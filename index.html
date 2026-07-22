@@ -499,7 +499,7 @@ function loadTheme(){
 // STORAGE
 const LS1='planRetiro_cartera_v1',LS2='planRetiro_params_v1',LS3='planRetiro_snapshots_v1';
 function saveAssets(){try{localStorage.setItem(LS1,JSON.stringify({assets,assetIdCounter}));}catch(e){}}
-function loadAssets(){try{const r=localStorage.getItem(LS1);if(r){const p=JSON.parse(r);assets=p.assets||[];assetIdCounter=p.assetIdCounter||assets.length;}}catch(e){}}
+function loadAssets(){try{const r=localStorage.getItem(LS1);if(r){const p=JSON.parse(r);assets=(p.assets||[]).map(a=>({...a,id:Number(a.id)}));assetIdCounter=p.assetIdCounter||assets.length;}}catch(e){}}
 function saveParams(){try{const p={};Object.keys(SL).forEach(id=>{const e=$(id);if(e)p[id]=e.value;});localStorage.setItem(LS2,JSON.stringify(p));}catch(e){}}
 function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e)e.value=v;});}catch(e){}}
 function saveSnapshot(){
@@ -749,7 +749,7 @@ function addAsset(){
   ['new-name','new-ticker','new-qty','new-price','new-cost'].forEach(id=>$(id).value='');
   renderCartera();
 }
-function removeAsset(id){assets=assets.filter(a=>a.id!==id);saveAssets();renderCartera();}
+function removeAsset(id){assets=assets.filter(a=>a.id!=id);saveAssets();renderCartera();}
 
 function renderCartera(){
   const al=gv('alertaCaida');
@@ -877,7 +877,7 @@ async function refreshPrices(){
 // MODAL EDITAR
 let editingId=null;
 function openEditModal(id){
-  const a=assets.find(x=>x.id===id);
+  const a=assets.find(x=>x.id==id);
   if(!a)return;
   editingId=id;
   const v=a.qty*a.price;
