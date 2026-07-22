@@ -163,6 +163,19 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .snapshot-btn{font-size:.65rem;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;width:100%;text-align:center}
 .snapshot-btn:hover{border-color:var(--purple);color:var(--purple)}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.modal h3{font-size:.9rem;font-weight:600}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-field label{font-size:.72rem;color:var(--muted)}
+.modal-field input{background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:8px 10px;font-size:.85rem;font-family:'JetBrains Mono',monospace;outline:none;width:100%;transition:border-color .15s}
+.modal-field input:focus{border-color:var(--accent)}
+.modal-info{font-size:.72rem;color:var(--muted);line-height:1.5;background:var(--surface2);padding:10px;border-radius:6px}
+.modal-info span{color:var(--text);font-weight:600;font-family:'JetBrains Mono',monospace}
+.modal-btns{display:flex;gap:8px}
+.edit-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:3px;transition:all .1s}
+.edit-btn:hover{color:var(--accent);background:rgba(88,166,255,.1)}
 @media(max-width:768px){
   header{padding:10px 14px}
   header h1{font-size:.88rem}.sub{display:none}
@@ -797,7 +810,10 @@ function rTbl(tbId,list,tv,bc,al){
       <td class="${pc}">${pnl>=0?'+':''}${fmt(pnl)}<br><span style="font-size:.6rem">${(ppnl>=0?'+':'')+ppnl.toFixed(1)}%</span></td>
       <td class="${cc}">${fmtCh(a.change24h)}</td>
       <td style="color:var(--muted)">${p}</td>
-      <td><button class="del-btn" onclick="removeAsset(${a.id})">✕</button></td>
+      <td style="display:flex;gap:3px;justify-content:center;align-items:center">
+        <button class="edit-btn" onclick="openEditModal(${a.id})" title="Editar precio de compra / cantidad">✏</button>
+        <button class="del-btn" onclick="removeAsset(${a.id})" title="Eliminar">✕</button>
+      </td>
     </tr>`;
   });
 }
@@ -857,6 +873,43 @@ async function refreshPrices(){
   renderCartera();saveAssets();btn.classList.remove('loading');
   setStatus('ok','Actualizado · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
 }
+
+// MODAL EDITAR
+let editingId=null;
+function openEditModal(id){
+  const a=assets.find(x=>x.id===id);
+  if(!a)return;
+  editingId=id;
+  const v=a.qty*a.price;
+  const cost=a.qty*(a.costBasis||a.price);
+  const pnl=v-cost;
+  $('modal-info').innerHTML=
+    '<b>'+a.name+' ('+a.ticker+')</b><br>'+
+    'Precio actual: <span>$'+a.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6})+'</span><br>'+
+    'Cantidad actual: <span>'+a.qty.toLocaleString('es-AR',{maximumFractionDigits:6})+'</span><br>'+
+    'Precio de compra actual: <span>'+(a.costBasis?'$'+a.costBasis.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6}):'No definido')+'</span><br>'+
+    'P&L actual: <span style="color:'+(pnl>=0?'var(--green)':'var(--red)')+'">'+(pnl>=0?'+':'')+fmt(pnl)+'</span>';
+  $('modal-cost').value=a.costBasis||a.price;
+  $('modal-qty').value=a.qty;
+  $('edit-modal').style.display='flex';
+  setTimeout(()=>$('modal-cost').focus(),100);
+}
+function closeModal(){
+  $('edit-modal').style.display='none';
+  editingId=null;
+}
+function saveModal(){
+  if(!editingId)return;
+  const a=assets.find(x=>x.id===editingId);
+  if(!a)return;
+  const cost=parseFloat($('modal-cost').value);
+  const qty=parseFloat($('modal-qty').value);
+  if(!isNaN(cost)&&cost>=0)a.costBasis=cost;
+  if(!isNaN(qty)&&qty>0)a.qty=qty;
+  saveAssets();renderCartera();closeModal();
+}
+// Cerrar modal con Escape
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 // INIT
 loadTheme();loadAssets();loadParams();
