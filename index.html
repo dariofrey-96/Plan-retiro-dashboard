@@ -39,9 +39,6 @@
   /* ── HEADER ── */
   header {
     padding: 18px 32px;
-    padding-top: max(18px, env(safe-area-inset-top));
-    padding-left: max(32px, env(safe-area-inset-left));
-    padding-right: max(32px, env(safe-area-inset-right));
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
   }
@@ -510,7 +507,7 @@ function getVal(id) { return parseFloat($(id).value); }
 Object.entries(sliders).forEach(([id, cfg]) => {
   const el = $(id); if (!el) return;
   const vEl = $('v-' + id);
-  const update = () => { if (vEl) vEl.textContent = cfg.display(parseFloat(el.value)); recalc(); };
+  const update = () => { if (vEl) vEl.textContent = cfg.display(parseFloat(el.value)); recalc(); saveParams(); };
   el.addEventListener('input', update);
 });
 
@@ -611,11 +608,35 @@ function recalc() {
 // ══════════════════════════════════════════════════════
 // CARTERA — Estado + localStorage
 // ══════════════════════════════════════════════════════
-const LS_KEY = 'planRetiro_cartera_v1';
+const LS_KEY       = 'planRetiro_cartera_v1';
+const LS_PARAMS_KEY = 'planRetiro_params_v1';
 
 function saveToStorage() {
   try { localStorage.setItem(LS_KEY, JSON.stringify({ assets, assetIdCounter })); }
   catch(e) { console.warn('localStorage no disponible:', e); }
+}
+
+function saveParams() {
+  try {
+    const params = {};
+    Object.keys(sliders).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) params[id] = el.value;
+    });
+    localStorage.setItem(LS_PARAMS_KEY, JSON.stringify(params));
+  } catch(e) { console.warn('Error guardando parámetros:', e); }
+}
+
+function loadParams() {
+  try {
+    const raw = localStorage.getItem(LS_PARAMS_KEY);
+    if (!raw) return;
+    const params = JSON.parse(raw);
+    Object.entries(params).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+  } catch(e) { console.warn('Error cargando parámetros:', e); }
 }
 
 function loadFromStorage() {
@@ -920,6 +941,13 @@ async function refreshPrices() {
 // INIT
 // ══════════════════════════════════════════════════════
 loadFromStorage();
+loadParams();
+// Actualizar displays de todos los sliders con valores cargados
+Object.entries(sliders).forEach(([id, cfg]) => {
+  const el = document.getElementById(id);
+  const vEl = document.getElementById('v-' + id);
+  if (el && vEl) vEl.textContent = cfg.display(parseFloat(el.value));
+});
 recalc();
 renderCartera();
 if (assets.length > 0) {
