@@ -218,7 +218,21 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 <aside id="aside">
   <div><div class="group-label">Perfil</div>
   <div class="field">
-    <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy">ⓘ</span></label>
+    <label>Fecha de nacimiento <span class="tooltip-icon" data-tip="Se usa para calcular tu edad exacta y los años reales hasta el retiro">ⓘ</span></label>
+    <div class="field-row">
+      <input type="date" id="fechaNacimiento" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-family:inherit;font-size:.8rem">
+    </div>
+    <div style="font-size:.68rem;color:var(--muted);margin-top:4px" id="edad-exacta-info"></div>
+  </div>
+  <div class="field">
+    <label>Fecha de inicio de inversión <span class="tooltip-icon" data-tip="Desde cuándo estás invirtiendo activamente">ⓘ</span></label>
+    <div class="field-row">
+      <input type="date" id="fechaInicioInversion" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-family:inherit;font-size:.8rem">
+    </div>
+    <div style="font-size:.68rem;color:var(--muted);margin-top:4px" id="tiempo-invirtiendo-info"></div>
+  </div>
+  <div class="field">
+    <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy. Se autocompleta desde la fecha de nacimiento, pero podés ajustarla manualmente">ⓘ</span></label>
     <div class="field-row">
       <button class="pm-btn" onclick="adjustSlider('edadActual',-1)">−</button>
       <input type="range" id="edadActual" min="20" max="60" value="30" step="1">
@@ -430,6 +444,9 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div class="ckpi"><div class="ckpi-label">Cambio 24h</div><div class="ckpi-val" id="ck-24h">—</div></div>
           <div class="ckpi"><div class="ckpi-label">% meta cubierta</div><div class="ckpi-val" id="ck-meta">0%</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-meta-bar"></div></div></div>
         </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="pm-btn" style="width:auto;padding:6px 12px;font-size:.72rem;border-radius:6px" onclick="syncCarteraToCapital()">↔ Usar valor de cartera como capital inicial</button>
+        </div>
         <div class="assets-section" id="section-crypto" style="display:none">
           <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.62rem;color:var(--muted)"></span></div>
           <table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table>
@@ -502,6 +519,63 @@ function saveAssets(){try{localStorage.setItem(LS1,JSON.stringify({assets,assetI
 function loadAssets(){try{const r=localStorage.getItem(LS1);if(r){const p=JSON.parse(r);assets=(p.assets||[]).map(a=>({...a,id:Number(a.id)}));assetIdCounter=p.assetIdCounter||assets.length;}}catch(e){}}
 function saveParams(){try{const p={};Object.keys(SL).forEach(id=>{const e=$(id);if(e)p[id]=e.value;});localStorage.setItem(LS2,JSON.stringify(p));}catch(e){}}
 function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e)e.value=v;});}catch(e){}}
+const LS4='planRetiro_dates_v1';
+function saveDates(){try{localStorage.setItem(LS4,JSON.stringify({fechaNacimiento:$('fechaNacimiento').value,fechaInicioInversion:$('fechaInicioInversion').value}));}catch(e){}}
+function loadDates(){try{const r=localStorage.getItem(LS4);if(!r)return;const p=JSON.parse(r);if(p.fechaNacimiento)$('fechaNacimiento').value=p.fechaNacimiento;if(p.fechaInicioInversion)$('fechaInicioInversion').value=p.fechaInicioInversion;}catch(e){}}
+const MS_YEAR=365.2425*24*3600*1000;
+function computeExactAge(){
+  const fn=$('fechaNacimiento').value;
+  const info=$('edad-exacta-info');
+  if(!fn){info.textContent='';return;}
+  const birth=new Date(fn+'T00:00:00');
+  const now=new Date();
+  const years=(now-birth)/MS_YEAR;
+  if(years<0){info.textContent='La fecha es en el futuro';return;}
+  const yrs=Math.floor(years),days=Math.round((years-yrs)*365.2425);
+  info.textContent=`Edad exacta: ${yrs} años y ${days} días (${years.toFixed(2)} años)`;
+  const e=$('edadActual');
+  const rounded=Math.round(years);
+  if(e&&rounded>=parseFloat(e.min)&&rounded<=parseFloat(e.max)){
+    e.value=rounded;
+    const ve=$('v-edadActual');if(ve)ve.textContent=SL.edadActual.d(rounded);
+  }
+  updateYearsToRetirement();
+}
+function updateYearsToRetirement(){
+  const fn=$('fechaNacimiento').value;
+  const sub=$('kpi-proy-sub');
+  if(!fn||!sub)return;
+  const birth=new Date(fn+'T00:00:00');
+  const er=gv('edadRetiro');
+  const retDate=new Date(birth.getFullYear()+er,birth.getMonth(),birth.getDate());
+  const now=new Date();
+  const yrsReal=(retDate-now)/MS_YEAR;
+  if(yrsReal>0)sub.textContent='en '+LC.nA+' años (real: '+yrsReal.toFixed(1)+' años exactos)';
+}
+function computeInvestingTime(){
+  const fi=$('fechaInicioInversion').value;
+  const info=$('tiempo-invirtiendo-info');
+  if(!fi){info.textContent='';return;}
+  const start=new Date(fi+'T00:00:00');
+  const now=new Date();
+  const years=(now-start)/MS_YEAR;
+  if(years<0){info.textContent='La fecha es en el futuro';return;}
+  const yrs=Math.floor(years),months=Math.floor((years-yrs)*12);
+  info.textContent=`Invirtiendo hace ${yrs} años y ${months} meses`;
+}
+$('fechaNacimiento').addEventListener('change',()=>{computeExactAge();recalc();updateYearsToRetirement();saveDates();});
+$('fechaInicioInversion').addEventListener('change',()=>{computeInvestingTime();saveDates();});
+function syncCarteraToCapital(){
+  const tv=assets.reduce((s,a)=>s+a.qty*a.price,0);
+  if(tv<=0){alert('Tu cartera no tiene valor todavía. Cargá activos primero.');return;}
+  const e=$('capitalInicial');
+  if(tv>parseFloat(e.max))e.max=Math.ceil(tv/1000)*1000;
+  const rv=Math.round(tv);
+  e.value=rv;
+  const ve=$('v-capitalInicial');if(ve)ve.textContent=SL.capitalInicial.d(rv);
+  recalc();saveParams();
+  alert('Capital inicial actualizado a '+fmt(tv)+' desde tu cartera.');
+}
 function saveSnapshot(){
   const total=assets.reduce((s,a)=>s+a.qty*a.price,0);
   const snap={date:new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'}),total,count:assets.length};
@@ -562,7 +636,7 @@ function adjustSlider(id,delta){
 Object.entries(SL).forEach(([id,cfg])=>{
   const e=$(id);if(!e)return;
   const ve=$('v-'+id);
-  e.addEventListener('input',()=>{if(ve)ve.textContent=cfg.d(parseFloat(e.value));recalc();saveParams();});
+  e.addEventListener('input',()=>{if(ve)ve.textContent=cfg.d(parseFloat(e.value));recalc();saveParams();if(id==='edadRetiro')updateYearsToRetirement();});
 });
 
 // CHARTS
@@ -912,11 +986,12 @@ function saveModal(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 // INIT
-loadTheme();loadAssets();loadParams();
+loadTheme();loadAssets();loadParams();loadDates();
 Object.entries(SL).forEach(([id,cfg])=>{const e=$(id),ve=$('v-'+id);if(e&&ve)ve.textContent=cfg.d(parseFloat(e.value));});
 ['tabla','escenarios','sensibilidad','inversa'].forEach(n=>{const e=$('inner-'+n);if(e)e.style.display='none';});
 $('inner-grafico').style.display='flex';
-recalc();renderCartera();
+computeExactAge();computeInvestingTime();
+recalc();renderCartera();updateYearsToRetirement();
 if(assets.length>0)setStatus('ok',assets.length+' activos cargados · Actualizar para refrescar precios');
 
 // SW
