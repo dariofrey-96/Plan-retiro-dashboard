@@ -141,6 +141,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .cat-badge{display:inline-block;font-size:.55rem;padding:1px 5px;border-radius:3px;font-family:'Inter',sans-serif;font-weight:600;text-transform:uppercase}
 .cat-crypto{background:rgba(88,166,255,.15);color:var(--accent)}
 .cat-etf{background:rgba(63,185,80,.15);color:var(--green)}
+.cat-metal{background:rgba(240,180,41,.18);color:#f0b429}
 .change-pos{color:var(--green)}.change-neg{color:var(--red)}.change-neu{color:var(--muted)}
 .pnl-pos{color:var(--green)}.pnl-neg{color:var(--red)}
 .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:2px 4px;border-radius:3px;transition:all .1s}
@@ -455,14 +456,19 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div class="section-title"><span>Acciones / ETFs <span style="color:var(--green);margin-left:6px" id="total-stocks"></span></span><span id="pct-stocks" style="font-size:.62rem;color:var(--muted)"></span></div>
           <table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-stocks"></tbody></table>
         </div>
+        <div class="assets-section" id="section-metal" style="display:none">
+          <div class="section-title"><span>Metales <span style="color:#f0b429;margin-left:6px" id="total-metal"></span></span><span id="pct-metal" style="font-size:.62rem;color:var(--muted)"></span></div>
+          <table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-metal"></tbody></table>
+        </div>
         <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
       </div>
       <div class="cartera-side">
         <div class="asset-form">
           <h3>➕ Agregar activo</h3>
-          <div class="form-row"><select id="new-cat" style="flex:0 0 110px"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option></select></div>
+          <div class="form-row"><select id="new-cat" onchange="updateTickerHint()" style="flex:0 0 110px"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option><option value="metal">Metal</option></select></div>
           <div class="form-row"><input id="new-name" placeholder="Nombre (ej. Bitcoin)"></div>
           <div class="form-row"><input id="new-ticker" placeholder="Ticker (ej. BTC / SPY)"></div>
+          <div id="ticker-hint" style="display:none;font-size:.62rem;color:var(--muted);margin:-6px 0 8px">Formato Twelve Data: <b>XAU/USD</b> (oro) o <b>XAG/USD</b> (plata)</div>
           <div class="form-row"><input id="new-qty" type="number" placeholder="Cantidad" min="0" step="any"><input id="new-price" type="number" placeholder="Precio USD" min="0" step="any"></div>
           <div class="form-row"><input id="new-cost" type="number" placeholder="Precio de compra (P&L)" min="0" step="any"></div>
           <div class="form-row"><button class="btn btn-primary" onclick="addAsset()" style="flex:1">Agregar</button></div>
@@ -518,7 +524,7 @@ const LS1='planRetiro_cartera_v1',LS2='planRetiro_params_v1',LS3='planRetiro_sna
 function saveAssets(){try{localStorage.setItem(LS1,JSON.stringify({assets,assetIdCounter}));}catch(e){}}
 function loadAssets(){try{const r=localStorage.getItem(LS1);if(r){const p=JSON.parse(r);assets=(p.assets||[]).map(a=>({...a,id:Number(a.id)}));assetIdCounter=p.assetIdCounter||assets.length;}}catch(e){}}
 function saveParams(){try{const p={};Object.keys(SL).forEach(id=>{const e=$(id);if(e)p[id]=e.value;});localStorage.setItem(LS2,JSON.stringify(p));}catch(e){}}
-function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e)e.value=v;});}catch(e){}}
+function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e){const nv=parseFloat(v);if(!isNaN(nv)&&nv>parseFloat(e.max))e.max=Math.ceil(nv/50)*50;e.value=v;}});}catch(e){}}
 const LS4='planRetiro_dates_v1';
 function saveDates(){try{localStorage.setItem(LS4,JSON.stringify({fechaNacimiento:$('fechaNacimiento').value,fechaInicioInversion:$('fechaInicioInversion').value}));}catch(e){}}
 function loadDates(){try{const r=localStorage.getItem(LS4);if(!r)return;const p=JSON.parse(r);if(p.fechaNacimiento)$('fechaNacimiento').value=p.fechaNacimiento;if(p.fechaInicioInversion)$('fechaInicioInversion').value=p.fechaInicioInversion;}catch(e){}}
@@ -813,6 +819,9 @@ let assets=[],assetIdCounter=0;
 const PAL=['#58a6ff','#3fb950','#bc8cff','#d29922','#f85149','#39d353','#79c0ff','#ffa657','#ff7b72','#a5d6ff'];
 const CL={crypto:'Crypto',stock:'Acción/ETF'};
 
+function updateTickerHint(){
+  $('ticker-hint').style.display=$('new-cat').value==='metal'?'':'none';
+}
 function addAsset(){
   const nm=$('new-name').value.trim(),tk=$('new-ticker').value.trim().toUpperCase();
   const cat=$('new-cat').value,qty=parseFloat($('new-qty').value),price=parseFloat($('new-price').value);
@@ -845,16 +854,18 @@ function renderCartera(){
   const pm=curMeta>0?tv/curMeta:0;
   $('ck-meta').textContent=(pm*100).toFixed(1)+'%';
   const mb=$('ck-meta-bar');mb.style.width=Math.min(pm*100,100)+'%';mb.style.background=pm>=1?'var(--green)':pm>=0.5?'var(--orange)':'var(--red)';
-  const crs=assets.filter(a=>a.cat==='crypto'),sts=assets.filter(a=>a.cat==='stock');
-  const tC=crs.reduce((s,a)=>s+a.qty*a.price,0),tS=sts.reduce((s,a)=>s+a.qty*a.price,0);
-  rTbl('tbody-crypto',crs,tv,'cat-crypto',al);rTbl('tbody-stocks',sts,tv,'cat-etf',al);
-  $('section-crypto').style.display=crs.length?'':'none';$('section-stocks').style.display=sts.length?'':'none';
-  $('total-crypto').textContent=crs.length?fmt(tC):'';$('total-stocks').textContent=sts.length?fmt(tS):'';
+  const crs=assets.filter(a=>a.cat==='crypto'),sts=assets.filter(a=>a.cat==='stock'),mts=assets.filter(a=>a.cat==='metal');
+  const tC=crs.reduce((s,a)=>s+a.qty*a.price,0),tS=sts.reduce((s,a)=>s+a.qty*a.price,0),tM=mts.reduce((s,a)=>s+a.qty*a.price,0);
+  rTbl('tbody-crypto',crs,tv,'cat-crypto',al);rTbl('tbody-stocks',sts,tv,'cat-etf',al);rTbl('tbody-metal',mts,tv,'cat-metal',al);
+  $('section-crypto').style.display=crs.length?'':'none';$('section-stocks').style.display=sts.length?'':'none';$('section-metal').style.display=mts.length?'':'none';
+  $('total-crypto').textContent=crs.length?fmt(tC):'';$('total-stocks').textContent=sts.length?fmt(tS):'';$('total-metal').textContent=mts.length?fmt(tM):'';
   $('pct-crypto').textContent=tv>0&&crs.length?(tC/tv*100).toFixed(1)+'%':'';
   $('pct-stocks').textContent=tv>0&&sts.length?(tS/tv*100).toFixed(1)+'%':'';
+  $('pct-metal').textContent=tv>0&&mts.length?(tM/tv*100).toFixed(1)+'%':'';
   const cd=[],cc=[],cl=[];
   if(tC>0){cd.push(tC);cc.push('#58a6ff');cl.push('Crypto');}
   if(tS>0){cd.push(tS);cc.push('#3fb950');cl.push('Acciones/ETFs');}
+  if(tM>0){cd.push(tM);cc.push('#f0b429');cl.push('Metales');}
   dCat.data.labels=cl;dCat.data.datasets[0].data=cd;dCat.data.datasets[0].backgroundColor=cc;dCat.update();
   $('donut-total-val').textContent=fmt(tv);
   const cleg=$('cat-legend');cleg.innerHTML='';
@@ -943,7 +954,7 @@ async function refreshPrices(){
   if(!assets.length){setStatus('','No hay activos.');return;}
   const btn=$('btn-refresh');btn.classList.add('loading');$('refresh-icon').textContent='⟳';
   setStatus('loading','Actualizando precios...');
-  await Promise.all([fetchCrypto(assets.filter(a=>a.cat==='crypto')),fetchStocks(assets.filter(a=>a.cat==='stock'))]);
+  await Promise.all([fetchCrypto(assets.filter(a=>a.cat==='crypto')),fetchStocks(assets.filter(a=>a.cat==='stock'||a.cat==='metal'))]);
   renderCartera();saveAssets();btn.classList.remove('loading');
   setStatus('ok','Actualizado · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
 }
@@ -992,7 +1003,7 @@ Object.entries(SL).forEach(([id,cfg])=>{const e=$(id),ve=$('v-'+id);if(e&&ve)ve.
 $('inner-grafico').style.display='flex';
 computeExactAge();computeInvestingTime();
 recalc();renderCartera();updateYearsToRetirement();
-if(assets.length>0)setStatus('ok',assets.length+' activos cargados · Actualizar para refrescar precios');
+if(assets.length>0){setStatus('loading','Cargando precios actualizados...');refreshPrices();}
 
 // SW
 if('serviceWorker' in navigator){
