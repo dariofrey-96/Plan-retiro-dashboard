@@ -90,13 +90,15 @@ aside.open{display:flex}
 .group-label,.group-block>.group-label{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .group-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;gap:12px}
 .field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:.75rem;color:var(--text);font-weight:500;display:flex;align-items:center;gap:5px}
+.field label{font-size:.75rem;color:var(--text);font-weight:500;display:flex;align-items:center;gap:5px;min-width:0}
+.field-top-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.field-top-row label{flex:1;min-width:0}
 .tooltip-icon{font-size:.62rem;color:var(--muted);cursor:help;position:relative;width:13px;height:13px;border-radius:50%;background:var(--surface3);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .tooltip-icon:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);background:var(--text);color:var(--bg);font-size:.66rem;font-weight:500;padding:7px 9px;border-radius:8px;white-space:normal;width:190px;z-index:999;line-height:1.4;box-shadow:var(--shadow-float)}
 .field-row{display:flex;align-items:center;gap:8px}
-.field input[type="range"]{flex:1;accent-color:var(--accent);height:4px;cursor:pointer}
+.field input[type="range"]{flex:1;min-width:0;accent-color:var(--accent);height:4px;cursor:pointer}
 .field input[type="date"]{flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:8px 10px;font-family:inherit;font-size:.8rem}
-.val{font-size:.76rem;font-weight:700;color:var(--text);min-width:70px;text-align:right}
+.val{font-size:.76rem;font-weight:700;color:var(--text);text-align:right;white-space:nowrap}
 .pm-btn{width:26px;height:26px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface3);color:var(--muted);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;user-select:none;line-height:1}
 .pm-btn:hover{border-color:var(--accent);color:var(--accent)}
 .pm-btn:active{background:var(--accent);color:var(--bg)}
@@ -177,6 +179,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .sens-cell-good{background:var(--teal-soft);color:var(--teal)}
 .sens-cell-ok{background:var(--orange-soft);color:var(--orange)}
 .sens-cell-bad{background:var(--red-soft);color:var(--red)}
+.sens-current{outline:2px solid var(--accent);outline-offset:-2px;position:relative}
 
 /* ── CALC INVERSA ── */
 .inv-grid{display:flex;flex-direction:column;gap:12px}
@@ -233,6 +236,8 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .form-row input:focus,.form-row select:focus{border-color:var(--accent)}
 .form-row input::placeholder{color:var(--muted)}
 .form-row select option{background:var(--surface2)}
+.hist-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:6px 9px;font-size:.72rem;outline:none}
+.hist-select option{background:var(--surface2)}
 .ticker-hint{font-size:.64rem;color:var(--muted);margin-top:-4px}
 .btn{padding:9px 14px;border-radius:var(--radius-sm);border:none;font-size:.78rem;cursor:pointer;transition:all .15s;font-weight:600}
 .btn-primary{background:var(--text);color:var(--bg)}.btn-primary:hover{opacity:.85}
@@ -338,7 +343,8 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="group-block">
     <div class="group-label">Perfil</div>
     <div class="field">
-      <label>Fecha de nacimiento <span class="tooltip-icon" data-tip="Se usa para calcular tu edad exacta y los años reales hasta el retiro">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Fecha de nacimiento <span class="tooltip-icon" data-tip="Se usa para calcular tu edad exacta y los años reales hasta el retiro">ⓘ</span></label>
       <div class="field-row">
         <input type="date" id="fechaNacimiento">
       </div>
@@ -353,29 +359,34 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     </div>
     <div class="field">
       <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy. Se autocompleta desde la fecha de nacimiento, pero podés ajustarla manualmente">ⓘ</span></label>
+        <span class="val" id="v-edadActual"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-edadActual-1"><input type="checkbox" switch class="pm-switch" id="sw-edadActual-1" data-target="edadActual" data-delta="-1"></label></span>
         <input type="range" id="edadActual" min="20" max="60" value="30" step="1">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-edadActual-2"><input type="checkbox" switch class="pm-switch" id="sw-edadActual-2" data-target="edadActual" data-delta="1.0"></label></span>
-        <span class="val" id="v-edadActual"></span>
       </div>
     </div>
     <div class="field">
-      <label>Edad de retiro <span class="tooltip-icon" data-tip="Edad objetivo para retirarte">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Edad de retiro <span class="tooltip-icon" data-tip="Edad objetivo para retirarte">ⓘ</span></label>
+        <span class="val" id="v-edadRetiro"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-edadRetiro-3"><input type="checkbox" switch class="pm-switch" id="sw-edadRetiro-3" data-target="edadRetiro" data-delta="-1"></label></span>
         <input type="range" id="edadRetiro" min="45" max="80" value="65" step="1">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-edadRetiro-4"><input type="checkbox" switch class="pm-switch" id="sw-edadRetiro-4" data-target="edadRetiro" data-delta="1.0"></label></span>
-        <span class="val" id="v-edadRetiro"></span>
       </div>
     </div>
     <div class="field">
-      <label>Esperanza de vida <span class="tooltip-icon" data-tip="Hasta qué edad proyectamos el plan">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Esperanza de vida <span class="tooltip-icon" data-tip="Hasta qué edad proyectamos el plan">ⓘ</span></label>
+        <span class="val" id="v-vidaEsperada"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-vidaEsperada-5"><input type="checkbox" switch class="pm-switch" id="sw-vidaEsperada-5" data-target="vidaEsperada" data-delta="-1"></label></span>
         <input type="range" id="vidaEsperada" min="70" max="110" value="100" step="1">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-vidaEsperada-6"><input type="checkbox" switch class="pm-switch" id="sw-vidaEsperada-6" data-target="vidaEsperada" data-delta="1.0"></label></span>
-        <span class="val" id="v-vidaEsperada"></span>
       </div>
     </div>
   </div>
@@ -383,30 +394,36 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="group-block">
     <div class="group-label">Metas</div>
     <div class="field">
-      <label>Gasto mensual deseado (USD hoy) <span class="tooltip-icon" data-tip="Cuánto querés gastar por mes en el retiro en dólares de hoy">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Gasto mensual deseado (USD hoy) <span class="tooltip-icon" data-tip="Cuánto querés gastar por mes en el retiro en dólares de hoy">ⓘ</span></label>
+        <span class="val" id="v-gastoMensual"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-gastoMensual-7"><input type="checkbox" switch class="pm-switch" id="sw-gastoMensual-7" data-target="gastoMensual" data-delta="-100"></label></span>
         <input type="range" id="gastoMensual" min="500" max="15000" value="3000" step="100">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-gastoMensual-8"><input type="checkbox" switch class="pm-switch" id="sw-gastoMensual-8" data-target="gastoMensual" data-delta="100.0"></label></span>
-        <span class="val" id="v-gastoMensual"></span>
       </div>
     </div>
     <div class="field">
-      <label>Inflación USD anual <span class="tooltip-icon" data-tip="Históricamente 2-3% anual en USD. Subila si sos conservador">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Inflación USD anual <span class="tooltip-icon" data-tip="Históricamente 2-3% anual en USD. Subila si sos conservador">ⓘ</span></label>
+        <span class="val" id="v-inflacion"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-inflacion-9"><input type="checkbox" switch class="pm-switch" id="sw-inflacion-9" data-target="inflacion" data-delta="-0.005"></label></span>
         <input type="range" id="inflacion" min="0.01" max="0.08" value="0.035" step="0.005">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-inflacion-10"><input type="checkbox" switch class="pm-switch" id="sw-inflacion-10" data-target="inflacion" data-delta="0.005"></label></span>
-        <span class="val" id="v-inflacion"></span>
       </div>
     </div>
     <div class="field">
-      <label>Tasa de retiro segura (SWR) <span class="tooltip-icon" data-tip="Regla del 4%: retirás ese % del portafolio por año sin agotarlo">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Tasa de retiro segura (SWR) <span class="tooltip-icon" data-tip="Regla del 4%: retirás ese % del portafolio por año sin agotarlo">ⓘ</span></label>
+        <span class="val" id="v-swr"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-swr-11"><input type="checkbox" switch class="pm-switch" id="sw-swr-11" data-target="swr" data-delta="-0.005"></label></span>
         <input type="range" id="swr" min="0.02" max="0.07" value="0.04" step="0.005">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-swr-12"><input type="checkbox" switch class="pm-switch" id="sw-swr-12" data-target="swr" data-delta="0.005"></label></span>
-        <span class="val" id="v-swr"></span>
       </div>
     </div>
   </div>
@@ -414,39 +431,47 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="group-block">
     <div class="group-label">Inversión</div>
     <div class="field">
-      <label>Capital inicial invertido (USD) <span class="tooltip-icon" data-tip="Lo que ya tenés invertido hoy">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Capital inicial invertido (USD) <span class="tooltip-icon" data-tip="Lo que ya tenés invertido hoy">ⓘ</span></label>
+        <span class="val" id="v-capitalInicial"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-capitalInicial-13"><input type="checkbox" switch class="pm-switch" id="sw-capitalInicial-13" data-target="capitalInicial" data-delta="-1000"></label></span>
         <input type="range" id="capitalInicial" min="0" max="500000" value="5000" step="1000">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-capitalInicial-14"><input type="checkbox" switch class="pm-switch" id="sw-capitalInicial-14" data-target="capitalInicial" data-delta="1000.0"></label></span>
-        <span class="val" id="v-capitalInicial"></span>
       </div>
     </div>
     <div class="field">
-      <label>Ahorro mensual actual (USD) <span class="tooltip-icon" data-tip="Cuánto invertís por mes. Cada $100 más equivale a ~$150k adicionales al retiro">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Ahorro mensual actual (USD) <span class="tooltip-icon" data-tip="Cuánto invertís por mes. Cada $100 más equivale a ~$150k adicionales al retiro">ⓘ</span></label>
+        <span class="val" id="v-ahorroMensual"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-ahorroMensual-15"><input type="checkbox" switch class="pm-switch" id="sw-ahorroMensual-15" data-target="ahorroMensual" data-delta="-50"></label></span>
         <input type="range" id="ahorroMensual" min="0" max="10000" value="500" step="50">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-ahorroMensual-16"><input type="checkbox" switch class="pm-switch" id="sw-ahorroMensual-16" data-target="ahorroMensual" data-delta="50.0"></label></span>
-        <span class="val" id="v-ahorroMensual"></span>
       </div>
     </div>
     <div class="field">
-      <label>Crecimiento anual del ahorro <span class="tooltip-icon" data-tip="Cuánto aumenta tu ahorro mensual cada año a medida que ganás más">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Crecimiento anual del ahorro <span class="tooltip-icon" data-tip="Cuánto aumenta tu ahorro mensual cada año a medida que ganás más">ⓘ</span></label>
+        <span class="val" id="v-crecAhorro"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-crecAhorro-17"><input type="checkbox" switch class="pm-switch" id="sw-crecAhorro-17" data-target="crecAhorro" data-delta="-0.005"></label></span>
         <input type="range" id="crecAhorro" min="0" max="0.15" value="0.03" step="0.005">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-crecAhorro-18"><input type="checkbox" switch class="pm-switch" id="sw-crecAhorro-18" data-target="crecAhorro" data-delta="0.005"></label></span>
-        <span class="val" id="v-crecAhorro"></span>
       </div>
     </div>
     <div class="field">
-      <label>Retorno anual esperado (nominal) <span class="tooltip-icon" data-tip="S&P500 históricamente ~10% nominal anual. Portafolio diversificado: 9-12%">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Retorno anual esperado (nominal) <span class="tooltip-icon" data-tip="S&P500 históricamente ~10% nominal anual. Portafolio diversificado: 9-12%">ⓘ</span></label>
+        <span class="val" id="v-retorno"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-retorno-19"><input type="checkbox" switch class="pm-switch" id="sw-retorno-19" data-target="retorno" data-delta="-0.005"></label></span>
         <input type="range" id="retorno" min="0.02" max="0.2" value="0.09" step="0.005">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-retorno-20"><input type="checkbox" switch class="pm-switch" id="sw-retorno-20" data-target="retorno" data-delta="0.005"></label></span>
-        <span class="val" id="v-retorno"></span>
       </div>
     </div>
   </div>
@@ -454,30 +479,36 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="group-block">
     <div class="group-label">Ingresos pasivos en retiro</div>
     <div class="field">
-      <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
+        <span class="val" id="v-alquiler"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alquiler-21"><input type="checkbox" switch class="pm-switch" id="sw-alquiler-21" data-target="alquiler" data-delta="-100"></label></span>
         <input type="range" id="alquiler" min="0" max="10000" value="500" step="100">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alquiler-22"><input type="checkbox" switch class="pm-switch" id="sw-alquiler-22" data-target="alquiler" data-delta="100.0"></label></span>
-        <span class="val" id="v-alquiler"></span>
       </div>
     </div>
     <div class="field">
-      <label>Dividendos / rentas (USD/mes) <span class="tooltip-icon" data-tip="Dividendos de ETFs y otras rentas en el retiro">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Dividendos / rentas (USD/mes) <span class="tooltip-icon" data-tip="Dividendos de ETFs y otras rentas en el retiro">ⓘ</span></label>
+        <span class="val" id="v-dividendos"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-dividendos-23"><input type="checkbox" switch class="pm-switch" id="sw-dividendos-23" data-target="dividendos" data-delta="-50"></label></span>
         <input type="range" id="dividendos" min="0" max="5000" value="0" step="50">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-dividendos-24"><input type="checkbox" switch class="pm-switch" id="sw-dividendos-24" data-target="dividendos" data-delta="50.0"></label></span>
-        <span class="val" id="v-dividendos"></span>
       </div>
     </div>
     <div class="field">
-      <label>Consultoría / part-time (USD/mes) <span class="tooltip-icon" data-tip="Si pensás trabajar ocasionalmente en el retiro">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Consultoría / part-time (USD/mes) <span class="tooltip-icon" data-tip="Si pensás trabajar ocasionalmente en el retiro">ⓘ</span></label>
+        <span class="val" id="v-consultoria"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-consultoria-25"><input type="checkbox" switch class="pm-switch" id="sw-consultoria-25" data-target="consultoria" data-delta="-50"></label></span>
         <input type="range" id="consultoria" min="0" max="5000" value="0" step="50">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-consultoria-26"><input type="checkbox" switch class="pm-switch" id="sw-consultoria-26" data-target="consultoria" data-delta="50.0"></label></span>
-        <span class="val" id="v-consultoria"></span>
       </div>
     </div>
   </div>
@@ -485,14 +516,32 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="group-block">
     <div class="group-label">Alertas de cartera</div>
     <div class="field">
-      <label>Alerta caída 24h (%) <span class="tooltip-icon" data-tip="Si un activo cae más de este % en 24h se marca con alerta roja">ⓘ</span></label>
+      <div class="field-top-row">
+        <label>Alerta caída 24h (%) <span class="tooltip-icon" data-tip="Si un activo cae más de este % en 24h se marca con alerta roja">ⓘ</span></label>
+        <span class="val" id="v-alertaCaida"></span>
+      </div>
       <div class="field-row">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaCaida-27"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-27" data-target="alertaCaida" data-delta="-1"></label></span>
         <input type="range" id="alertaCaida" min="1" max="30" value="10" step="1">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaCaida-28"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-28" data-target="alertaCaida" data-delta="1.0"></label></span>
-        <span class="val" id="v-alertaCaida"></span>
       </div>
     </div>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Sincronización con GitHub (historial automático)</div>
+    <div class="field-hint" style="margin-bottom:2px">Pegá acá un token de GitHub con permiso de escritura solo sobre este repositorio. La cartera se sube sola cada vez que agregás, editás o borrás un activo — un robot en GitHub Actions guarda el valor todos los días, aunque no abras la app.</div>
+    <div class="field">
+      <label>Token de GitHub (fine-grained)</label>
+      <div class="field-row">
+        <input type="password" id="gh-token" placeholder="github_pat_..." autocomplete="off" style="flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:9px 10px;font-size:.78rem">
+      </div>
+    </div>
+    <div class="field-row" style="gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveGhToken()">Guardar token</button>
+      <button class="btn btn-refresh" style="flex:1" onclick="syncCarteraToGitHub(true)">↻ Sincronizar ahora</button>
+    </div>
+    <div class="status-bar" id="gh-status-bar" style="padding:4px 0 0"><div class="status-dot" id="gh-status-dot"></div><span id="gh-status-msg">Sin configurar todavía.</span></div>
   </div>
 </aside>
 <main>
@@ -545,13 +594,18 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           </div>
           <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
         </div>
+        <div class="cartera-kpis" style="overflow-x:visible;flex-wrap:wrap">
+          <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Total aportado de tu bolsillo</div><div class="ckpi-val blue" id="proy-stat-aportado">—</div></div>
+          <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Generado por interés compuesto</div><div class="ckpi-val green" id="proy-stat-interes">—</div><div class="field-hint" id="proy-stat-interes-pct" style="margin-top:3px"></div></div>
+          <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Años de retiro cubiertos</div><div class="ckpi-val" id="proy-stat-anos">—</div></div>
+        </div>
       </div>
     </div>
 
     <div id="inner-tabla" style="display:none">
       <div class="view-pad">
         <div class="table-card">
-          <div class="table-wrap">
+          <div class="table-wrap" style="max-height:calc(100vh - 340px)">
             <table><thead><tr><th>Año</th><th>Edad</th><th class="ph-a">Ahorro/Retiro Mens.</th><th class="ph-a">Ahorro/Retiro Anual</th><th>Rendimiento</th><th>Cap. Inicio</th><th>Cap. Fin</th><th style="color:var(--purple)">Cap. Real</th><th>Estado</th></tr></thead><tbody id="tabla-body"></tbody></table>
           </div>
         </div>
@@ -571,13 +625,18 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           </div>
           <div class="chart-canvas-wrap"><canvas id="chart-escenarios"></canvas></div>
         </div>
+        <div class="cartera-kpis" style="overflow-x:visible;flex-wrap:wrap">
+          <div class="ckpi" style="flex:1;min-width:150px;border-top:2px solid var(--red)"><div class="ckpi-label">Pesimista (6%) al retiro</div><div class="ckpi-val red" id="esc-stat-pesimista">—</div></div>
+          <div class="ckpi" style="flex:1;min-width:150px;border-top:2px solid var(--orange)"><div class="ckpi-label">Base (tu config) al retiro</div><div class="ckpi-val orange" id="esc-stat-base">—</div></div>
+          <div class="ckpi" style="flex:1;min-width:150px;border-top:2px solid var(--green)"><div class="ckpi-label">Optimista (12%) al retiro</div><div class="ckpi-val green" id="esc-stat-optimista">—</div></div>
+        </div>
       </div>
     </div>
 
     <div id="inner-sensibilidad" style="display:none">
       <div class="sens-view">
         <div class="sens-title">Tabla de sensibilidad</div>
-        <div class="sens-sub">% de la meta según ahorro mensual × retorno anual. Verde = supera la meta.</div>
+        <div class="sens-sub">% de la meta según ahorro mensual × retorno anual. Verde = supera la meta. <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border:2px solid var(--accent);display:inline-block;border-radius:2px"></span>= tu configuración actual.</span></div>
         <div class="table-card"><div id="sens-table-wrap" style="overflow-x:auto"></div></div>
       </div>
     </div>
@@ -589,6 +648,12 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div class="inv-card"><h3>🏦 ¿Con qué capital inicial llego?</h3><p>Manteniendo tu ahorro actual, ¿qué capital inicial necesitás para llegar a la meta?</p><div class="inv-result" id="inv-capital">—</div><div class="inv-result-sub">de capital inicial</div></div>
           <div class="inv-card"><h3>📅 ¿En cuántos años llego?</h3><p>Con tu ahorro y capital actuales, ¿cuándo alcanzás la meta?</p><div class="inv-result" id="inv-anos">—</div><div class="inv-result-sub" id="inv-anos-sub">—</div></div>
           <div class="inv-card"><h3>📉 ¿Cuánto puedo retirar sosteniblemente?</h3><p>Con el capital proyectado al retiro, ¿cuánto podés retirar por mes indefinidamente?</p><div class="inv-result" id="inv-retiro">—</div><div class="inv-result-sub">por mes</div></div>
+          <div class="inv-card"><h3>⏳ ¿Y si me retiro antes o después?</h3><p>Manteniendo el resto de los parámetros igual, así cambia tu capital final si movés la edad de retiro 5 años para cada lado.</p>
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+              <div><div class="inv-result-sub">5 años antes</div><div class="inv-result" id="inv-retiro-antes" style="font-size:1.3rem">—</div></div>
+              <div><div class="inv-result-sub">5 años después</div><div class="inv-result" id="inv-retiro-despues" style="font-size:1.3rem">—</div></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -620,6 +685,25 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 
         <div class="assets-section">
           <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="chart-header">
+            <span class="chart-title">📈 Evolución histórica</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select id="hist-series" class="hist-select" onchange="renderHistChart()">
+                <option value="__total__">Cartera completa</option>
+              </select>
+              <div class="toggle-wrap" id="hist-period-toggle">
+                <button class="toggle-btn active" data-days="30" onclick="setHistPeriod(30,this)">30D</button>
+                <button class="toggle-btn" data-days="90" onclick="setHistPeriod(90,this)">90D</button>
+                <button class="toggle-btn" data-days="365" onclick="setHistPeriod(365,this)">1A</button>
+                <button class="toggle-btn" data-days="0" onclick="setHistPeriod(0,this)">Todo</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap" style="min-height:220px"><canvas id="chart-hist"></canvas></div>
+          <div class="field-hint" id="hist-empty-msg">Todavía no hay historial guardado. Se va a ir completando solo — un robot en GitHub Actions guarda el valor de tu cartera todos los días, aunque no abras la app.</div>
         </div>
       </div>
 
@@ -1330,6 +1414,263 @@ document.addEventListener('change', (e) => {
   document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup', onEnd);
 })();
+</script>
+<script>
+// ── SINCRONIZACIÓN CON GITHUB (para el historial automático) ───────────────
+const GH_OWNER = 'dariofrey-96';
+const GH_REPO = 'Plan-retiro-dashboard';
+const GH_BRANCH = 'main'; // si tu repo usa "master", cambiá esto
+const GH_PATH_CARTERA = 'cartera.json';
+const GH_PATH_HISTORY = 'history.json';
+const LS_GH_TOKEN = 'planRetiro_gh_token';
+
+function setGhStatus(state, msg) {
+  const dot = $('gh-status-dot'), m = $('gh-status-msg');
+  if (dot) dot.className = 'status-dot ' + state;
+  if (m) m.textContent = msg;
+}
+
+function saveGhToken() {
+  const token = $('gh-token').value.trim();
+  try {
+    if (token) { localStorage.setItem(LS_GH_TOKEN, token); setGhStatus('ok', 'Token guardado. Sincronizando...'); syncCarteraToGitHub(true); }
+    else { localStorage.removeItem(LS_GH_TOKEN); setGhStatus('', 'Sin configurar todavía.'); }
+  } catch (e) { setGhStatus('error', 'No se pudo guardar el token.'); }
+}
+
+// UTF-8 seguro para btoa (nombres de activos pueden tener tildes)
+function b64EncodeUtf8(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+async function syncCarteraToGitHub(manual) {
+  const token = (() => { try { return localStorage.getItem(LS_GH_TOKEN); } catch (e) { return null; } })();
+  if (!token) { if (manual) setGhStatus('error', 'Pegá un token primero.'); return; }
+
+  setGhStatus('loading', 'Sincronizando...');
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH_CARTERA}`;
+  try {
+    let sha = null;
+    const getRes = await fetch(apiUrl + `?ref=${GH_BRANCH}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' }
+    });
+    if (getRes.ok) { const cur = await getRes.json(); sha = cur.sha; }
+    else if (getRes.status !== 404) { setGhStatus('error', 'Error al leer el archivo (revisá el token / nombre del repo).'); return; }
+
+    const payload = {
+      assets: assets.map(a => ({ ticker: a.ticker, cat: a.cat, qty: a.qty })),
+      updatedAt: new Date().toISOString()
+    };
+    const body = {
+      message: 'Actualizar cartera desde la app',
+      content: b64EncodeUtf8(JSON.stringify(payload, null, 2)),
+      branch: GH_BRANCH
+    };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (putRes.ok) setGhStatus('ok', 'Sincronizado · ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }));
+    else {
+      const errBody = await putRes.json().catch(() => ({}));
+      setGhStatus('error', 'Error al sincronizar' + (errBody.message ? ': ' + errBody.message : '.'));
+    }
+  } catch (e) {
+    setGhStatus('error', 'Sin conexión, no se sincronizó.');
+  }
+}
+
+// Se engancha SOLO a los cambios de composición de la cartera (agregar,
+// borrar, editar cantidad/costo) — no a cada actualización de precio, para
+// no generar commits de más. No se toca ninguna función original: se
+// reemplaza la referencia global por una versión que además sincroniza.
+(function () {
+  const _addAsset = addAsset, _removeAsset = removeAsset, _saveModal = saveModal;
+  addAsset = function (...args) { const r = _addAsset(...args); syncCarteraToGitHub(); return r; };
+  removeAsset = function (...args) { const r = _removeAsset(...args); syncCarteraToGitHub(); return r; };
+  saveModal = function (...args) { const r = _saveModal(...args); syncCarteraToGitHub(); return r; };
+})();
+
+// Precarga el token guardado en el campo al abrir Ajustes
+(function () {
+  try {
+    const saved = localStorage.getItem(LS_GH_TOKEN);
+    if (saved && $('gh-token')) { $('gh-token').value = saved; setGhStatus('ok', 'Token configurado.'); }
+  } catch (e) {}
+})();
+
+// ── GRÁFICO DE EVOLUCIÓN HISTÓRICA ──────────────────────────────────────────
+// Lee history.json directo del repo público (sin token, es solo lectura) —
+// ese archivo lo va completando solo el robot diario de GitHub Actions.
+let histData = null, histPeriodDays = 30;
+const chartHist = new Chart(document.getElementById('chart-hist').getContext('2d'), {
+  type: 'line', data: { labels: [], datasets: [] }, options: cDef()
+});
+
+async function loadHistory() {
+  const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH_HISTORY}`;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) { histData = { snapshots: [] }; renderHistChart(); return; }
+    histData = await res.json();
+  } catch (e) {
+    histData = { snapshots: [] };
+  }
+  populateHistSeriesSelect();
+  renderHistChart();
+}
+
+function populateHistSeriesSelect() {
+  const sel = $('hist-series');
+  if (!sel || !histData) return;
+  const tickers = new Set();
+  (histData.snapshots || []).forEach(s => Object.keys(s.byAsset || {}).forEach(t => tickers.add(t)));
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="__total__">Cartera completa</option>' +
+    '<option value="cat:crypto">Categoría: Crypto</option>' +
+    '<option value="cat:stock">Categoría: Acciones/ETFs</option>' +
+    '<option value="cat:metal">Categoría: Metales</option>' +
+    [...tickers].sort().map(t => `<option value="asset:${t}">${t}</option>`).join('');
+  if ([...sel.options].some(o => o.value === currentVal)) sel.value = currentVal;
+}
+
+function setHistPeriod(days, btn) {
+  histPeriodDays = days;
+  document.querySelectorAll('#hist-period-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderHistChart();
+}
+
+function renderHistChart() {
+  if (!histData) return;
+  let snaps = histData.snapshots || [];
+  if (histPeriodDays > 0) {
+    const cutoff = Date.now() - histPeriodDays * 86400000;
+    snaps = snaps.filter(s => new Date(s.date + 'T00:00:00').getTime() >= cutoff);
+  }
+  const emptyMsg = $('hist-empty-msg');
+  if (!snaps.length) {
+    if (emptyMsg) emptyMsg.style.display = '';
+    chartHist.data.labels = []; chartHist.data.datasets = []; chartHist.update();
+    return;
+  }
+  if (emptyMsg) emptyMsg.style.display = 'none';
+
+  const seriesSel = $('hist-series') ? $('hist-series').value : '__total__';
+  let label = 'Cartera completa', values;
+  if (seriesSel === '__total__') {
+    values = snaps.map(s => s.total);
+  } else if (seriesSel.startsWith('cat:')) {
+    const cat = seriesSel.slice(4);
+    label = { crypto: 'Crypto', stock: 'Acciones/ETFs', metal: 'Metales' }[cat] || cat;
+    values = snaps.map(s => (s.byCategory || {})[cat] || 0);
+  } else if (seriesSel.startsWith('asset:')) {
+    const tk = seriesSel.slice(6);
+    label = tk;
+    values = snaps.map(s => (s.byAsset || {})[tk] ?? null);
+  }
+
+  chartHist.data.labels = snaps.map(s => s.date);
+  chartHist.data.datasets = [{
+    label, data: values,
+    borderColor: getCSSVar('--accent') || '#58a6ff',
+    backgroundColor: 'transparent',
+    borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
+  }];
+  chartHist.update();
+}
+
+// Enganchar el gráfico nuevo al refresco de colores que ya hace toggleTheme()
+// para los otros dos charts (sin tocar esa función original).
+(function () {
+  const _toggleTheme = toggleTheme;
+  toggleTheme = function (...args) {
+    const r = _toggleTheme(...args);
+    setTimeout(() => {
+      const opts = cDef();
+      chartHist.options.plugins.tooltip = opts.plugins.tooltip;
+      chartHist.options.scales.x.ticks.color = opts.scales.x.ticks.color;
+      chartHist.options.scales.x.border.color = opts.scales.x.border.color;
+      chartHist.options.scales.y.ticks.color = opts.scales.y.ticks.color;
+      chartHist.options.scales.y.border.color = opts.scales.y.border.color;
+      chartHist.data.datasets.forEach(ds => { ds.borderColor = getCSSVar('--accent'); });
+      chartHist.update();
+    }, 60);
+    return r;
+  };
+})();
+
+// ── CONTENIDO EXTRA EN LAS SUB-PESTAÑAS DE PROYECCIÓN (antes vacías) ────────
+function renderProyStats() {
+  if (!LC.rA) return;
+  const totalAportado = LC.ci + LC.rA.reduce((s, r) => s + r.aa, 0);
+  const interesGenerado = LC.cR - totalAportado;
+  const anosCubiertos = LC.eAg ? Math.max(0, LC.eAg - LC.er) : LC.ev - LC.er;
+  if ($('proy-stat-aportado')) $('proy-stat-aportado').textContent = fmt(totalAportado);
+  if ($('proy-stat-interes')) $('proy-stat-interes').textContent = fmt(interesGenerado);
+  if ($('proy-stat-interes-pct')) $('proy-stat-interes-pct').textContent = LC.cR > 0 ? fmtPct(interesGenerado / LC.cR) + ' de tu capital final' : '';
+  if ($('proy-stat-anos')) $('proy-stat-anos').textContent = (LC.eAg ? anosCubiertos : anosCubiertos + '+') + ' años';
+}
+
+function calcAccumAt(rate) {
+  let c = LC.ci, a = LC.ai;
+  for (let i = 0; i < LC.nA; i++) { const aA = a * 12; c = c + aA + (c + aA / 2) * rate; a *= (1 + LC.ca); }
+  return c;
+}
+function renderEscStats() {
+  if (LC.ret == null) return;
+  if ($('esc-stat-pesimista')) $('esc-stat-pesimista').textContent = fmt(calcAccumAt(0.06));
+  if ($('esc-stat-base')) $('esc-stat-base').textContent = fmt(calcAccumAt(LC.ret));
+  if ($('esc-stat-optimista')) $('esc-stat-optimista').textContent = fmt(calcAccumAt(0.12));
+}
+
+function highlightSensCell() {
+  const ahs = [200, 300, 500, 700, 1000, 1500, 2000, 3000];
+  const rets = [0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.12, 0.15];
+  let rowIdx = 0, minRowDiff = Infinity;
+  ahs.forEach((v, i) => { const d = Math.abs(v - LC.ai); if (d < minRowDiff) { minRowDiff = d; rowIdx = i; } });
+  let colIdx = 0, minColDiff = Infinity;
+  rets.forEach((v, i) => { const d = Math.abs(v - LC.ret); if (d < minColDiff) { minColDiff = d; colIdx = i; } });
+  const table = document.querySelector('#sens-table-wrap table');
+  if (!table) return;
+  table.querySelectorAll('.sens-current').forEach(elx => elx.classList.remove('sens-current'));
+  const row = table.querySelectorAll('tbody tr')[rowIdx];
+  if (row) {
+    const cell = row.querySelectorAll('td')[colIdx + 1]; // +1: la primera celda de la fila es la etiqueta "$ahorro"
+    if (cell) cell.classList.add('sens-current');
+  }
+}
+
+function calcCapitalAtRetAge(offsetYears) {
+  const nA2 = Math.max(1, (LC.er + offsetYears) - LC.ea);
+  let c = LC.ci, a = LC.ai;
+  for (let i = 0; i < nA2; i++) { const aA = a * 12; c = c + aA + (c + aA / 2) * LC.ret; a *= (1 + LC.ca); }
+  return c;
+}
+function renderInvExtra() {
+  if (LC.ret == null) return;
+  const edadAntes = Math.max(LC.ea + 1, LC.er - 5), edadDespues = LC.er + 5;
+  if ($('inv-retiro-antes')) $('inv-retiro-antes').textContent = fmt(calcCapitalAtRetAge(edadAntes - LC.er)) + ' · ' + edadAntes + ' años';
+  if ($('inv-retiro-despues')) $('inv-retiro-despues').textContent = fmt(calcCapitalAtRetAge(5)) + ' · ' + edadDespues + ' años';
+}
+
+// Enganchar todo esto a las funciones originales, sin tocarlas.
+(function () {
+  const _recalc = recalc, _renderEsc = renderEsc, _renderSens = renderSens, _renderInv = renderInv;
+  recalc = function (...args) { const r = _recalc(...args); renderProyStats(); return r; };
+  renderEsc = function (...args) { const r = _renderEsc(...args); renderEscStats(); return r; };
+  renderSens = function (...args) { const r = _renderSens(...args); highlightSensCell(); return r; };
+  renderInv = function (...args) { const r = _renderInv(...args); renderInvExtra(); return r; };
+})();
+// el recalc() inicial de la página ya corrió antes de instalar este parche
+// (este script corre después), así que disparamos una vez a mano para no
+// dejar las estadísticas nuevas vacías hasta el próximo cambio de slider.
+renderProyStats();
+
+loadHistory();
 </script>
 </body>
 </html>
