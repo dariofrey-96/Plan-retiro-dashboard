@@ -1,1 +1,40 @@
-{"assets":[]}
+{
+  "assets": [
+    {
+      "ticker": "BTC",
+      "cat": "crypto",
+      "qty": 0.1
+    },
+    {
+      "ticker": "ETH",
+      "cat": "crypto",
+      "qty": 0.25
+    },
+    {
+      "ticker": "IBIT",
+      "cat": "stock",
+      "qty": 18
+    },
+    {
+      "ticker": "XLE",
+      "cat": "stock",
+      "qty": 17
+    },
+    {
+      "ticker": "SCCO",
+      "cat": "stock",
+      "qty": 3
+    },
+    {
+      "ticker": "URA",
+      "cat": "stock",
+      "qty": 13
+    },
+    {
+      "ticker": "QQQ",
+      "cat": "stock",
+      "qty": 0.3
+    }
+  ],
+  "updatedAt": "2026-08-04T23:51:16.434Z"
+}
