@@ -100,6 +100,10 @@ aside.open{display:flex}
 .pm-btn{width:26px;height:26px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface3);color:var(--muted);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;user-select:none;line-height:1}
 .pm-btn:hover{border-color:var(--accent);color:var(--accent)}
 .pm-btn:active{background:var(--accent);color:var(--bg)}
+.pm-wrap{position:relative;display:inline-flex;flex-shrink:0}
+.pm-wrap .pm-btn{pointer-events:none}
+.pm-switch-label{position:absolute;inset:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pm-switch{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .field-hint{font-size:.66rem;color:var(--muted);margin-top:2px}
 
 /* ══════════════════════════ MAIN ══════════════════════════ */
@@ -350,27 +354,27 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     <div class="field">
       <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy. Se autocompleta desde la fecha de nacimiento, pero podés ajustarla manualmente">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('edadActual',-1)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-edadActual-1"><input type="checkbox" switch class="pm-switch" id="sw-edadActual-1" data-target="edadActual" data-delta="-1"></label></span>
         <input type="range" id="edadActual" min="20" max="60" value="30" step="1">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('edadActual',1.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-edadActual-2"><input type="checkbox" switch class="pm-switch" id="sw-edadActual-2" data-target="edadActual" data-delta="1.0"></label></span>
         <span class="val" id="v-edadActual"></span>
       </div>
     </div>
     <div class="field">
       <label>Edad de retiro <span class="tooltip-icon" data-tip="Edad objetivo para retirarte">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('edadRetiro',-1)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-edadRetiro-3"><input type="checkbox" switch class="pm-switch" id="sw-edadRetiro-3" data-target="edadRetiro" data-delta="-1"></label></span>
         <input type="range" id="edadRetiro" min="45" max="80" value="65" step="1">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('edadRetiro',1.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-edadRetiro-4"><input type="checkbox" switch class="pm-switch" id="sw-edadRetiro-4" data-target="edadRetiro" data-delta="1.0"></label></span>
         <span class="val" id="v-edadRetiro"></span>
       </div>
     </div>
     <div class="field">
       <label>Esperanza de vida <span class="tooltip-icon" data-tip="Hasta qué edad proyectamos el plan">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('vidaEsperada',-1)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-vidaEsperada-5"><input type="checkbox" switch class="pm-switch" id="sw-vidaEsperada-5" data-target="vidaEsperada" data-delta="-1"></label></span>
         <input type="range" id="vidaEsperada" min="70" max="110" value="100" step="1">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('vidaEsperada',1.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-vidaEsperada-6"><input type="checkbox" switch class="pm-switch" id="sw-vidaEsperada-6" data-target="vidaEsperada" data-delta="1.0"></label></span>
         <span class="val" id="v-vidaEsperada"></span>
       </div>
     </div>
@@ -381,27 +385,27 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     <div class="field">
       <label>Gasto mensual deseado (USD hoy) <span class="tooltip-icon" data-tip="Cuánto querés gastar por mes en el retiro en dólares de hoy">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('gastoMensual',-100)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-gastoMensual-7"><input type="checkbox" switch class="pm-switch" id="sw-gastoMensual-7" data-target="gastoMensual" data-delta="-100"></label></span>
         <input type="range" id="gastoMensual" min="500" max="15000" value="3000" step="100">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('gastoMensual',100.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-gastoMensual-8"><input type="checkbox" switch class="pm-switch" id="sw-gastoMensual-8" data-target="gastoMensual" data-delta="100.0"></label></span>
         <span class="val" id="v-gastoMensual"></span>
       </div>
     </div>
     <div class="field">
       <label>Inflación USD anual <span class="tooltip-icon" data-tip="Históricamente 2-3% anual en USD. Subila si sos conservador">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('inflacion',-0.005)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-inflacion-9"><input type="checkbox" switch class="pm-switch" id="sw-inflacion-9" data-target="inflacion" data-delta="-0.005"></label></span>
         <input type="range" id="inflacion" min="0.01" max="0.08" value="0.035" step="0.005">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('inflacion',0.005)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-inflacion-10"><input type="checkbox" switch class="pm-switch" id="sw-inflacion-10" data-target="inflacion" data-delta="0.005"></label></span>
         <span class="val" id="v-inflacion"></span>
       </div>
     </div>
     <div class="field">
       <label>Tasa de retiro segura (SWR) <span class="tooltip-icon" data-tip="Regla del 4%: retirás ese % del portafolio por año sin agotarlo">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('swr',-0.005)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-swr-11"><input type="checkbox" switch class="pm-switch" id="sw-swr-11" data-target="swr" data-delta="-0.005"></label></span>
         <input type="range" id="swr" min="0.02" max="0.07" value="0.04" step="0.005">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('swr',0.005)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-swr-12"><input type="checkbox" switch class="pm-switch" id="sw-swr-12" data-target="swr" data-delta="0.005"></label></span>
         <span class="val" id="v-swr"></span>
       </div>
     </div>
@@ -412,36 +416,36 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     <div class="field">
       <label>Capital inicial invertido (USD) <span class="tooltip-icon" data-tip="Lo que ya tenés invertido hoy">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('capitalInicial',-1000)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-capitalInicial-13"><input type="checkbox" switch class="pm-switch" id="sw-capitalInicial-13" data-target="capitalInicial" data-delta="-1000"></label></span>
         <input type="range" id="capitalInicial" min="0" max="500000" value="5000" step="1000">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('capitalInicial',1000.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-capitalInicial-14"><input type="checkbox" switch class="pm-switch" id="sw-capitalInicial-14" data-target="capitalInicial" data-delta="1000.0"></label></span>
         <span class="val" id="v-capitalInicial"></span>
       </div>
     </div>
     <div class="field">
       <label>Ahorro mensual actual (USD) <span class="tooltip-icon" data-tip="Cuánto invertís por mes. Cada $100 más equivale a ~$150k adicionales al retiro">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('ahorroMensual',-50)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-ahorroMensual-15"><input type="checkbox" switch class="pm-switch" id="sw-ahorroMensual-15" data-target="ahorroMensual" data-delta="-50"></label></span>
         <input type="range" id="ahorroMensual" min="0" max="10000" value="500" step="50">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('ahorroMensual',50.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-ahorroMensual-16"><input type="checkbox" switch class="pm-switch" id="sw-ahorroMensual-16" data-target="ahorroMensual" data-delta="50.0"></label></span>
         <span class="val" id="v-ahorroMensual"></span>
       </div>
     </div>
     <div class="field">
       <label>Crecimiento anual del ahorro <span class="tooltip-icon" data-tip="Cuánto aumenta tu ahorro mensual cada año a medida que ganás más">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('crecAhorro',-0.005)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-crecAhorro-17"><input type="checkbox" switch class="pm-switch" id="sw-crecAhorro-17" data-target="crecAhorro" data-delta="-0.005"></label></span>
         <input type="range" id="crecAhorro" min="0" max="0.15" value="0.03" step="0.005">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('crecAhorro',0.005)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-crecAhorro-18"><input type="checkbox" switch class="pm-switch" id="sw-crecAhorro-18" data-target="crecAhorro" data-delta="0.005"></label></span>
         <span class="val" id="v-crecAhorro"></span>
       </div>
     </div>
     <div class="field">
       <label>Retorno anual esperado (nominal) <span class="tooltip-icon" data-tip="S&P500 históricamente ~10% nominal anual. Portafolio diversificado: 9-12%">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('retorno',-0.005)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-retorno-19"><input type="checkbox" switch class="pm-switch" id="sw-retorno-19" data-target="retorno" data-delta="-0.005"></label></span>
         <input type="range" id="retorno" min="0.02" max="0.2" value="0.09" step="0.005">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('retorno',0.005)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-retorno-20"><input type="checkbox" switch class="pm-switch" id="sw-retorno-20" data-target="retorno" data-delta="0.005"></label></span>
         <span class="val" id="v-retorno"></span>
       </div>
     </div>
@@ -452,27 +456,27 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     <div class="field">
       <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('alquiler',-100)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alquiler-21"><input type="checkbox" switch class="pm-switch" id="sw-alquiler-21" data-target="alquiler" data-delta="-100"></label></span>
         <input type="range" id="alquiler" min="0" max="10000" value="500" step="100">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('alquiler',100.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alquiler-22"><input type="checkbox" switch class="pm-switch" id="sw-alquiler-22" data-target="alquiler" data-delta="100.0"></label></span>
         <span class="val" id="v-alquiler"></span>
       </div>
     </div>
     <div class="field">
       <label>Dividendos / rentas (USD/mes) <span class="tooltip-icon" data-tip="Dividendos de ETFs y otras rentas en el retiro">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('dividendos',-50)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-dividendos-23"><input type="checkbox" switch class="pm-switch" id="sw-dividendos-23" data-target="dividendos" data-delta="-50"></label></span>
         <input type="range" id="dividendos" min="0" max="5000" value="0" step="50">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('dividendos',50.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-dividendos-24"><input type="checkbox" switch class="pm-switch" id="sw-dividendos-24" data-target="dividendos" data-delta="50.0"></label></span>
         <span class="val" id="v-dividendos"></span>
       </div>
     </div>
     <div class="field">
       <label>Consultoría / part-time (USD/mes) <span class="tooltip-icon" data-tip="Si pensás trabajar ocasionalmente en el retiro">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('consultoria',-50)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-consultoria-25"><input type="checkbox" switch class="pm-switch" id="sw-consultoria-25" data-target="consultoria" data-delta="-50"></label></span>
         <input type="range" id="consultoria" min="0" max="5000" value="0" step="50">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('consultoria',50.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-consultoria-26"><input type="checkbox" switch class="pm-switch" id="sw-consultoria-26" data-target="consultoria" data-delta="50.0"></label></span>
         <span class="val" id="v-consultoria"></span>
       </div>
     </div>
@@ -483,9 +487,9 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     <div class="field">
       <label>Alerta caída 24h (%) <span class="tooltip-icon" data-tip="Si un activo cae más de este % en 24h se marca con alerta roja">ⓘ</span></label>
       <div class="field-row">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('alertaCaida',-1)">−</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaCaida-27"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-27" data-target="alertaCaida" data-delta="-1"></label></span>
         <input type="range" id="alertaCaida" min="1" max="30" value="10" step="1">
-        <button class="pm-btn" onclick="hapticTick();adjustSlider('alertaCaida',1.0)">+</button>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaCaida-28"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-28" data-target="alertaCaida" data-delta="1.0"></label></span>
         <span class="val" id="v-alertaCaida"></span>
       </div>
     </div>
@@ -1207,20 +1211,23 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})),{scope:'/'}).catch(()=>{});
 }
 </script>
-<!-- Elemento oculto usado solo para el truco de vibración táctil en iOS Safari
-     (checkbox tipo "switch" — Apple genera un tap háptico real al hacer click
-     en el <label> asociado, aunque no haya soporte de la Vibration API estándar). -->
-<label for="haptic-switch" id="haptic-switch-label" style="position:fixed;width:1px;height:1px;left:-9999px;opacity:0;pointer-events:none">
-  <input type="checkbox" switch id="haptic-switch" tabindex="-1">
-</label>
 
 <script>
 // ── HAPTICS (vibración táctil al tocar parámetros) ──────────────────────────
-// Android/Chrome: usa la Vibration API estándar (navigator.vibrate).
-// iOS Safari: no tiene una API estándar de vibración. Se intenta el truco del
-// checkbox tipo "switch" (soportado desde iOS 18 en adelante en algunas
-// versiones); Apple lo fue restringiendo, así que puede no sonar en todos
-// los iPhone/versiones de iOS — es una mejora progresiva, no una garantía.
+// Android/Chrome: usa la Vibration API estándar (navigator.vibrate) — anda
+// perfecto tanto en los botones +/- como arrastrando los sliders.
+//
+// iOS Safari: no existe una API estándar de vibración. Hasta iOS 26.4 se podía
+// "engañar" con un checkbox tipo switch disparado por código; Apple lo cerró
+// en iOS 26.5. Lo que SÍ sigue funcionando ahí: si el dedo toca DIRECTAMENTE
+// un <input type="checkbox" switch> real, el sistema igual hace sonar el
+// motor táctil. Por eso los botones +/- ahora tienen ese switch real,
+// invisible, puesto exactamente encima del botón visible — así el toque
+// del usuario cae sobre el control nativo de verdad, no sobre una simulación.
+// Resultado: los botones +/- vibran en iOS incluso en las versiones nuevas.
+// El arrastre de los sliders NO tiene forma conocida de hacerlo (no hay
+// manera de "enganchar" un switch nativo a un gesto de drag continuo) —
+// esa limitación es real y no tiene workaround en web hoy.
 let _lastHaptic = 0;
 function hapticTick() {
   const now = Date.now();
@@ -1229,18 +1236,100 @@ function hapticTick() {
   try {
     if (navigator.vibrate) { navigator.vibrate(8); return; }
   } catch (e) {}
-  const lbl = document.getElementById('haptic-switch-label');
-  if (lbl) lbl.click();
 }
 
-// Sliders: se engancha con un listener adicional (no reemplaza el que ya
-// actualiza el valor y recalcula), así no se toca la lógica original.
+// Sliders: listener adicional (no reemplaza el que ya actualiza el valor y
+// recalcula), best-effort — funciona en Android; en iOS no hay garantía.
 ['edadActual','edadRetiro','vidaEsperada','gastoMensual','inflacion','swr',
  'capitalInicial','ahorroMensual','crecAhorro','retorno','alquiler',
  'dividendos','consultoria','alertaCaida'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', hapticTick);
 });
+
+// Botones +/-: el 'change' del switch real (tocado directamente por el
+// usuario) dispara la vibración nativa en iOS, y acá reusamos exactamente
+// la misma función adjustSlider() ya existente para aplicar el cambio.
+document.addEventListener('change', (e) => {
+  if (e.target.matches && e.target.matches('.pm-switch')) {
+    const id = e.target.dataset.target;
+    const delta = parseFloat(e.target.dataset.delta);
+    hapticTick(); // fallback extra por si el switch no sonó (p.ej. Android)
+    adjustSlider(id, delta);
+  }
+});
+</script>
+<script>
+// ── ARRASTRAR PARA CERRAR EL PANEL DE PARÁMETROS (bottom sheet) ─────────────
+// Se agarra del "handle" (la barrita gris) o del título — igual que en las
+// apps nativas — para no pisar el scroll de la lista de parámetros. Arrastrar
+// más de ~18% de la altura de pantalla, o soltar con velocidad, cierra el
+// panel llamando a la función toggleSidebar() ya existente (no se toca).
+(function () {
+  const asideEl = document.getElementById('aside');
+  const backdropEl = document.getElementById('sheet-backdrop');
+  if (!asideEl) return;
+  const dragZones = [asideEl.querySelector('.sheet-handle'), asideEl.querySelector('.sheet-title-row')].filter(Boolean);
+  if (!dragZones.length) return;
+
+  let dragging = false, startY = 0, currentY = 0, startTime = 0;
+
+  function getY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
+
+  function onStart(e) {
+    if (!asideEl.classList.contains('open')) return;
+    dragging = true;
+    startY = currentY = getY(e);
+    startTime = Date.now();
+    asideEl.style.transition = 'none';
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    currentY = getY(e);
+    const delta = Math.max(0, currentY - startY);
+    asideEl.style.transform = 'translateY(' + delta + 'px)';
+    if (backdropEl) backdropEl.style.opacity = String(Math.max(0.15, 1 - delta / (window.innerHeight * 0.5)));
+    if (e.cancelable) e.preventDefault();
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    const delta = Math.max(0, currentY - startY);
+    const elapsed = Date.now() - startTime;
+    // la velocidad solo es una señal confiable si pasó al menos ~1 frame;
+    // si no, un drag chico pero "instantáneo" (o un tap con jitter) podría
+    // calcular una velocidad absurda y cerrar el panel sin que corresponda.
+    const velocity = elapsed > 16 ? delta / elapsed : 0;
+    const shouldClose = delta > window.innerHeight * 0.18 || (delta > 24 && velocity > 0.5);
+
+    if (shouldClose) {
+      asideEl.style.transition = '';
+      asideEl.style.transform = '';
+      if (backdropEl) backdropEl.style.opacity = '';
+      hapticTick();
+      toggleSidebar();
+    } else {
+      asideEl.style.transition = 'transform .25s ease';
+      asideEl.style.transform = 'translateY(0)';
+      if (backdropEl) { backdropEl.style.transition = 'opacity .25s ease'; backdropEl.style.opacity = ''; }
+      setTimeout(() => {
+        asideEl.style.transition = '';
+        asideEl.style.transform = '';
+        if (backdropEl) backdropEl.style.transition = '';
+      }, 260);
+    }
+  }
+
+  dragZones.forEach(zone => {
+    zone.addEventListener('touchstart', onStart, { passive: true });
+    zone.addEventListener('touchmove', onMove, { passive: false });
+    zone.addEventListener('touchend', onEnd);
+    zone.addEventListener('touchcancel', onEnd);
+    zone.addEventListener('mousedown', onStart); // soporte de mouse para probar en desktop
+  });
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+})();
 </script>
 </body>
 </html>
