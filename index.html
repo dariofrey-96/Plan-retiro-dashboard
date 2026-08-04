@@ -7,426 +7,579 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Plan Retiro">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#17161a">
 <title>Plan de Retiro</title>
 <link rel="manifest" href="manifest.json">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2333;--surface3:#21262d;--border:#30363d;--text:#e6edf3;--muted:#7d8590;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--orange:#d29922;--purple:#bc8cff;--teal:#39d353}
-[data-theme="light"]{--bg:#f6f8fa;--surface:#ffffff;--surface2:#f0f3f6;--surface3:#e8ecf0;--border:#d0d7de;--text:#1f2328;--muted:#656d76;--accent:#0969da;--green:#1a7f37;--red:#cf222e;--orange:#9a6700;--purple:#8250df}
-html{font-size:15px}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;transition:background .2s,color .2s}
-header{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface)}
+
+/* ══════════════════════════ DESIGN TOKENS ══════════════════════════
+   Mismo sistema que Presupuesto Personal. Nombres de variable preservados
+   (--bg, --surface, --surface2, --border, --text, --muted, etc.) porque
+   el JS original los lee vía getComputedStyle para pintar los charts —
+   así no hace falta tocar ni una línea de lógica.
+   Por defecto es oscuro (igual que el archivo original); [data-theme="light"]
+   sobreescribe con la paleta clara. */
+:root{
+  --bg:#17161a; --surface:#201f23; --surface2:#29282d; --surface3:#333136;
+  --border:#3a383e; --text:#f2f0ec; --muted:#b3aea6; --hairline:rgba(247,246,244,.08);
+
+  --accent:oklch(72% .13 264); --green:oklch(72% .13 150); --red:oklch(72% .15 25);
+  --orange:oklch(78% .13 80); --purple:oklch(74% .14 300); --teal:oklch(72% .11 175);
+
+  --accent-soft:oklch(28% .06 264); --green-soft:oklch(26% .06 150); --red-soft:oklch(28% .08 25);
+  --orange-soft:oklch(30% .07 80); --purple-soft:oklch(27% .06 300); --teal-soft:oklch(27% .05 175);
+
+  --radius-sm:8px; --radius-md:12px; --radius-lg:18px; --radius-xl:22px;
+  --shadow-card:0 1px 2px rgba(0,0,0,.35),0 1px 1px rgba(0,0,0,.2);
+  --shadow-pop:0 -8px 30px rgba(0,0,0,.5);
+  --shadow-float:0 6px 20px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:#f7f6f4; --surface:#ffffff; --surface2:#f2f1ee; --surface3:#efece8;
+  --border:#e7e4e0; --text:#1a1a18; --muted:#6f6d68; --hairline:rgba(26,26,24,.06);
+
+  --accent:oklch(45% .15 264); --green:oklch(38% .1 150); --red:oklch(40% .12 25);
+  --orange:oklch(40% .1 80); --purple:oklch(52% .16 300); --teal:oklch(42% .1 175);
+
+  --accent-soft:oklch(94% .03 264); --green-soft:oklch(94% .045 150); --red-soft:oklch(94% .05 25);
+  --orange-soft:oklch(93% .06 80); --purple-soft:oklch(94% .035 300); --teal-soft:oklch(94% .04 175);
+
+  --shadow-card:0 1px 2px rgba(26,26,24,.05),0 1px 1px rgba(26,26,24,.03);
+  --shadow-pop:0 -8px 30px rgba(26,26,24,.16);
+  --shadow-float:0 6px 20px rgba(26,26,24,.10);
+}
+
+html{font-size:15px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;transition:background .2s,color .2s;-webkit-font-smoothing:antialiased}
+.num,.kpi-value,.val,.ckpi-val,table,.inv-result{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ══════════════════════════ HEADER ══════════════════════════ */
+header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);position:sticky;top:0;z-index:50;flex-wrap:wrap}
 .header-left{display:flex;align-items:baseline;gap:10px}
 header h1{font-size:1rem;font-weight:700;letter-spacing:-.01em}
-header .sub{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
-.header-right{display:flex;align-items:center;gap:8px}
-.nav-tabs{display:flex;gap:3px}
-.nav-tab{padding:5px 14px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:.75rem;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s}
-.nav-tab.active{background:var(--surface2);color:var(--text);border-color:var(--border)}
-.icon-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+header .sub{font-size:.68rem;color:var(--muted);display:none}
+.header-right{display:flex;align-items:center;gap:8px;order:2}
+.nav-tabs{display:none;gap:3px;background:var(--surface2);padding:3px;border-radius:100px}
+.nav-tab{padding:7px 15px;border-radius:100px;border:none;background:transparent;color:var(--muted);font-size:.74rem;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s}
+.nav-tab.active{background:var(--text);color:var(--bg);font-weight:600}
+.icon-btn{width:34px;height:34px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .icon-btn:hover{border-color:var(--accent);color:var(--text)}
-.sidebar-toggle{display:none;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer}
-.shell{display:grid;grid-template-columns:290px 1fr;min-height:calc(100vh - 53px)}
-aside{border-right:1px solid var(--border);padding:18px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;background:var(--surface)}
-.group-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:2px}
-.field{display:flex;flex-direction:column;gap:4px}
-.field label{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:5px}
-.tooltip-icon{font-size:.65rem;color:var(--muted);cursor:help;position:relative}
-.tooltip-icon:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:var(--surface3);border:1px solid var(--border);color:var(--text);font-size:.68rem;padding:6px 8px;border-radius:5px;white-space:normal;width:200px;z-index:999;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.3)}
-.field-row{display:flex;align-items:center;gap:6px}
-.field input[type="range"]{flex:1;accent-color:var(--accent);height:3px;cursor:pointer}
-.val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;color:var(--text);min-width:68px;text-align:right}
-.pm-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;user-select:none;line-height:1}
+.sidebar-toggle{padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:500;cursor:pointer}
+
+/* ══════════════════════════ SHELL / ASIDE (bottom sheet en mobile) ══════════════════════════ */
+.shell{display:block;min-height:calc(100vh - 57px)}
+.sheet-backdrop{display:none;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.5);backdrop-filter:blur(1px)}
+.sheet-backdrop.open{display:block}
+body:has(aside.open) .sheet-backdrop{display:block}
+aside{
+  display:none;position:fixed;left:0;right:0;bottom:0;top:auto;z-index:150;
+  max-height:86vh;background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow:var(--shadow-pop);padding:10px 16px calc(20px + env(safe-area-inset-bottom));
+  overflow-y:auto;flex-direction:column;gap:14px;
+}
+aside.open{display:flex}
+.sheet-handle{display:block;width:36px;height:4px;border-radius:100px;background:var(--surface3);align-self:center;margin-bottom:4px;flex-shrink:0}
+.sheet-title-row{display:flex;align-items:center;justify-content:space-between;padding-bottom:2px}
+.sheet-title-row h2{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+.aside-close{background:var(--surface2);border:none;color:var(--text);border-radius:100px;padding:7px 14px;font-size:.72rem;font-weight:500;cursor:pointer}
+
+.group-label,.group-block>.group-label{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.group-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.75rem;color:var(--text);font-weight:500;display:flex;align-items:center;gap:5px}
+.tooltip-icon{font-size:.62rem;color:var(--muted);cursor:help;position:relative;width:13px;height:13px;border-radius:50%;background:var(--surface3);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.tooltip-icon:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);background:var(--text);color:var(--bg);font-size:.66rem;font-weight:500;padding:7px 9px;border-radius:8px;white-space:normal;width:190px;z-index:999;line-height:1.4;box-shadow:var(--shadow-float)}
+.field-row{display:flex;align-items:center;gap:8px}
+.field input[type="range"]{flex:1;accent-color:var(--accent);height:4px;cursor:pointer}
+.field input[type="date"]{flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:8px 10px;font-family:inherit;font-size:.8rem}
+.val{font-size:.76rem;font-weight:700;color:var(--text);min-width:70px;text-align:right}
+.pm-btn{width:26px;height:26px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface3);color:var(--muted);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;user-select:none;line-height:1}
 .pm-btn:hover{border-color:var(--accent);color:var(--accent)}
-.pm-btn:active{background:var(--accent);color:#000}
-main{display:flex;flex-direction:column;overflow:hidden}
-.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border)}
-.kpi{padding:14px 16px;border-right:1px solid var(--border)}
-.kpi:last-child{border-right:none}
-.kpi-label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
-.kpi-value{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:700;line-height:1}
-.kpi-sub{font-size:.65rem;color:var(--muted);margin-top:3px}
-.kpi-bar{height:3px;border-radius:2px;background:var(--surface3);margin-top:6px;overflow:hidden}
+.pm-btn:active{background:var(--accent);color:var(--bg)}
+.field-hint{font-size:.66rem;color:var(--muted);margin-top:2px}
+
+/* ══════════════════════════ MAIN ══════════════════════════ */
+main{display:flex;flex-direction:column;overflow:visible;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+
+/* ── KPI SCROLLER ── */
+.kpi-strip{display:flex;gap:10px;overflow-x:auto;padding:14px 0 4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.kpi-strip::-webkit-scrollbar{display:none}
+.kpi{scroll-snap-align:start;flex:0 0 auto;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:13px 15px;box-shadow:var(--shadow-card)}
+.kpi-label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;font-weight:600}
+.hscroll-pad{flex:0 0 auto}
+.kpi-value{font-size:1.15rem;font-weight:700;line-height:1;letter-spacing:-.01em}
+.kpi-sub{font-size:.65rem;color:var(--muted);margin-top:5px}
+.kpi-bar{height:4px;border-radius:2px;background:var(--surface3);margin-top:7px;overflow:hidden}
 .kpi-bar-fill{height:100%;border-radius:2px;transition:width .4s}
 .green{color:var(--green)}.red{color:var(--red)}.orange{color:var(--orange)}.blue{color:var(--accent)}.purple{color:var(--purple)}
-.health-strip{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
-.health-item{padding:8px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.health-item:last-child{border-right:none}
+
+/* ── HEALTH STRIP → tira de chips ── */
+.health-strip{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;-webkit-overflow-scrolling:touch}
+.health-strip::-webkit-scrollbar{display:none}
+.health-item{flex:0 0 auto;display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:7px 13px 7px 10px}
 .health-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--muted)}
-.health-label{font-size:.65rem;color:var(--muted)}
-.health-val{font-size:.7rem;font-weight:600;margin-left:auto;font-family:'JetBrains Mono',monospace}
-.view{display:none;flex:1;flex-direction:column;overflow:hidden}
+.health-label{font-size:.66rem;color:var(--muted)}
+.health-val{font-size:.7rem;font-weight:700;margin-left:5px}
+
+/* ── VIEWS ── */
+.view{display:none;flex:1;flex-direction:column}
 .view.active{display:flex}
-.inner-tabs{display:flex;gap:2px;padding:10px 20px 0;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
-.inner-tab{padding:5px 12px;border-radius:5px 5px 0 0;border:1px solid transparent;border-bottom:none;background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer;transition:all .15s;margin-bottom:-1px}
-.inner-tab.active{background:var(--bg);color:var(--text);border-color:var(--border)}
-.chart-wrap{flex:1;padding:20px 24px 16px;display:flex;flex-direction:column;gap:10px;min-height:0}
-.chart-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.chart-title{font-size:.82rem;font-weight:600;color:var(--text)}
-.legend{display:flex;gap:14px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--muted)}
+.inner-tabs{display:flex;gap:6px;padding:14px 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.inner-tabs::-webkit-scrollbar{display:none}
+.inner-tab{flex:0 0 auto;padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:500;cursor:pointer;transition:all .15s}
+.inner-tab.active{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
+
+.view-pad{padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:16px;display:flex;flex-direction:column;gap:12px}
+.chart-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.chart-title{font-size:.82rem;font-weight:700;letter-spacing:-.005em}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.66rem;color:var(--muted)}
 .legend-dot{width:10px;height:3px;border-radius:2px}
-.chart-canvas-wrap{flex:1;position:relative;min-height:280px}
-.toggle-wrap{display:flex;gap:5px;align-items:center}
-.toggle-btn{font-family:'JetBrains Mono',monospace;font-size:.65rem;padding:3px 9px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
-.toggle-btn.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
-.table-wrap{border-top:1px solid var(--border);max-height:190px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:.7rem;font-family:'JetBrains Mono',monospace}
-thead th{position:sticky;top:0;background:var(--surface);color:var(--muted);font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;padding:7px 12px;text-align:right;border-bottom:1px solid var(--border);font-family:'Inter',sans-serif}
+.chart-canvas-wrap{position:relative;min-height:260px}
+.toggle-wrap{display:flex;gap:4px;background:var(--surface2);padding:3px;border-radius:100px}
+.toggle-btn{font-size:.66rem;font-weight:600;padding:5px 11px;border-radius:100px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-card)}
+
+/* ── TABLES ── */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden}
+.table-wrap{max-height:340px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.72rem}
+thead th{position:sticky;top:0;background:var(--surface2);color:var(--muted);font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border)}
 thead th:first-child{text-align:center}thead th:nth-child(2){text-align:center}
 thead th.ph-a{color:var(--accent)}thead th.ph-r{color:var(--red)}
-tbody tr{border-bottom:1px solid rgba(48,54,61,.4)}
+tbody tr{border-bottom:1px solid var(--hairline)}
 tbody tr:hover{background:var(--surface2)}
-tbody tr.ret-row{background:rgba(248,81,73,.03)}
-tbody tr.ret-row:hover{background:rgba(248,81,73,.08)}
-tbody td{padding:4px 12px;text-align:right;color:var(--text)}
+tbody tr.ret-row{background:var(--red-soft)}
+tbody tr.ret-row:hover{filter:brightness(1.15)}
+tbody td{padding:7px 12px;text-align:right;color:var(--text)}
 tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){text-align:center;color:var(--muted)}
-.st-ok{color:var(--green);font-size:.62rem}.st-warn{color:var(--orange);font-size:.62rem}.st-bad{color:var(--red);font-size:.62rem}
-.phase-tag{display:inline-block;font-size:.55rem;padding:1px 4px;border-radius:3px;vertical-align:middle;margin-left:3px}
-.tag-a{background:rgba(88,166,255,.15);color:var(--accent)}.tag-r{background:rgba(248,81,73,.15);color:var(--red)}
-.sens-view{padding:20px 24px;overflow-y:auto;flex:1}
-.sens-title{font-size:.82rem;font-weight:600;margin-bottom:4px}
-.sens-sub{font-size:.72rem;color:var(--muted);margin-bottom:16px}
-.sens-table{width:100%;border-collapse:collapse;font-size:.72rem}
-.sens-table th{background:var(--surface);color:var(--muted);font-size:.62rem;text-transform:uppercase;padding:7px 10px;text-align:center;border:1px solid var(--border);font-family:'Inter',sans-serif;position:sticky;top:0}
-.sens-table td{padding:6px 10px;text-align:center;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.7rem}
-.sens-cell-great{background:rgba(63,185,80,.2);color:var(--green);font-weight:600}
-.sens-cell-good{background:rgba(63,185,80,.08);color:var(--teal)}
-.sens-cell-ok{background:rgba(210,153,34,.1);color:var(--orange)}
-.sens-cell-bad{background:rgba(248,81,73,.1);color:var(--red)}
-.inv-view{padding:24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;flex:1}
-.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px}
-.inv-card h3{font-size:.82rem;font-weight:600}
+.st-ok{color:var(--green);font-size:.64rem;font-weight:600}.st-warn{color:var(--orange);font-size:.64rem;font-weight:600}.st-bad{color:var(--red);font-size:.64rem;font-weight:600}
+.phase-tag{display:inline-block;font-size:.55rem;font-weight:700;padding:2px 6px;border-radius:5px;vertical-align:middle;margin-left:5px}
+.tag-a{background:var(--accent-soft);color:var(--accent)}.tag-r{background:var(--red-soft);color:var(--red)}
+
+/* ── SENSIBILIDAD ── */
+.sens-view{padding:14px 16px 24px}
+.sens-title{font-size:.85rem;font-weight:700;margin-bottom:4px}
+.sens-sub{font-size:.72rem;color:var(--muted);margin-bottom:14px}
+.sens-table{width:100%;border-collapse:collapse;font-size:.72rem;border-radius:var(--radius-md);overflow:hidden}
+.sens-table th{background:var(--surface2);color:var(--muted);font-size:.6rem;text-transform:uppercase;padding:8px 10px;text-align:center;border:1px solid var(--border);position:sticky;top:0}
+.sens-table td{padding:7px 10px;text-align:center;border:1px solid var(--border);font-size:.72rem;font-weight:600}
+.sens-cell-great{background:var(--green-soft);color:var(--green)}
+.sens-cell-good{background:var(--teal-soft);color:var(--teal)}
+.sens-cell-ok{background:var(--orange-soft);color:var(--orange)}
+.sens-cell-bad{background:var(--red-soft);color:var(--red)}
+
+/* ── CALC INVERSA ── */
+.inv-grid{display:flex;flex-direction:column;gap:12px}
+.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:18px;display:flex;flex-direction:column;gap:10px}
+.inv-card h3{font-size:.82rem;font-weight:700}
 .inv-card p{font-size:.72rem;color:var(--muted);line-height:1.5}
-.inv-result{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--accent)}
+.inv-result{font-size:1.7rem;font-weight:800;color:var(--accent);letter-spacing:-.02em}
 .inv-result-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
-.inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.cartera-layout{display:grid;grid-template-columns:1fr 320px;gap:0;flex:1;overflow:hidden;min-height:0}
-.cartera-main{display:flex;flex-direction:column;overflow-y:auto;padding:20px 24px;gap:16px}
-.cartera-side{border-left:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;background:var(--surface)}
-.asset-form{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}
-.asset-form h3{font-size:.75rem;font-weight:600}
-.form-row{display:flex;gap:6px}
-.form-row input,.form-row select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:6px 8px;font-size:.75rem;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .15s}
+
+/* ══════════════════════════ CARTERA ══════════════════════════ */
+.cartera-layout{display:flex;flex-direction:column;gap:14px;padding:14px 16px 24px}
+.cartera-kpis{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.cartera-kpis::-webkit-scrollbar{display:none}
+.ckpi{flex:0 0 auto;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:13px 15px;box-shadow:var(--shadow-card)}
+.ckpi-label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.ckpi-val{font-size:1.02rem;font-weight:700;letter-spacing:-.01em}
+.meta-pct-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:7px}
+.meta-pct-fill{height:100%;border-radius:2px;transition:width .4s}
+.btn-sync{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:100px;padding:8px 14px;font-size:.7rem;font-weight:600;cursor:pointer;align-self:flex-end}
+
+.assets-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden}
+.section-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.asset-table{width:100%;border-collapse:collapse;font-size:.72rem}
+.asset-table thead th{background:var(--surface2);color:var(--muted);font-size:.6rem;text-transform:uppercase;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);position:sticky;top:0}
+.asset-table thead th:first-child{text-align:left}
+.asset-table thead th:last-child{text-align:center;width:36px}
+.asset-table tbody tr{border-bottom:1px solid var(--hairline);transition:background .1s}
+.asset-table tbody tr:last-child{border-bottom:none}
+.asset-table tbody tr:hover{background:var(--surface2)}
+.asset-table tbody td{padding:9px 10px;text-align:right}
+.asset-table tbody td:first-child{text-align:left}
+.asset-table tbody td:last-child{text-align:center}
+.asset-name{font-weight:600;font-size:.76rem}
+.asset-ticker{font-size:.62rem;color:var(--muted);display:block;margin-top:2px}
+.cat-badge{display:inline-block;font-size:.55rem;padding:2px 6px;border-radius:5px;font-weight:700;text-transform:uppercase}
+.cat-crypto{background:var(--accent-soft);color:var(--accent)}
+.cat-etf{background:var(--green-soft);color:var(--green)}
+.cat-metal{background:var(--orange-soft);color:var(--orange)}
+.change-pos{color:var(--green)}.change-neg{color:var(--red)}.change-neu{color:var(--muted)}
+.pnl-pos{color:var(--green)}.pnl-neg{color:var(--red)}
+.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:3px 6px;border-radius:var(--radius-sm);transition:all .1s}
+.del-btn:hover{color:var(--red);background:var(--red-soft)}
+.edit-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:3px 6px;border-radius:var(--radius-sm);transition:all .1s}
+.edit-btn:hover{color:var(--accent);background:var(--accent-soft)}
+.price-ts{font-size:.57rem;color:var(--muted);display:block}
+.alert-badge{display:inline-block;font-size:.55rem;padding:2px 6px;border-radius:5px;background:var(--red-soft);color:var(--red);font-weight:700;margin-left:5px;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+.cartera-panels{display:flex;flex-direction:column;gap:14px}
+.panel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel-card h3{font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.form-row{display:flex;gap:8px}
+.form-row input,.form-row select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:9px 10px;font-size:.78rem;outline:none;transition:border-color .15s}
 .form-row input:focus,.form-row select:focus{border-color:var(--accent)}
 .form-row input::placeholder{color:var(--muted)}
 .form-row select option{background:var(--surface2)}
-.btn{padding:6px 12px;border-radius:5px;border:none;font-size:.75rem;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;font-weight:500}
-.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{opacity:.85}
-.btn-refresh{background:var(--surface2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;gap:5px;justify-content:center}
+.ticker-hint{font-size:.64rem;color:var(--muted);margin-top:-4px}
+.btn{padding:9px 14px;border-radius:var(--radius-sm);border:none;font-size:.78rem;cursor:pointer;transition:all .15s;font-weight:600}
+.btn-primary{background:var(--text);color:var(--bg)}.btn-primary:hover{opacity:.85}
+.btn-refresh{background:var(--surface2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;gap:6px;justify-content:center}
 .btn-refresh:hover{border-color:var(--green);color:var(--green)}
 .btn-refresh.loading{opacity:.5;pointer-events:none}
-.cartera-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.ckpi{background:var(--surface);padding:12px 14px}
-.ckpi-label{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.ckpi-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600}
-.meta-pct-bar{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:5px}
-.meta-pct-fill{height:100%;border-radius:2px;transition:width .4s}
-.assets-section{display:flex;flex-direction:column;gap:6px}
-.section-title{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;justify-content:space-between}
-.asset-table{width:100%;border-collapse:collapse;font-size:.72rem}
-.asset-table thead th{background:var(--surface);color:var(--muted);font-size:.6rem;text-transform:uppercase;padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);font-family:'Inter',sans-serif;position:sticky;top:0}
-.asset-table thead th:first-child{text-align:left}
-.asset-table thead th:last-child{text-align:center;width:36px}
-.asset-table tbody tr{border-bottom:1px solid rgba(48,54,61,.4);transition:background .1s}
-.asset-table tbody tr:hover{background:var(--surface2)}
-.asset-table tbody td{padding:7px 10px;text-align:right;font-family:'JetBrains Mono',monospace}
-.asset-table tbody td:first-child{text-align:left;font-family:'Inter',sans-serif}
-.asset-table tbody td:last-child{text-align:center}
-.asset-name{font-weight:600;font-size:.75rem}
-.asset-ticker{font-size:.62rem;color:var(--muted);display:block;margin-top:1px;font-family:'JetBrains Mono',monospace}
-.cat-badge{display:inline-block;font-size:.55rem;padding:1px 5px;border-radius:3px;font-family:'Inter',sans-serif;font-weight:600;text-transform:uppercase}
-.cat-crypto{background:rgba(88,166,255,.15);color:var(--accent)}
-.cat-etf{background:rgba(63,185,80,.15);color:var(--green)}
-.cat-metal{background:rgba(240,180,41,.18);color:#f0b429}
-.change-pos{color:var(--green)}.change-neg{color:var(--red)}.change-neu{color:var(--muted)}
-.pnl-pos{color:var(--green)}.pnl-neg{color:var(--red)}
-.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:2px 4px;border-radius:3px;transition:all .1s}
-.del-btn:hover{color:var(--red);background:rgba(248,81,73,.1)}
-.price-ts{font-size:.57rem;color:var(--muted);display:block}
-.alert-badge{display:inline-block;font-size:.55rem;padding:1px 5px;border-radius:3px;background:rgba(248,81,73,.2);color:var(--red);font-weight:600;margin-left:4px;animation:blink 1.5s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-.donut-wrap{position:relative;width:160px;height:160px;margin:0 auto}
+.snapshot-btn{font-size:.7rem;font-weight:600;padding:9px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;width:100%;text-align:center}
+.snapshot-btn:hover{border-color:var(--purple);color:var(--purple)}
+
+.donut-block-title{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.donut-wrap{position:relative;width:150px;height:150px;margin:0 auto}
 .donut-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-.donut-total{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700}
+.donut-total{font-size:.85rem;font-weight:700}
 .donut-sub{font-size:.58rem;color:var(--muted)}
-.cat-legend{display:flex;flex-direction:column;gap:5px}
-.cat-leg-row{display:flex;align-items:center;justify-content:space-between;font-size:.68rem}
-.cat-leg-left{display:flex;align-items:center;gap:6px}
-.cat-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.cat-leg-pct{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)}
-.status-bar{font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:7px}
+.cat-legend{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.cat-leg-row{display:flex;align-items:center;justify-content:space-between;font-size:.7rem}
+.cat-leg-left{display:flex;align-items:center;gap:7px}
+.cat-dot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.cat-leg-pct{font-size:.66rem;color:var(--muted)}
+
+.status-bar{font-size:.68rem;color:var(--muted);display:flex;align-items:center;gap:8px;padding:12px 16px}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
 .status-dot.ok{background:var(--green)}.status-dot.loading{background:var(--orange);animation:pulse 1s infinite}.status-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.snapshot-btn{font-size:.65rem;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;width:100%;text-align:center}
-.snapshot-btn:hover{border-color:var(--purple);color:var(--purple)}
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.modal h3{font-size:.9rem;font-weight:600}
-.modal-field{display:flex;flex-direction:column;gap:5px}
-.modal-field label{font-size:.72rem;color:var(--muted)}
-.modal-field input{background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:8px 10px;font-size:.85rem;font-family:'JetBrains Mono',monospace;outline:none;width:100%;transition:border-color .15s}
+
+#snapshot-history{margin-top:6px}
+#snapshot-list{display:flex;flex-direction:column;gap:4px}
+.snap-row{display:flex;justify-content:space-between;font-size:.68rem;padding:6px 0;border-bottom:1px solid var(--hairline)}
+
+/* ══════════════════════════ MODAL ══════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-float)}
+.modal h3{font-size:.92rem;font-weight:700}
+.modal-field{display:flex;flex-direction:column;gap:6px}
+.modal-field label{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.modal-field input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:9px 11px;font-size:.85rem;outline:none;width:100%;transition:border-color .15s}
 .modal-field input:focus{border-color:var(--accent)}
-.modal-info{font-size:.72rem;color:var(--muted);line-height:1.5;background:var(--surface2);padding:10px;border-radius:6px}
-.modal-info span{color:var(--text);font-weight:600;font-family:'JetBrains Mono',monospace}
+.modal-info{font-size:.72rem;color:var(--muted);line-height:1.6;background:var(--surface2);padding:11px;border-radius:var(--radius-sm)}
+.modal-info span{color:var(--text);font-weight:700}
 .modal-btns{display:flex;gap:8px}
-.edit-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:3px;transition:all .1s}
-.edit-btn:hover{color:var(--accent);background:rgba(88,166,255,.1)}
-@media(max-width:768px){
-  header{padding:10px 14px}
-  header h1{font-size:.88rem}.sub{display:none}
-  .nav-tab{padding:4px 9px;font-size:.68rem}
-  .shell{grid-template-columns:1fr}
-  aside{display:none;position:fixed;inset:0;top:49px;z-index:100;background:var(--bg);padding:14px;overflow-y:auto}
-  aside.open{display:flex}.sidebar-toggle{display:block}
-  .kpi-strip{grid-template-columns:repeat(2,1fr)}
-  .kpi:nth-child(5){grid-column:1/-1;border-right:none}
-  .kpi{padding:10px 12px}.kpi-value{font-size:.95rem}
-  .health-strip{grid-template-columns:repeat(2,1fr)}
-  .health-item:nth-child(3){border-right:none}
-  .chart-wrap{padding:14px 12px 10px}.chart-canvas-wrap{min-height:200px}
-  .chart-header{flex-direction:column;align-items:flex-start;gap:6px}
-  .table-wrap{max-height:150px}
-  thead th,tbody td{padding:3px 7px;font-size:.58rem}
-  .cartera-layout{grid-template-columns:1fr}
-  .cartera-side{border-left:none;border-top:1px solid var(--border)}
-  .cartera-main{padding:12px}
-  .cartera-kpis{grid-template-columns:repeat(2,1fr)}
-  .donut-wrap{width:130px;height:130px}
-  .inv-grid{grid-template-columns:1fr}
-  main{padding-bottom:env(safe-area-inset-bottom)}
+.modal-btns .btn{flex:1}
+.btn-cancel{background:var(--surface3);color:var(--text)}
+
+/* ══════════════════════════ BOTTOM NAV ══════════════════════════ */
+.bottom-nav{display:flex;position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:120;background:var(--surface);border:1px solid var(--border);border-radius:100px;box-shadow:var(--shadow-pop);padding:6px;justify-content:space-around;align-items:center}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--muted);font-size:.58rem;font-weight:600;padding:8px 6px;border-radius:16px;cursor:pointer;flex:1;transition:background .15s,color .15s}
+.bn-item .bn-ic{font-size:1.05rem;line-height:1}
+.bn-item.active{color:var(--bg);background:var(--text)}
+
+/* ══════════════════════════ DESKTOP ══════════════════════════ */
+@media(min-width:900px){
+  html{font-size:14px}
+  header{padding:14px 28px;flex-wrap:nowrap}
+  header .sub{display:block}
+  .nav-tabs{display:flex}
+  .sidebar-toggle{display:none}
+
+  .shell{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 61px)}
+  .sheet-backdrop{display:none!important}
+  aside{display:flex;position:static;max-height:none;border-radius:0;box-shadow:none;border-right:1px solid var(--border);padding:20px 16px;overflow-y:auto;gap:16px}
+  .sheet-handle,.aside-close{display:none}
+
+  main{padding-bottom:24px}
+  .bottom-nav{display:none}
+
+  .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);padding:0;overflow:visible}
+  .kpi{border-radius:0;box-shadow:none;min-width:0}
+  .health-strip{display:grid;grid-template-columns:repeat(4,1fr);padding:0;background:var(--surface);border-bottom:1px solid var(--border);overflow:visible}
+  .health-item{border-radius:0;border-right:1px solid var(--border);background:transparent;padding:9px 16px}
+  .health-item:last-child{border-right:none}
+
+  .view-pad,.sens-view{padding:16px 24px 28px;max-width:1100px}
+  .inner-tabs{padding:14px 24px 0}
+  .hscroll-pad{display:none}
+  .cartera-layout{padding:16px 24px 28px;display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+  .cartera-kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);overflow:visible}
+  .cartera-main-col{display:flex;flex-direction:column;gap:14px}
+  .cartera-side-col{display:flex;flex-direction:column;gap:14px}
 }
 </style>
 </head>
 <body>
 <header>
   <div class="header-left"><h1>Plan de Retiro</h1><span class="sub">USD · personal</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('retiro',this)">Proyección</button>
+    <button class="nav-tab" onclick="switchView('cartera',this)">Cartera</button>
+  </div>
   <div class="header-right">
     <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">⚙ Params</button>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchView('retiro',this)">Proyección</button>
-      <button class="nav-tab" onclick="switchView('cartera',this)">Cartera</button>
-    </div>
     <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Tema">🌙</button>
   </div>
 </header>
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="toggleSidebar()"></div>
 <div class="shell">
 <aside id="aside">
-  <div><div class="group-label">Perfil</div>
-  <div class="field">
-    <label>Fecha de nacimiento <span class="tooltip-icon" data-tip="Se usa para calcular tu edad exacta y los años reales hasta el retiro">ⓘ</span></label>
-    <div class="field-row">
-      <input type="date" id="fechaNacimiento" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-family:inherit;font-size:.8rem">
-    </div>
-    <div style="font-size:.68rem;color:var(--muted);margin-top:4px" id="edad-exacta-info"></div>
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row">
+    <h2>Parámetros</h2>
+    <button class="aside-close" onclick="toggleSidebar()">✕ Cerrar</button>
   </div>
-  <div class="field">
-    <label>Fecha de inicio de inversión <span class="tooltip-icon" data-tip="Desde cuándo estás invirtiendo activamente">ⓘ</span></label>
-    <div class="field-row">
-      <input type="date" id="fechaInicioInversion" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-family:inherit;font-size:.8rem">
+
+  <div class="group-block">
+    <div class="group-label">Perfil</div>
+    <div class="field">
+      <label>Fecha de nacimiento <span class="tooltip-icon" data-tip="Se usa para calcular tu edad exacta y los años reales hasta el retiro">ⓘ</span></label>
+      <div class="field-row">
+        <input type="date" id="fechaNacimiento">
+      </div>
+      <div class="field-hint" id="edad-exacta-info"></div>
     </div>
-    <div style="font-size:.68rem;color:var(--muted);margin-top:4px" id="tiempo-invirtiendo-info"></div>
-  </div>
-  <div class="field">
-    <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy. Se autocompleta desde la fecha de nacimiento, pero podés ajustarla manualmente">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('edadActual',-1)">−</button>
-      <input type="range" id="edadActual" min="20" max="60" value="30" step="1">
-      <button class="pm-btn" onclick="adjustSlider('edadActual',1.0)">+</button>
-      <span class="val" id="v-edadActual"></span>
+    <div class="field">
+      <label>Fecha de inicio de inversión <span class="tooltip-icon" data-tip="Desde cuándo estás invirtiendo activamente">ⓘ</span></label>
+      <div class="field-row">
+        <input type="date" id="fechaInicioInversion">
+      </div>
+      <div class="field-hint" id="tiempo-invirtiendo-info"></div>
     </div>
-  </div>
-  <div class="field">
-    <label>Edad de retiro <span class="tooltip-icon" data-tip="Edad objetivo para retirarte">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('edadRetiro',-1)">−</button>
-      <input type="range" id="edadRetiro" min="45" max="80" value="65" step="1">
-      <button class="pm-btn" onclick="adjustSlider('edadRetiro',1.0)">+</button>
-      <span class="val" id="v-edadRetiro"></span>
+    <div class="field">
+      <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy. Se autocompleta desde la fecha de nacimiento, pero podés ajustarla manualmente">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('edadActual',-1)">−</button>
+        <input type="range" id="edadActual" min="20" max="60" value="30" step="1">
+        <button class="pm-btn" onclick="adjustSlider('edadActual',1.0)">+</button>
+        <span class="val" id="v-edadActual"></span>
+      </div>
     </div>
-  </div>
-  <div class="field">
-    <label>Esperanza de vida <span class="tooltip-icon" data-tip="Hasta qué edad proyectamos el plan">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('vidaEsperada',-1)">−</button>
-      <input type="range" id="vidaEsperada" min="70" max="110" value="100" step="1">
-      <button class="pm-btn" onclick="adjustSlider('vidaEsperada',1.0)">+</button>
-      <span class="val" id="v-vidaEsperada"></span>
+    <div class="field">
+      <label>Edad de retiro <span class="tooltip-icon" data-tip="Edad objetivo para retirarte">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('edadRetiro',-1)">−</button>
+        <input type="range" id="edadRetiro" min="45" max="80" value="65" step="1">
+        <button class="pm-btn" onclick="adjustSlider('edadRetiro',1.0)">+</button>
+        <span class="val" id="v-edadRetiro"></span>
+      </div>
     </div>
-  </div></div><div><div class="group-label">Metas</div>
-  <div class="field">
-    <label>Gasto mensual deseado (USD hoy) <span class="tooltip-icon" data-tip="Cuánto querés gastar por mes en el retiro en dólares de hoy">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('gastoMensual',-100)">−</button>
-      <input type="range" id="gastoMensual" min="500" max="15000" value="3000" step="100">
-      <button class="pm-btn" onclick="adjustSlider('gastoMensual',100.0)">+</button>
-      <span class="val" id="v-gastoMensual"></span>
-    </div>
-  </div>
-  <div class="field">
-    <label>Inflación USD anual <span class="tooltip-icon" data-tip="Históricamente 2-3% anual en USD. Subila si sos conservador">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('inflacion',-0.005)">−</button>
-      <input type="range" id="inflacion" min="0.01" max="0.08" value="0.035" step="0.005">
-      <button class="pm-btn" onclick="adjustSlider('inflacion',0.005)">+</button>
-      <span class="val" id="v-inflacion"></span>
+    <div class="field">
+      <label>Esperanza de vida <span class="tooltip-icon" data-tip="Hasta qué edad proyectamos el plan">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('vidaEsperada',-1)">−</button>
+        <input type="range" id="vidaEsperada" min="70" max="110" value="100" step="1">
+        <button class="pm-btn" onclick="adjustSlider('vidaEsperada',1.0)">+</button>
+        <span class="val" id="v-vidaEsperada"></span>
+      </div>
     </div>
   </div>
-  <div class="field">
-    <label>Tasa de retiro segura (SWR) <span class="tooltip-icon" data-tip="Regla del 4%: retirás ese % del portafolio por año sin agotarlo">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('swr',-0.005)">−</button>
-      <input type="range" id="swr" min="0.02" max="0.07" value="0.04" step="0.005">
-      <button class="pm-btn" onclick="adjustSlider('swr',0.005)">+</button>
-      <span class="val" id="v-swr"></span>
+
+  <div class="group-block">
+    <div class="group-label">Metas</div>
+    <div class="field">
+      <label>Gasto mensual deseado (USD hoy) <span class="tooltip-icon" data-tip="Cuánto querés gastar por mes en el retiro en dólares de hoy">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('gastoMensual',-100)">−</button>
+        <input type="range" id="gastoMensual" min="500" max="15000" value="3000" step="100">
+        <button class="pm-btn" onclick="adjustSlider('gastoMensual',100.0)">+</button>
+        <span class="val" id="v-gastoMensual"></span>
+      </div>
     </div>
-  </div></div><div><div class="group-label">Inversión</div>
-  <div class="field">
-    <label>Capital inicial invertido (USD) <span class="tooltip-icon" data-tip="Lo que ya tenés invertido hoy">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('capitalInicial',-1000)">−</button>
-      <input type="range" id="capitalInicial" min="0" max="500000" value="5000" step="1000">
-      <button class="pm-btn" onclick="adjustSlider('capitalInicial',1000.0)">+</button>
-      <span class="val" id="v-capitalInicial"></span>
+    <div class="field">
+      <label>Inflación USD anual <span class="tooltip-icon" data-tip="Históricamente 2-3% anual en USD. Subila si sos conservador">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('inflacion',-0.005)">−</button>
+        <input type="range" id="inflacion" min="0.01" max="0.08" value="0.035" step="0.005">
+        <button class="pm-btn" onclick="adjustSlider('inflacion',0.005)">+</button>
+        <span class="val" id="v-inflacion"></span>
+      </div>
     </div>
-  </div>
-  <div class="field">
-    <label>Ahorro mensual actual (USD) <span class="tooltip-icon" data-tip="Cuánto invertís por mes. Cada $100 más equivale a ~$150k adicionales al retiro">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('ahorroMensual',-50)">−</button>
-      <input type="range" id="ahorroMensual" min="0" max="10000" value="500" step="50">
-      <button class="pm-btn" onclick="adjustSlider('ahorroMensual',50.0)">+</button>
-      <span class="val" id="v-ahorroMensual"></span>
-    </div>
-  </div>
-  <div class="field">
-    <label>Crecimiento anual del ahorro <span class="tooltip-icon" data-tip="Cuánto aumenta tu ahorro mensual cada año a medida que ganás más">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('crecAhorro',-0.005)">−</button>
-      <input type="range" id="crecAhorro" min="0" max="0.15" value="0.03" step="0.005">
-      <button class="pm-btn" onclick="adjustSlider('crecAhorro',0.005)">+</button>
-      <span class="val" id="v-crecAhorro"></span>
+    <div class="field">
+      <label>Tasa de retiro segura (SWR) <span class="tooltip-icon" data-tip="Regla del 4%: retirás ese % del portafolio por año sin agotarlo">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('swr',-0.005)">−</button>
+        <input type="range" id="swr" min="0.02" max="0.07" value="0.04" step="0.005">
+        <button class="pm-btn" onclick="adjustSlider('swr',0.005)">+</button>
+        <span class="val" id="v-swr"></span>
+      </div>
     </div>
   </div>
-  <div class="field">
-    <label>Retorno anual esperado (nominal) <span class="tooltip-icon" data-tip="S&P500 históricamente ~10% nominal anual. Portafolio diversificado: 9-12%">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('retorno',-0.005)">−</button>
-      <input type="range" id="retorno" min="0.02" max="0.2" value="0.09" step="0.005">
-      <button class="pm-btn" onclick="adjustSlider('retorno',0.005)">+</button>
-      <span class="val" id="v-retorno"></span>
+
+  <div class="group-block">
+    <div class="group-label">Inversión</div>
+    <div class="field">
+      <label>Capital inicial invertido (USD) <span class="tooltip-icon" data-tip="Lo que ya tenés invertido hoy">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('capitalInicial',-1000)">−</button>
+        <input type="range" id="capitalInicial" min="0" max="500000" value="5000" step="1000">
+        <button class="pm-btn" onclick="adjustSlider('capitalInicial',1000.0)">+</button>
+        <span class="val" id="v-capitalInicial"></span>
+      </div>
     </div>
-  </div></div><div><div class="group-label">Ingresos pasivos en retiro</div>
-  <div class="field">
-    <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('alquiler',-100)">−</button>
-      <input type="range" id="alquiler" min="0" max="10000" value="500" step="100">
-      <button class="pm-btn" onclick="adjustSlider('alquiler',100.0)">+</button>
-      <span class="val" id="v-alquiler"></span>
+    <div class="field">
+      <label>Ahorro mensual actual (USD) <span class="tooltip-icon" data-tip="Cuánto invertís por mes. Cada $100 más equivale a ~$150k adicionales al retiro">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('ahorroMensual',-50)">−</button>
+        <input type="range" id="ahorroMensual" min="0" max="10000" value="500" step="50">
+        <button class="pm-btn" onclick="adjustSlider('ahorroMensual',50.0)">+</button>
+        <span class="val" id="v-ahorroMensual"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Crecimiento anual del ahorro <span class="tooltip-icon" data-tip="Cuánto aumenta tu ahorro mensual cada año a medida que ganás más">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('crecAhorro',-0.005)">−</button>
+        <input type="range" id="crecAhorro" min="0" max="0.15" value="0.03" step="0.005">
+        <button class="pm-btn" onclick="adjustSlider('crecAhorro',0.005)">+</button>
+        <span class="val" id="v-crecAhorro"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Retorno anual esperado (nominal) <span class="tooltip-icon" data-tip="S&P500 históricamente ~10% nominal anual. Portafolio diversificado: 9-12%">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('retorno',-0.005)">−</button>
+        <input type="range" id="retorno" min="0.02" max="0.2" value="0.09" step="0.005">
+        <button class="pm-btn" onclick="adjustSlider('retorno',0.005)">+</button>
+        <span class="val" id="v-retorno"></span>
+      </div>
     </div>
   </div>
-  <div class="field">
-    <label>Dividendos / rentas (USD/mes) <span class="tooltip-icon" data-tip="Dividendos de ETFs y otras rentas en el retiro">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('dividendos',-50)">−</button>
-      <input type="range" id="dividendos" min="0" max="5000" value="0" step="50">
-      <button class="pm-btn" onclick="adjustSlider('dividendos',50.0)">+</button>
-      <span class="val" id="v-dividendos"></span>
+
+  <div class="group-block">
+    <div class="group-label">Ingresos pasivos en retiro</div>
+    <div class="field">
+      <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('alquiler',-100)">−</button>
+        <input type="range" id="alquiler" min="0" max="10000" value="500" step="100">
+        <button class="pm-btn" onclick="adjustSlider('alquiler',100.0)">+</button>
+        <span class="val" id="v-alquiler"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Dividendos / rentas (USD/mes) <span class="tooltip-icon" data-tip="Dividendos de ETFs y otras rentas en el retiro">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('dividendos',-50)">−</button>
+        <input type="range" id="dividendos" min="0" max="5000" value="0" step="50">
+        <button class="pm-btn" onclick="adjustSlider('dividendos',50.0)">+</button>
+        <span class="val" id="v-dividendos"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Consultoría / part-time (USD/mes) <span class="tooltip-icon" data-tip="Si pensás trabajar ocasionalmente en el retiro">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('consultoria',-50)">−</button>
+        <input type="range" id="consultoria" min="0" max="5000" value="0" step="50">
+        <button class="pm-btn" onclick="adjustSlider('consultoria',50.0)">+</button>
+        <span class="val" id="v-consultoria"></span>
+      </div>
     </div>
   </div>
-  <div class="field">
-    <label>Consultoría / part-time (USD/mes) <span class="tooltip-icon" data-tip="Si pensás trabajar ocasionalmente en el retiro">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('consultoria',-50)">−</button>
-      <input type="range" id="consultoria" min="0" max="5000" value="0" step="50">
-      <button class="pm-btn" onclick="adjustSlider('consultoria',50.0)">+</button>
-      <span class="val" id="v-consultoria"></span>
+
+  <div class="group-block">
+    <div class="group-label">Alertas de cartera</div>
+    <div class="field">
+      <label>Alerta caída 24h (%) <span class="tooltip-icon" data-tip="Si un activo cae más de este % en 24h se marca con alerta roja">ⓘ</span></label>
+      <div class="field-row">
+        <button class="pm-btn" onclick="adjustSlider('alertaCaida',-1)">−</button>
+        <input type="range" id="alertaCaida" min="1" max="30" value="10" step="1">
+        <button class="pm-btn" onclick="adjustSlider('alertaCaida',1.0)">+</button>
+        <span class="val" id="v-alertaCaida"></span>
+      </div>
     </div>
-  </div></div><div><div class="group-label">Alertas de cartera</div>
-  <div class="field">
-    <label>Alerta caída 24h (%) <span class="tooltip-icon" data-tip="Si un activo cae más de este % en 24h se marca con alerta roja">ⓘ</span></label>
-    <div class="field-row">
-      <button class="pm-btn" onclick="adjustSlider('alertaCaida',-1)">−</button>
-      <input type="range" id="alertaCaida" min="1" max="30" value="10" step="1">
-      <button class="pm-btn" onclick="adjustSlider('alertaCaida',1.0)">+</button>
-      <span class="val" id="v-alertaCaida"></span>
-    </div>
-  </div></div></aside>
+  </div>
+</aside>
 <main>
   <div class="kpi-strip">
+    <div class="hscroll-pad" style="flex-basis:6px"></div>
     <div class="kpi"><div class="kpi-label">Capital necesario</div><div class="kpi-value blue" id="kpi-meta">—</div><div class="kpi-sub" id="kpi-meta-sub">al retiro</div></div>
     <div class="kpi"><div class="kpi-label">Capital proyectado</div><div class="kpi-value" id="kpi-proy">—</div><div class="kpi-sub" id="kpi-proy-sub">—</div><div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-proy-bar"></div></div></div>
     <div class="kpi"><div class="kpi-label">% de meta</div><div class="kpi-value" id="kpi-pct">—</div><div class="kpi-sub" id="kpi-pct-sub">—</div></div>
     <div class="kpi"><div class="kpi-label">Gasto mensual retiro</div><div class="kpi-value purple" id="kpi-gasto">—</div><div class="kpi-sub" id="kpi-gasto-sub">—</div></div>
     <div class="kpi"><div class="kpi-label">Capital dura hasta</div><div class="kpi-value" id="kpi-duracion">—</div><div class="kpi-sub" id="kpi-duracion-sub">—</div></div>
+    <div class="hscroll-pad" style="flex-basis:6px"></div>
   </div>
   <div class="health-strip">
+    <div class="hscroll-pad" style="flex-basis:8px"></div>
     <div class="health-item"><div class="health-dot" id="h-ahorro-dot"></div><span class="health-label">Ahorro mensual</span><span class="health-val" id="h-ahorro-val">—</span></div>
     <div class="health-item"><div class="health-dot" id="h-retorno-dot"></div><span class="health-label">Retorno real</span><span class="health-val" id="h-retorno-val">—</span></div>
     <div class="health-item"><div class="health-dot" id="h-brecha-dot"></div><span class="health-label">Brecha capital</span><span class="health-val" id="h-brecha-val">—</span></div>
     <div class="health-item"><div class="health-dot" id="h-plan-dot"></div><span class="health-label">Estado del plan</span><span class="health-val" id="h-plan-val">—</span></div>
+    <div class="hscroll-pad" style="flex-basis:8px"></div>
   </div>
+
   <div class="view active" id="view-retiro">
     <div class="inner-tabs">
+      <div class="hscroll-pad" style="flex-basis:10px"></div>
       <button class="inner-tab active" onclick="switchInner('grafico',this)">Gráfico</button>
       <button class="inner-tab" onclick="switchInner('tabla',this)">Tabla</button>
       <button class="inner-tab" onclick="switchInner('escenarios',this)">Escenarios</button>
       <button class="inner-tab" onclick="switchInner('sensibilidad',this)">Sensibilidad</button>
       <button class="inner-tab" onclick="switchInner('inversa',this)">Calc. Inversa</button>
+      <div class="hscroll-pad" style="flex-basis:10px"></div>
     </div>
-    <div id="inner-grafico" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-      <div class="chart-wrap">
-        <div class="chart-header">
-          <span class="chart-title">Portafolio · Acumulación + Retiro</span>
-          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-            <div class="toggle-wrap">
-              <button class="toggle-btn active" id="btn-nominal" onclick="setMode('nominal')">Nominal</button>
-              <button class="toggle-btn" id="btn-real" onclick="setMode('real')">Real (hoy)</button>
-            </div>
-            <div class="legend">
-              <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Acumulación</div>
-              <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Retiro</div>
-              <div class="legend-item"><div class="legend-dot" style="background:#bc8cff"></div>Real</div>
-              <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Meta</div>
+
+    <div id="inner-grafico" style="display:flex;flex-direction:column">
+      <div class="view-pad">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Portafolio · Acumulación + Retiro</span>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div class="toggle-wrap">
+                <button class="toggle-btn active" id="btn-nominal" onclick="setMode('nominal')">Nominal</button>
+                <button class="toggle-btn" id="btn-real" onclick="setMode('real')">Real (hoy)</button>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
-      </div>
-    </div>
-    <div id="inner-tabla" style="display:none;flex:1;overflow:hidden">
-      <div class="table-wrap" style="max-height:100%">
-        <table><thead><tr><th>Año</th><th>Edad</th><th class="ph-a">Ahorro/Retiro Mens.</th><th class="ph-a">Ahorro/Retiro Anual</th><th>Rendimiento</th><th>Cap. Inicio</th><th>Cap. Fin</th><th style="color:#bc8cff">Cap. Real</th><th>Estado</th></tr></thead><tbody id="tabla-body"></tbody></table>
-      </div>
-    </div>
-    <div id="inner-escenarios" style="display:none;flex:1;flex-direction:column;overflow:hidden">
-      <div class="chart-wrap">
-        <div class="chart-header">
-          <span class="chart-title">Escenarios de retorno comparados</span>
           <div class="legend">
-            <div class="legend-item"><div class="legend-dot" style="background:#f85149"></div>Pesimista 6%</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#d29922"></div>Base (tu config)</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div>Optimista 12%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Acumulación</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Retiro</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Real</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Meta</div>
           </div>
+          <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
         </div>
-        <div class="chart-canvas-wrap"><canvas id="chart-escenarios"></canvas></div>
       </div>
     </div>
-    <div id="inner-sensibilidad" style="display:none;flex:1;overflow-y:auto">
+
+    <div id="inner-tabla" style="display:none">
+      <div class="view-pad">
+        <div class="table-card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Año</th><th>Edad</th><th class="ph-a">Ahorro/Retiro Mens.</th><th class="ph-a">Ahorro/Retiro Anual</th><th>Rendimiento</th><th>Cap. Inicio</th><th>Cap. Fin</th><th style="color:var(--purple)">Cap. Real</th><th>Estado</th></tr></thead><tbody id="tabla-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inner-escenarios" style="display:none;flex-direction:column">
+      <div class="view-pad">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Escenarios de retorno comparados</span>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Pesimista 6%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Base (tu config)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Optimista 12%</div>
+          </div>
+          <div class="chart-canvas-wrap"><canvas id="chart-escenarios"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inner-sensibilidad" style="display:none">
       <div class="sens-view">
         <div class="sens-title">Tabla de sensibilidad</div>
         <div class="sens-sub">% de la meta según ahorro mensual × retorno anual. Verde = supera la meta.</div>
-        <div id="sens-table-wrap"></div>
+        <div class="table-card"><div id="sens-table-wrap" style="overflow-x:auto"></div></div>
       </div>
     </div>
-    <div id="inner-inversa" style="display:none;flex:1;overflow-y:auto">
-      <div class="inv-view">
+
+    <div id="inner-inversa" style="display:none">
+      <div class="view-pad">
         <div class="inv-grid">
           <div class="inv-card"><h3>💰 ¿Cuánto ahorro mensual necesito?</h3><p>Con tu capital inicial actual, ¿cuánto tenés que ahorrar por mes para llegar a la meta?</p><div class="inv-result" id="inv-ahorro">—</div><div class="inv-result-sub" id="inv-ahorro-sub">por mes</div></div>
           <div class="inv-card"><h3>🏦 ¿Con qué capital inicial llego?</h3><p>Manteniendo tu ahorro actual, ¿qué capital inicial necesitás para llegar a la meta?</p><div class="inv-result" id="inv-capital">—</div><div class="inv-result-sub">de capital inicial</div></div>
@@ -438,53 +591,96 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   </div>
   <div class="view" id="view-cartera">
     <div class="cartera-layout">
-      <div class="cartera-main">
-        <div class="cartera-kpis">
-          <div class="ckpi"><div class="ckpi-label">Valor total</div><div class="ckpi-val blue" id="ck-total">$0</div></div>
-          <div class="ckpi"><div class="ckpi-label">P&L total</div><div class="ckpi-val" id="ck-pnl">—</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-pnl-bar"></div></div></div>
-          <div class="ckpi"><div class="ckpi-label">Cambio 24h</div><div class="ckpi-val" id="ck-24h">—</div></div>
-          <div class="ckpi"><div class="ckpi-label">% meta cubierta</div><div class="ckpi-val" id="ck-meta">0%</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-meta-bar"></div></div></div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:8px">
-          <button class="pm-btn" style="width:auto;padding:6px 12px;font-size:.72rem;border-radius:6px" onclick="syncCarteraToCapital()">↔ Usar valor de cartera como capital inicial</button>
-        </div>
+      <div class="cartera-kpis">
+        <div class="ckpi"><div class="ckpi-label">Valor total</div><div class="ckpi-val blue" id="ck-total">$0</div></div>
+        <div class="ckpi"><div class="ckpi-label">P&L total</div><div class="ckpi-val" id="ck-pnl">—</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-pnl-bar"></div></div></div>
+        <div class="ckpi"><div class="ckpi-label">Cambio 24h</div><div class="ckpi-val" id="ck-24h">—</div></div>
+        <div class="ckpi"><div class="ckpi-label">% meta cubierta</div><div class="ckpi-val" id="ck-meta">0%</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-meta-bar"></div></div></div>
+      </div>
+
+      <div class="cartera-main-col">
+        <button class="btn-sync" onclick="syncCarteraToCapital()">↔ Usar valor de cartera como capital inicial</button>
+
         <div class="assets-section" id="section-crypto" style="display:none">
-          <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.62rem;color:var(--muted)"></span></div>
-          <table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table>
+          <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table></div>
         </div>
         <div class="assets-section" id="section-stocks" style="display:none">
-          <div class="section-title"><span>Acciones / ETFs <span style="color:var(--green);margin-left:6px" id="total-stocks"></span></span><span id="pct-stocks" style="font-size:.62rem;color:var(--muted)"></span></div>
-          <table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-stocks"></tbody></table>
+          <div class="section-title"><span>Acciones / ETFs <span style="color:var(--green);margin-left:6px" id="total-stocks"></span></span><span id="pct-stocks" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-stocks"></tbody></table></div>
         </div>
         <div class="assets-section" id="section-metal" style="display:none">
-          <div class="section-title"><span>Metales <span style="color:#f0b429;margin-left:6px" id="total-metal"></span></span><span id="pct-metal" style="font-size:.62rem;color:var(--muted)"></span></div>
-          <table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-metal"></tbody></table>
+          <div class="section-title"><span>Metales <span style="color:var(--orange);margin-left:6px" id="total-metal"></span></span><span id="pct-metal" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-metal"></tbody></table></div>
         </div>
-        <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
+
+        <div class="assets-section">
+          <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
+        </div>
       </div>
-      <div class="cartera-side">
-        <div class="asset-form">
+
+      <div class="cartera-side-col">
+        <div class="panel-card">
           <h3>➕ Agregar activo</h3>
-          <div class="form-row"><select id="new-cat" onchange="updateTickerHint()" style="flex:0 0 110px"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option><option value="metal">Metal</option></select></div>
+          <div class="form-row"><select id="new-cat" onchange="updateTickerHint()"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option><option value="metal">Metal</option></select></div>
           <div class="form-row"><input id="new-name" placeholder="Nombre (ej. Bitcoin)"></div>
           <div class="form-row"><input id="new-ticker" placeholder="Ticker (ej. BTC / SPY)"></div>
-          <div id="ticker-hint" style="display:none;font-size:.62rem;color:var(--muted);margin:-6px 0 8px">Formato Twelve Data: <b>XAU/USD</b> (oro) o <b>XAG/USD</b> (plata)</div>
+          <div id="ticker-hint" class="ticker-hint" style="display:none">Formato Twelve Data: <b>XAU/USD</b> (oro) o <b>XAG/USD</b> (plata)</div>
           <div class="form-row"><input id="new-qty" type="number" placeholder="Cantidad" min="0" step="any"><input id="new-price" type="number" placeholder="Precio USD" min="0" step="any"></div>
           <div class="form-row"><input id="new-cost" type="number" placeholder="Precio de compra (P&L)" min="0" step="any"></div>
           <div class="form-row"><button class="btn btn-primary" onclick="addAsset()" style="flex:1">Agregar</button></div>
         </div>
-        <button class="btn btn-refresh" id="btn-refresh" onclick="refreshPrices()" style="width:100%"><span id="refresh-icon">⟳</span> Actualizar precios</button>
+
+        <button class="btn btn-refresh" id="btn-refresh" onclick="refreshPrices()"><span id="refresh-icon">⟳</span> Actualizar precios</button>
         <button class="snapshot-btn" onclick="saveSnapshot()">📸 Guardar snapshot mensual</button>
-        <div><div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Por categoría</div><div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div></div>
-        <div class="cat-legend" id="cat-legend"></div>
-        <div style="margin-top:6px"><div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Por activo</div><div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div></div>
-        <div class="cat-legend" id="asset-legend"></div>
-        <div id="snapshot-history" style="display:none"><div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Historial snapshots</div><div id="snapshot-list" style="display:flex;flex-direction:column;gap:4px"></div></div>
+
+        <div class="panel-card">
+          <div class="donut-block-title">Por categoría</div>
+          <div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div>
+          <div class="cat-legend" id="cat-legend"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="donut-block-title">Por activo</div>
+          <div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div>
+          <div class="cat-legend" id="asset-legend"></div>
+        </div>
+
+        <div class="panel-card" id="snapshot-history" style="display:none">
+          <div class="donut-block-title" style="margin-bottom:2px">Historial snapshots</div>
+          <div id="snapshot-list"></div>
+        </div>
       </div>
     </div>
   </div>
 </main>
 </div>
+
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" data-tab="retiro" onclick="document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));switchView('retiro',this)"><span class="bn-ic">📈</span>Proyección</button>
+  <button class="bn-item" data-tab="cartera" onclick="document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));switchView('cartera',this)"><span class="bn-ic">💼</span>Cartera</button>
+  <button class="bn-item" onclick="toggleSidebar()"><span class="bn-ic">⚙</span>Ajustes</button>
+</nav>
+
+<div class="modal-overlay" id="edit-modal" style="display:none">
+  <div class="modal">
+    <h3>Editar activo</h3>
+    <div class="modal-info" id="modal-info"></div>
+    <div class="modal-field">
+      <label>Precio de compra (USD)</label>
+      <input type="number" id="modal-cost" step="0.000001" min="0">
+    </div>
+    <div class="modal-field">
+      <label>Cantidad</label>
+      <input type="number" id="modal-qty" step="0.000001" min="0">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $=id=>document.getElementById(id);
 const fmt=n=>n==null?'—':'$'+Math.round(n).toLocaleString('es-AR');
@@ -1011,23 +1207,5 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})),{scope:'/'}).catch(()=>{});
 }
 </script>
-<div class="modal-overlay" id="edit-modal" style="display:none">
-  <div class="modal">
-    <h3>Editar activo</h3>
-    <div class="modal-info" id="modal-info"></div>
-    <div class="modal-field">
-      <label>Precio de compra (USD)</label>
-      <input type="number" id="modal-cost" step="0.000001" min="0">
-    </div>
-    <div class="modal-field">
-      <label>Cantidad</label>
-      <input type="number" id="modal-qty" step="0.000001" min="0">
-    </div>
-    <div class="modal-btns">
-      <button class="btn" style="flex:1;background:var(--surface3);color:var(--text)" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" style="flex:1" onclick="saveModal()">Guardar</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
