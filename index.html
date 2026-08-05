@@ -218,12 +218,15 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .cat-crypto{background:var(--accent-soft);color:var(--accent)}
 .cat-etf{background:var(--green-soft);color:var(--green)}
 .cat-metal{background:var(--orange-soft);color:var(--orange)}
+.cat-cash{background:var(--green-soft);color:var(--green)}
 .change-pos{color:var(--green)}.change-neg{color:var(--red)}.change-neu{color:var(--muted)}
 .pnl-pos{color:var(--green)}.pnl-neg{color:var(--red)}
 .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:3px 6px;border-radius:var(--radius-sm);transition:all .1s}
 .del-btn:hover{color:var(--red);background:var(--red-soft)}
 .edit-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:3px 6px;border-radius:var(--radius-sm);transition:all .1s}
 .edit-btn:hover{color:var(--accent);background:var(--accent-soft)}
+.sell-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:3px 6px;border-radius:var(--radius-sm);transition:all .1s}
+.sell-btn:hover{color:var(--green);background:var(--green-soft)}
 .price-ts{font-size:.57rem;color:var(--muted);display:block}
 .alert-badge{display:inline-block;font-size:.55rem;padding:2px 6px;border-radius:5px;background:var(--red-soft);color:var(--red);font-weight:700;margin-left:5px;animation:blink 1.5s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
@@ -682,6 +685,10 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div class="section-title"><span>Metales <span style="color:var(--orange);margin-left:6px" id="total-metal"></span></span><span id="pct-metal" style="font-size:.64rem;color:var(--muted)"></span></div>
           <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-metal"></tbody></table></div>
         </div>
+        <div class="assets-section" id="section-cash" style="display:none">
+          <div class="section-title"><span>USD / USDT (liquidez) <span style="color:var(--green);margin-left:6px" id="total-cash"></span></span><span id="pct-cash" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-cash"></tbody></table></div>
+        </div>
 
         <div class="assets-section">
           <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
@@ -710,7 +717,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
       <div class="cartera-side-col">
         <div class="panel-card">
           <h3>➕ Agregar activo</h3>
-          <div class="form-row"><select id="new-cat" onchange="updateTickerHint()"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option><option value="metal">Metal</option></select></div>
+          <div class="form-row"><select id="new-cat" onchange="updateTickerHint()"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option><option value="metal">Metal</option><option value="cash">USD/USDT</option></select></div>
           <div class="form-row"><input id="new-name" placeholder="Nombre (ej. Bitcoin)"></div>
           <div class="form-row"><input id="new-ticker" placeholder="Ticker (ej. BTC / SPY)"></div>
           <div id="ticker-hint" class="ticker-hint" style="display:none">Formato Twelve Data: <b>XAU/USD</b> (oro) o <b>XAG/USD</b> (plata)</div>
@@ -737,6 +744,11 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
         <div class="panel-card" id="snapshot-history" style="display:none">
           <div class="donut-block-title" style="margin-bottom:2px">Historial snapshots</div>
           <div id="snapshot-list"></div>
+        </div>
+
+        <div class="panel-card" id="sales-history" style="display:none">
+          <div class="donut-block-title" style="margin-bottom:2px">💵 Historial de ventas</div>
+          <div id="sales-list"></div>
         </div>
       </div>
     </div>
@@ -765,6 +777,23 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sell-modal" style="display:none">
+  <div class="modal">
+    <h3>💵 Vender activo</h3>
+    <div class="modal-info" id="sell-info"></div>
+    <div class="modal-field">
+      <label>Cantidad a vender</label>
+      <input type="number" id="sell-qty" step="0.000001" min="0">
+    </div>
+    <div class="modal-info" id="sell-preview"></div>
+    <div class="field-hint">El importe se acredita como USD/USDT dentro de tu misma cartera, y queda registrado en el historial de ventas.</div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeSellModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmSell()">Confirmar venta</button>
     </div>
   </div>
 </div>
@@ -1101,10 +1130,13 @@ function renderInv(){
 // CARTERA
 let assets=[],assetIdCounter=0;
 const PAL=['#58a6ff','#3fb950','#bc8cff','#d29922','#f85149','#39d353','#79c0ff','#ffa657','#ff7b72','#a5d6ff'];
-const CL={crypto:'Crypto',stock:'Acción/ETF'};
+const CL={crypto:'Crypto',stock:'Acción/ETF',cash:'USD/USDT'};
 
 function updateTickerHint(){
-  $('ticker-hint').style.display=$('new-cat').value==='metal'?'':'none';
+  const cat=$('new-cat').value;
+  $('ticker-hint').style.display=(cat==='metal'||cat==='cash')?'':'none';
+  if(cat==='metal')$('ticker-hint').innerHTML='Formato Twelve Data: <b>XAU/USD</b> (oro) o <b>XAG/USD</b> (plata)';
+  if(cat==='cash'){$('ticker-hint').innerHTML='Usá <b>USD</b> como ticker. El precio siempre es $1.';$('new-price').value='1';$('new-cost').value='1';}
 }
 function addAsset(){
   const nm=$('new-name').value.trim(),tk=$('new-ticker').value.trim().toUpperCase();
@@ -1148,18 +1180,20 @@ function renderCartera(){
   const pm=curMeta>0?tv/curMeta:0;
   $('ck-meta').textContent=(pm*100).toFixed(1)+'%';
   const mb=$('ck-meta-bar');mb.style.width=Math.min(pm*100,100)+'%';mb.style.background=pm>=1?'var(--green)':pm>=0.5?'var(--orange)':'var(--red)';
-  const crs=assets.filter(a=>a.cat==='crypto'),sts=assets.filter(a=>a.cat==='stock'),mts=assets.filter(a=>a.cat==='metal');
-  const tC=crs.reduce((s,a)=>s+a.qty*a.price,0),tS=sts.reduce((s,a)=>s+a.qty*a.price,0),tM=mts.reduce((s,a)=>s+a.qty*a.price,0);
-  rTbl('tbody-crypto',crs,tv,'cat-crypto',al);rTbl('tbody-stocks',sts,tv,'cat-etf',al);rTbl('tbody-metal',mts,tv,'cat-metal',al);
-  $('section-crypto').style.display=crs.length?'':'none';$('section-stocks').style.display=sts.length?'':'none';$('section-metal').style.display=mts.length?'':'none';
-  $('total-crypto').textContent=crs.length?fmt(tC):'';$('total-stocks').textContent=sts.length?fmt(tS):'';$('total-metal').textContent=mts.length?fmt(tM):'';
+  const crs=assets.filter(a=>a.cat==='crypto'),sts=assets.filter(a=>a.cat==='stock'),mts=assets.filter(a=>a.cat==='metal'),chs=assets.filter(a=>a.cat==='cash');
+  const tC=crs.reduce((s,a)=>s+a.qty*a.price,0),tS=sts.reduce((s,a)=>s+a.qty*a.price,0),tM=mts.reduce((s,a)=>s+a.qty*a.price,0),tCh=chs.reduce((s,a)=>s+a.qty*a.price,0);
+  rTbl('tbody-crypto',crs,tv,'cat-crypto',al);rTbl('tbody-stocks',sts,tv,'cat-etf',al);rTbl('tbody-metal',mts,tv,'cat-metal',al);rTbl('tbody-cash',chs,tv,'cat-cash',al);
+  $('section-crypto').style.display=crs.length?'':'none';$('section-stocks').style.display=sts.length?'':'none';$('section-metal').style.display=mts.length?'':'none';$('section-cash').style.display=chs.length?'':'none';
+  $('total-crypto').textContent=crs.length?fmt(tC):'';$('total-stocks').textContent=sts.length?fmt(tS):'';$('total-metal').textContent=mts.length?fmt(tM):'';$('total-cash').textContent=chs.length?fmt(tCh):'';
   $('pct-crypto').textContent=tv>0&&crs.length?(tC/tv*100).toFixed(1)+'%':'';
   $('pct-stocks').textContent=tv>0&&sts.length?(tS/tv*100).toFixed(1)+'%':'';
   $('pct-metal').textContent=tv>0&&mts.length?(tM/tv*100).toFixed(1)+'%':'';
+  $('pct-cash').textContent=tv>0&&chs.length?(tCh/tv*100).toFixed(1)+'%':'';
   const cd=[],cc=[],cl=[];
   if(tC>0){cd.push(tC);cc.push('#58a6ff');cl.push('Crypto');}
   if(tS>0){cd.push(tS);cc.push('#3fb950');cl.push('Acciones/ETFs');}
   if(tM>0){cd.push(tM);cc.push('#f0b429');cl.push('Metales');}
+  if(tCh>0){cd.push(tCh);cc.push('#39d353');cl.push('USD/USDT');}
   dCat.data.labels=cl;dCat.data.datasets[0].data=cd;dCat.data.datasets[0].backgroundColor=cc;dCat.update();
   $('donut-total-val').textContent=fmt(tv);
   const cleg=$('cat-legend');cleg.innerHTML='';
@@ -1190,6 +1224,7 @@ function rTbl(tbId,list,tv,bc,al){
       <td class="${cc}">${fmtCh(a.change24h)}</td>
       <td style="color:var(--muted)">${p}</td>
       <td style="display:flex;gap:3px;justify-content:center;align-items:center">
+        ${a.cat!=='cash'?`<button class="sell-btn" onclick="openSellModal(${a.id})" title="Vender / pasar a USD">💵</button>`:''}
         <button class="edit-btn" onclick="openEditModal(${a.id})" title="Editar precio de compra / cantidad">✏</button>
         <button class="del-btn" onclick="removeAsset(${a.id})" title="Eliminar">✕</button>
       </td>
@@ -1679,6 +1714,145 @@ function renderInvExtra() {
 // (este script corre después), así que disparamos una vez a mano para no
 // dejar las estadísticas nuevas vacías hasta el próximo cambio de slider.
 renderProyStats();
+
+// ── VENDER ACTIVO → PASA A USD/USDT + REGISTRO DE VENTA (sync a GitHub) ────
+let sales = [];
+let sellingId = null;
+const LS_SALES = 'planRetiro_sales_v1';
+const GH_PATH_SALES = 'sales.json';
+
+function saveSalesLocal() { try { localStorage.setItem(LS_SALES, JSON.stringify(sales)); } catch (e) {} }
+function loadSalesLocal() { try { const r = localStorage.getItem(LS_SALES); if (r) sales = JSON.parse(r) || []; } catch (e) {} }
+
+function openSellModal(id) {
+  const a = assets.find(x => x.id == id);
+  if (!a) return;
+  sellingId = id;
+  $('sell-info').innerHTML =
+    '<b>' + a.name + ' (' + a.ticker + ')</b><br>' +
+    'Tenés: <span>' + a.qty.toLocaleString('es-AR', { maximumFractionDigits: 6 }) + '</span><br>' +
+    'Precio actual: <span>$' + a.price.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 6 }) + '</span><br>' +
+    'Costo promedio: <span>$' + (a.costBasis || a.price).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 6 }) + '</span>';
+  $('sell-qty').value = a.qty;
+  $('sell-qty').max = a.qty;
+  updateSellPreview();
+  $('sell-modal').style.display = 'flex';
+}
+function updateSellPreview() {
+  const a = assets.find(x => x.id == sellingId);
+  const prev = $('sell-preview');
+  if (!a || !prev) return;
+  let qty = parseFloat($('sell-qty').value);
+  if (isNaN(qty) || qty < 0) qty = 0;
+  if (qty > a.qty) qty = a.qty;
+  const saleValue = qty * a.price;
+  const cost = qty * (a.costBasis || a.price);
+  const pnl = saleValue - cost;
+  const pnlPct = cost > 0 ? (pnl / cost * 100) : 0;
+  prev.innerHTML =
+    'Recibís: <span>' + fmt(saleValue) + '</span> en USD/USDT<br>' +
+    'Resultado de la venta: <span style="color:' + (pnl >= 0 ? 'var(--green)' : 'var(--red)') + '">' +
+    (pnl >= 0 ? '+' : '') + fmt(pnl) + ' (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%)</span>';
+}
+if ($('sell-qty')) $('sell-qty').addEventListener('input', updateSellPreview);
+
+function closeSellModal() { $('sell-modal').style.display = 'none'; sellingId = null; }
+
+function confirmSell() {
+  const a = assets.find(x => x.id == sellingId);
+  if (!a) return;
+  let qty = parseFloat($('sell-qty').value);
+  if (isNaN(qty) || qty <= 0) { alert('Ingresá una cantidad válida.'); return; }
+  if (qty > a.qty + 1e-9) { alert('No podés vender más de lo que tenés.'); return; }
+
+  const saleValue = qty * a.price;
+  const costBasis = a.costBasis || a.price;
+  const cost = qty * costBasis;
+  const realizedPnl = saleValue - cost;
+  const realizedPnlPct = cost > 0 ? (realizedPnl / cost * 100) : 0;
+
+  sales.push({
+    id: Date.now() + '-' + a.ticker,
+    date: new Date().toISOString().slice(0, 10),
+    ticker: a.ticker, name: a.name, cat: a.cat,
+    qty, salePrice: a.price,
+    saleValue: Math.round(saleValue * 100) / 100,
+    costBasis,
+    realizedPnl: Math.round(realizedPnl * 100) / 100,
+    realizedPnlPct: Math.round(realizedPnlPct * 100) / 100
+  });
+  saveSalesLocal();
+
+  if (qty >= a.qty - 1e-9) assets = assets.filter(x => x.id !== a.id);
+  else a.qty -= qty;
+
+  let cash = assets.find(x => x.cat === 'cash' && x.ticker === 'USD');
+  if (cash) cash.qty += saleValue;
+  else assets.push({ id: ++assetIdCounter, name: 'Liquidez USD', ticker: 'USD', cat: 'cash', qty: saleValue, price: 1, costBasis: 1, change24h: null, lastUpdate: null });
+
+  saveAssets();
+  renderCartera();
+  renderSalesHistory();
+  syncCarteraToGitHub();
+  syncSalesToGitHub();
+  closeSellModal();
+}
+
+function renderSalesHistory() {
+  const wrap = $('sales-history'), list = $('sales-list');
+  if (!wrap || !list) return;
+  if (!sales.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  const sorted = [...sales].sort((x, y) => y.date.localeCompare(x.date));
+  list.innerHTML = sorted.map(s => {
+    const pc = s.realizedPnl >= 0 ? 'var(--green)' : 'var(--red)';
+    return '<div class="snap-row"><span style="color:var(--muted)">' + s.date + ' · ' + s.ticker + ' (' + s.qty.toLocaleString('es-AR', { maximumFractionDigits: 6 }) + ')</span>' +
+      '<span style="color:' + pc + ';font-weight:600">' + (s.realizedPnl >= 0 ? '+' : '') + fmt(s.realizedPnl) + '</span></div>';
+  }).join('');
+}
+
+async function syncSalesToGitHub() {
+  const token = (() => { try { return localStorage.getItem(LS_GH_TOKEN); } catch (e) { return null; } })();
+  if (!token) return;
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH_SALES}`;
+  try {
+    let sha = null;
+    const getRes = await fetch(apiUrl + `?ref=${GH_BRANCH}`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+    if (getRes.ok) { const cur = await getRes.json(); sha = cur.sha; }
+    else if (getRes.status !== 404) return;
+    const body = {
+      message: 'Actualizar historial de ventas',
+      content: b64EncodeUtf8(JSON.stringify({ sales, updatedAt: new Date().toISOString() }, null, 2)),
+      branch: GH_BRANCH
+    };
+    if (sha) body.sha = sha;
+    await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  } catch (e) { /* falla silenciosa: la próxima venta o "Sincronizar ahora" lo vuelve a intentar */ }
+}
+
+// Al abrir la app, combina el historial de ventas local con el que ya esté
+// en GitHub (por si vendiste algo desde el otro dispositivo) — sin perder
+// registros de ninguno de los dos lados.
+async function loadSalesRemote() {
+  loadSalesLocal();
+  const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH_SALES}`;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (res.ok) {
+      const remote = await res.json();
+      const byId = {};
+      [...sales, ...(remote.sales || [])].forEach(s => { byId[s.id] = s; });
+      sales = Object.values(byId);
+      saveSalesLocal();
+    }
+  } catch (e) {}
+  renderSalesHistory();
+}
+loadSalesRemote();
 
 loadHistory();
 </script>
