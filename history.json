@@ -1,1 +1,21 @@
-{"snapshots":[]}
+{
+  "snapshots": [
+    {
+      "date": "2026-08-05",
+      "total": 9710.7,
+      "byCategory": {
+        "crypto": 6929.0325,
+        "stock": 2781.665,
+        "metal": 0
+      },
+      "byAsset": {
+        "BTC": 6455.8,
+        "ETH": 473.2325,
+        "IBIT": 658.53,
+        "XLE": 976.31,
+        "SCCO": 592.635,
+        "URA": 554.19
+      }
+    }
+  ]
+}
