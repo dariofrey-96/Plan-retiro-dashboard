@@ -1111,7 +1111,17 @@ function addAsset(){
   const cat=$('new-cat').value,qty=parseFloat($('new-qty').value),price=parseFloat($('new-price').value);
   const cost=parseFloat($('new-cost').value)||price;
   if(!nm||!tk||isNaN(qty)||qty<=0||isNaN(price)||price<0){alert('Completá todos los campos.');return;}
-  assets.push({id:++assetIdCounter,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null});
+  const existing=assets.find(a=>a.ticker===tk&&a.cat===cat);
+  if(existing){
+    const oldQty=existing.qty,oldCost=existing.costBasis||existing.price;
+    const newQty=oldQty+qty;
+    existing.costBasis=((oldQty*oldCost)+(qty*cost))/newQty;
+    existing.qty=newQty;
+    existing.price=price;
+    if(nm)existing.name=nm;
+  }else{
+    assets.push({id:++assetIdCounter,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null});
+  }
   saveAssets();
   ['new-name','new-ticker','new-qty','new-price','new-cost'].forEach(id=>$(id).value='');
   renderCartera();
