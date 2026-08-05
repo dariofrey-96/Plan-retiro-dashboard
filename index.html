@@ -229,6 +229,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .sell-btn:hover{color:var(--green);background:var(--green-soft)}
 .price-ts{font-size:.57rem;color:var(--muted);display:block}
 .alert-badge{display:inline-block;font-size:.55rem;padding:2px 6px;border-radius:5px;background:var(--red-soft);color:var(--red);font-weight:700;margin-left:5px;animation:blink 1.5s infinite}
+.alert-badge.gain-badge{background:var(--green-soft);color:var(--green);animation:none}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 
 .cartera-panels{display:flex;flex-direction:column;gap:14px}
@@ -527,6 +528,28 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaCaida-27"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-27" data-target="alertaCaida" data-delta="-1"></label></span>
         <input type="range" id="alertaCaida" min="1" max="30" value="10" step="1">
         <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaCaida-28"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-28" data-target="alertaCaida" data-delta="1.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Alerta ganancia total (%) <span class="tooltip-icon" data-tip="Si un activo acumula más de este % de ganancia se marca con una alerta 🎯, como recordatorio de que capaz vale la pena venderlo">ⓘ</span></label>
+        <span class="val" id="v-alertaGanancia"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaGanancia-29"><input type="checkbox" switch class="pm-switch" id="sw-alertaGanancia-29" data-target="alertaGanancia" data-delta="-5"></label></span>
+        <input type="range" id="alertaGanancia" min="10" max="500" value="50" step="5">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaGanancia-30"><input type="checkbox" switch class="pm-switch" id="sw-alertaGanancia-30" data-target="alertaGanancia" data-delta="5.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>...dentro de esta ventana de tiempo <span class="tooltip-icon" data-tip="Solo alerta si esa ganancia se dio dentro de estos meses desde que compraste. Ponelo en 0 para ignorar el tiempo y alertar siempre que se supere el %.">ⓘ</span></label>
+        <span class="val" id="v-alertaGananciaMeses"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaGananciaMeses-31"><input type="checkbox" switch class="pm-switch" id="sw-alertaGananciaMeses-31" data-target="alertaGananciaMeses" data-delta="-1"></label></span>
+        <input type="range" id="alertaGananciaMeses" min="0" max="60" value="6" step="1">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaGananciaMeses-32"><input type="checkbox" switch class="pm-switch" id="sw-alertaGananciaMeses-32" data-target="alertaGananciaMeses" data-delta="1.0"></label></span>
       </div>
     </div>
   </div>
@@ -940,7 +963,8 @@ const SL={
   gastoMensual:{d:v=>fmt(v)},inflacion:{d:v=>fmtPct(v)},swr:{d:v=>fmtPct(v)},
   capitalInicial:{d:v=>fmt(v)},ahorroMensual:{d:v=>fmt(v)},crecAhorro:{d:v=>fmtPct(v)},
   retorno:{d:v=>fmtPct(v)},alquiler:{d:v=>fmt(v)},dividendos:{d:v=>fmt(v)},
-  consultoria:{d:v=>fmt(v)},alertaCaida:{d:v=>v+'%'}
+  consultoria:{d:v=>fmt(v)},alertaCaida:{d:v=>v+'%'},
+  alertaGanancia:{d:v=>v+'%'},alertaGananciaMeses:{d:v=>v==0?'sin límite':v+' meses'}
 };
 const gv=id=>parseFloat($(id).value);
 
@@ -1151,8 +1175,9 @@ function addAsset(){
     existing.qty=newQty;
     existing.price=price;
     if(nm)existing.name=nm;
+    if(!existing.boughtDate)existing.boughtDate=new Date().toISOString().slice(0,10);
   }else{
-    assets.push({id:++assetIdCounter,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null});
+    assets.push({id:++assetIdCounter,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null,boughtDate:new Date().toISOString().slice(0,10)});
   }
   saveAssets();
   ['new-name','new-ticker','new-qty','new-price','new-cost'].forEach(id=>$(id).value='');
@@ -1182,7 +1207,8 @@ function renderCartera(){
   const mb=$('ck-meta-bar');mb.style.width=Math.min(pm*100,100)+'%';mb.style.background=pm>=1?'var(--green)':pm>=0.5?'var(--orange)':'var(--red)';
   const crs=assets.filter(a=>a.cat==='crypto'),sts=assets.filter(a=>a.cat==='stock'),mts=assets.filter(a=>a.cat==='metal'),chs=assets.filter(a=>a.cat==='cash');
   const tC=crs.reduce((s,a)=>s+a.qty*a.price,0),tS=sts.reduce((s,a)=>s+a.qty*a.price,0),tM=mts.reduce((s,a)=>s+a.qty*a.price,0),tCh=chs.reduce((s,a)=>s+a.qty*a.price,0);
-  rTbl('tbody-crypto',crs,tv,'cat-crypto',al);rTbl('tbody-stocks',sts,tv,'cat-etf',al);rTbl('tbody-metal',mts,tv,'cat-metal',al);rTbl('tbody-cash',chs,tv,'cat-cash',al);
+  const agp=gv('alertaGanancia'),agm=gv('alertaGananciaMeses');
+  rTbl('tbody-crypto',crs,tv,'cat-crypto',al,agp,agm);rTbl('tbody-stocks',sts,tv,'cat-etf',al,agp,agm);rTbl('tbody-metal',mts,tv,'cat-metal',al,agp,agm);rTbl('tbody-cash',chs,tv,'cat-cash',al,agp,agm);
   $('section-crypto').style.display=crs.length?'':'none';$('section-stocks').style.display=sts.length?'':'none';$('section-metal').style.display=mts.length?'':'none';$('section-cash').style.display=chs.length?'':'none';
   $('total-crypto').textContent=crs.length?fmt(tC):'';$('total-stocks').textContent=sts.length?fmt(tS):'';$('total-metal').textContent=mts.length?fmt(tM):'';$('total-cash').textContent=chs.length?fmt(tCh):'';
   $('pct-crypto').textContent=tv>0&&crs.length?(tC/tv*100).toFixed(1)+'%':'';
@@ -1206,7 +1232,7 @@ function renderCartera(){
   renderSnaps();
 }
 
-function rTbl(tbId,list,tv,bc,al){
+function rTbl(tbId,list,tv,bc,al,agp,agm){
   const tb=$(tbId);tb.innerHTML='';
   list.forEach(a=>{
     const v=a.qty*a.price,p=tv>0?(v/tv*100).toFixed(1)+'%':'—';
@@ -1214,9 +1240,18 @@ function rTbl(tbId,list,tv,bc,al){
     const pc=pnl>=0?'pnl-pos':'pnl-neg';
     const cc=a.change24h==null?'change-neu':a.change24h>=0?'change-pos':'change-neg';
     const alert=a.change24h!=null&&Math.abs(a.change24h)>=al?'<span class="alert-badge">⚠'+a.change24h.toFixed(1)+'%</span>':'';
+    let gainAlert='';
+    if(agp!=null&&ppnl>=agp){
+      let monthsHeld=null;
+      if(a.boughtDate){monthsHeld=(Date.now()-new Date(a.boughtDate+'T00:00:00').getTime())/(1000*3600*24*30.44);}
+      if(agm===0||monthsHeld==null||monthsHeld<=agm){
+        const monthsTxt=monthsHeld!=null?' en '+Math.max(1,Math.round(monthsHeld))+'m':'';
+        gainAlert='<span class="alert-badge gain-badge">🎯+'+ppnl.toFixed(0)+'%'+monthsTxt+'</span>';
+      }
+    }
     const ts=a.lastUpdate?'<span class="price-ts">'+a.lastUpdate+'</span>':'';
     tb.innerHTML+=`<tr>
-      <td><span class="asset-name">${a.name}${alert}</span><span class="asset-ticker">${a.ticker} <span class="cat-badge ${bc}">${CL[a.cat]||a.cat}</span></span></td>
+      <td><span class="asset-name">${a.name}${alert}${gainAlert}</span><span class="asset-ticker">${a.ticker} <span class="cat-badge ${bc}">${CL[a.cat]||a.cat}</span></span></td>
       <td>${a.qty.toLocaleString('es-AR',{maximumFractionDigits:6})}</td>
       <td>$${a.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6})}${ts}</td>
       <td style="font-weight:600">$${Math.round(v).toLocaleString('es-AR')}</td>
