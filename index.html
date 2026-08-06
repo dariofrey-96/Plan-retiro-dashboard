@@ -318,6 +318,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   .hscroll-pad{display:none}
   .cartera-layout{padding:16px 24px 28px;display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
   .cartera-kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);overflow:visible}
+  .currency-toggle-row{grid-column:1/-1}
   .cartera-main-col{display:flex;flex-direction:column;gap:14px}
   .cartera-side-col{display:flex;flex-direction:column;gap:14px}
 }
@@ -686,6 +687,13 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   </div>
   <div class="view" id="view-cartera">
     <div class="cartera-layout">
+      <div class="chart-header currency-toggle-row" style="padding:0 2px">
+        <span class="field-hint" id="ars-rate-hint" style="margin:0"></span>
+        <div class="toggle-wrap currency-toggle">
+          <button class="toggle-btn active" data-cur="USD" onclick="setCarteraCurrency('USD',this)">USD</button>
+          <button class="toggle-btn" data-cur="ARS" onclick="setCarteraCurrency('ARS',this)">ARS</button>
+        </div>
+      </div>
       <div class="cartera-kpis">
         <div class="ckpi"><div class="ckpi-label">Valor total</div><div class="ckpi-val blue" id="ck-total">$0</div></div>
         <div class="ckpi"><div class="ckpi-label">P&L total</div><div class="ckpi-val" id="ck-pnl">—</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-pnl-bar"></div></div></div>
@@ -725,6 +733,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
                 <option value="__total__">Cartera completa</option>
               </select>
               <div class="toggle-wrap" id="hist-period-toggle">
+                <button class="toggle-btn" data-days="today" onclick="setHistPeriod('today',this)">Hoy</button>
                 <button class="toggle-btn active" data-days="30" onclick="setHistPeriod(30,this)">30D</button>
                 <button class="toggle-btn" data-days="90" onclick="setHistPeriod(90,this)">90D</button>
                 <button class="toggle-btn" data-days="365" onclick="setHistPeriod(365,this)">1A</button>
@@ -1012,7 +1021,7 @@ function donutOpts(){
   const txt=getCSSVar('--text')||'#e6edf3';
   const surf2=getCSSVar('--surface2')||'#1c2333';
   const bord=getCSSVar('--border')||'#30363d';
-  return {responsive:true,maintainAspectRatio:true,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:surf2,borderColor:bord,borderWidth:1,bodyColor:txt,callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)}`}}}};
+  return {responsive:true,maintainAspectRatio:true,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:surf2,borderColor:bord,borderWidth:1,bodyColor:txt,callbacks:{label:c=>` ${c.label}: ${(typeof fmtC==='function'?fmtC:fmt)(c.parsed)}`}}}};
 }
 const dCat=new Chart($('donut-cat').getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0,hoverOffset:4}]},options:donutOpts()});
 const dAsset=new Chart($('donut-asset').getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0,hoverOffset:4}]},options:donutOpts()});
@@ -1186,13 +1195,14 @@ function addAsset(){
 function removeAsset(id){assets=assets.filter(a=>a.id!=id);saveAssets();renderCartera();}
 
 function renderCartera(){
+  const F=typeof fmtC==='function'?fmtC:fmt;
   const al=gv('alertaCaida');
   const tv=assets.reduce((s,a)=>s+a.qty*a.price,0);
   const tc=assets.reduce((s,a)=>s+a.qty*(a.costBasis||a.price),0);
   const tp=tv-tc,pp=tc>0?tp/tc:0;
-  $('ck-total').textContent=fmt(tv);
+  $('ck-total').textContent=F(tv);
   const pe=$('ck-pnl');
-  pe.textContent=(tp>=0?'+':'')+fmt(tp)+' ('+fmtCh(pp*100)+')';
+  pe.textContent=(tp>=0?'+':'')+F(tp)+' ('+fmtCh(pp*100)+')';
   pe.className='ckpi-val '+(tp>=0?'green':'red');
   const pb=$('ck-pnl-bar');pb.style.width=Math.min(Math.abs(pp)*100,100)+'%';pb.style.background=tp>=0?'var(--green)':'var(--red)';
   const w=assets.filter(a=>a.change24h!=null);
@@ -1200,7 +1210,7 @@ function renderCartera(){
     const tY=w.reduce((s,a)=>s+a.qty*a.price/(1+a.change24h/100),0);
     const tN=w.reduce((s,a)=>s+a.qty*a.price,0);
     const ch=tY>0?(tN-tY)/tY*100:0,df=tN-tY;
-    const ce=$('ck-24h');ce.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'% ('+fmt(df)+')';ce.className='ckpi-val '+(ch>=0?'green':'red');
+    const ce=$('ck-24h');ce.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'% ('+F(df)+')';ce.className='ckpi-val '+(ch>=0?'green':'red');
   }else{$('ck-24h').textContent='—';$('ck-24h').className='ckpi-val';}
   const pm=curMeta>0?tv/curMeta:0;
   $('ck-meta').textContent=(pm*100).toFixed(1)+'%';
@@ -1210,7 +1220,7 @@ function renderCartera(){
   const agp=gv('alertaGanancia'),agm=gv('alertaGananciaMeses');
   rTbl('tbody-crypto',crs,tv,'cat-crypto',al,agp,agm);rTbl('tbody-stocks',sts,tv,'cat-etf',al,agp,agm);rTbl('tbody-metal',mts,tv,'cat-metal',al,agp,agm);rTbl('tbody-cash',chs,tv,'cat-cash',al,agp,agm);
   $('section-crypto').style.display=crs.length?'':'none';$('section-stocks').style.display=sts.length?'':'none';$('section-metal').style.display=mts.length?'':'none';$('section-cash').style.display=chs.length?'':'none';
-  $('total-crypto').textContent=crs.length?fmt(tC):'';$('total-stocks').textContent=sts.length?fmt(tS):'';$('total-metal').textContent=mts.length?fmt(tM):'';$('total-cash').textContent=chs.length?fmt(tCh):'';
+  $('total-crypto').textContent=crs.length?F(tC):'';$('total-stocks').textContent=sts.length?F(tS):'';$('total-metal').textContent=mts.length?F(tM):'';$('total-cash').textContent=chs.length?F(tCh):'';
   $('pct-crypto').textContent=tv>0&&crs.length?(tC/tv*100).toFixed(1)+'%':'';
   $('pct-stocks').textContent=tv>0&&sts.length?(tS/tv*100).toFixed(1)+'%':'';
   $('pct-metal').textContent=tv>0&&mts.length?(tM/tv*100).toFixed(1)+'%':'';
@@ -1221,14 +1231,14 @@ function renderCartera(){
   if(tM>0){cd.push(tM);cc.push('#f0b429');cl.push('Metales');}
   if(tCh>0){cd.push(tCh);cc.push('#39d353');cl.push('USD/USDT');}
   dCat.data.labels=cl;dCat.data.datasets[0].data=cd;dCat.data.datasets[0].backgroundColor=cc;dCat.update();
-  $('donut-total-val').textContent=fmt(tv);
+  $('donut-total-val').textContent=F(tv);
   const cleg=$('cat-legend');cleg.innerHTML='';
-  cl.forEach((l,i)=>{const p=tv>0?(cd[i]/tv*100).toFixed(1)+'%':'0%';cleg.innerHTML+=`<div class="cat-leg-row"><div class="cat-leg-left"><div class="cat-dot" style="background:${cc[i]}"></div><span>${l}</span></div><span class="cat-leg-pct">${p} · ${fmt(cd[i])}</span></div>`;});
+  cl.forEach((l,i)=>{const p=tv>0?(cd[i]/tv*100).toFixed(1)+'%':'0%';cleg.innerHTML+=`<div class="cat-leg-row"><div class="cat-leg-left"><div class="cat-dot" style="background:${cc[i]}"></div><span>${l}</span></div><span class="cat-leg-pct">${p} · ${F(cd[i])}</span></div>`;});
   const so=[...assets].sort((a,b)=>b.qty*b.price-a.qty*a.price);
   dAsset.data.labels=so.map(a=>a.ticker);dAsset.data.datasets[0].data=so.map(a=>a.qty*a.price);dAsset.data.datasets[0].backgroundColor=so.map((_,i)=>PAL[i%PAL.length]);dAsset.update();
   $('donut-asset-val').textContent=so[0]?so[0].ticker:'—';
   const aleg=$('asset-legend');aleg.innerHTML='';
-  so.forEach((a,i)=>{const v=a.qty*a.price,p=tv>0?(v/tv*100).toFixed(1)+'%':'0%',c=PAL[i%PAL.length];aleg.innerHTML+=`<div class="cat-leg-row"><div class="cat-leg-left"><div class="cat-dot" style="background:${c}"></div><span>${a.ticker}</span></div><span class="cat-leg-pct">${p} · ${fmt(v)}</span></div>`;});
+  so.forEach((a,i)=>{const v=a.qty*a.price,p=tv>0?(v/tv*100).toFixed(1)+'%':'0%',c=PAL[i%PAL.length];aleg.innerHTML+=`<div class="cat-leg-row"><div class="cat-leg-left"><div class="cat-dot" style="background:${c}"></div><span>${a.ticker}</span></div><span class="cat-leg-pct">${p} · ${F(v)}</span></div>`;});
   renderSnaps();
 }
 
@@ -1253,9 +1263,9 @@ function rTbl(tbId,list,tv,bc,al,agp,agm){
     tb.innerHTML+=`<tr>
       <td><span class="asset-name">${a.name}${alert}${gainAlert}</span><span class="asset-ticker">${a.ticker} <span class="cat-badge ${bc}">${CL[a.cat]||a.cat}</span></span></td>
       <td>${a.qty.toLocaleString('es-AR',{maximumFractionDigits:6})}</td>
-      <td>$${a.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6})}${ts}</td>
-      <td style="font-weight:600">$${Math.round(v).toLocaleString('es-AR')}</td>
-      <td class="${pc}">${pnl>=0?'+':''}${fmt(pnl)}<br><span style="font-size:.6rem">${(ppnl>=0?'+':'')+ppnl.toFixed(1)}%</span></td>
+      <td>${typeof fmtPrice==='function'?fmtPrice(a.price):'$'+a.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6})}${ts}</td>
+      <td style="font-weight:600">${typeof fmtC==='function'?fmtC(v):'$'+Math.round(v).toLocaleString('es-AR')}</td>
+      <td class="${pc}">${pnl>=0?'+':''}${typeof fmtC==='function'?fmtC(pnl):fmt(pnl)}<br><span style="font-size:.6rem">${(ppnl>=0?'+':'')+ppnl.toFixed(1)}%</span></td>
       <td class="${cc}">${fmtCh(a.change24h)}</td>
       <td style="color:var(--muted)">${p}</td>
       <td style="display:flex;gap:3px;justify-content:center;align-items:center">
@@ -1617,6 +1627,10 @@ function populateHistSeriesSelect() {
   if ([...sel.options].some(o => o.value === currentVal)) sel.value = currentVal;
 }
 
+function getSnapTime(s) {
+  return new Date(s.timestamp || (s.date + 'T12:00:00')).getTime();
+}
+
 function setHistPeriod(days, btn) {
   histPeriodDays = days;
   document.querySelectorAll('#hist-period-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -1626,11 +1640,25 @@ function setHistPeriod(days, btn) {
 
 function renderHistChart() {
   if (!histData) return;
-  let snaps = histData.snapshots || [];
-  if (histPeriodDays > 0) {
-    const cutoff = Date.now() - histPeriodDays * 86400000;
-    snaps = snaps.filter(s => new Date(s.date + 'T00:00:00').getTime() >= cutoff);
+  let snaps = [...(histData.snapshots || [])].sort((a, b) => getSnapTime(a) - getSnapTime(b));
+  const isToday = histPeriodDays === 'today';
+
+  if (isToday) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    snaps = snaps.filter(s => (s.date || '') === todayStr);
+  } else {
+    if (histPeriodDays > 0) {
+      const cutoff = Date.now() - histPeriodDays * 86400000;
+      snaps = snaps.filter(s => getSnapTime(s) >= cutoff);
+    }
+    // Compactar a 1 punto por día (el último snapshot de cada día) — con
+    // snapshots cada hora, mostrar todos los puntos crudos en 30D/90D/1A/Todo
+    // haría un gráfico ilegible y pesado. Para "Hoy" sí se muestran todos.
+    const byDate = {};
+    snaps.forEach(s => { byDate[s.date] = s; }); // ordenado ascendente: el último pisa y gana
+    snaps = Object.values(byDate).sort((a, b) => getSnapTime(a) - getSnapTime(b));
   }
+
   const emptyMsg = $('hist-empty-msg');
   if (!snaps.length) {
     if (emptyMsg) emptyMsg.style.display = '';
@@ -1653,12 +1681,14 @@ function renderHistChart() {
     values = snaps.map(s => (s.byAsset || {})[tk] ?? null);
   }
 
-  chartHist.data.labels = snaps.map(s => s.date);
+  chartHist.data.labels = snaps.map(s => isToday
+    ? new Date(getSnapTime(s)).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    : s.date);
   chartHist.data.datasets = [{
     label, data: values,
     borderColor: getCSSVar('--accent') || '#58a6ff',
     backgroundColor: 'transparent',
-    borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
+    borderWidth: 2.5, pointRadius: isToday ? 2 : 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
   }];
   chartHist.update();
 }
@@ -1888,6 +1918,54 @@ async function loadSalesRemote() {
   renderSalesHistory();
 }
 loadSalesRemote();
+
+// ── CARTERA EN USD O ARS (cotización blue automática) ───────────────────────
+let carteraCurrency = 'USD';
+let arsRate = null; // pesos por 1 USD (blue, venta)
+const LS_CARTERA_CUR = 'planRetiro_cartera_currency';
+
+function fmtC(usd) {
+  if (carteraCurrency === 'ARS' && arsRate) return 'AR$' + Math.round(usd * arsRate).toLocaleString('es-AR');
+  return fmt(usd);
+}
+function fmtPrice(usd) {
+  if (carteraCurrency === 'ARS' && arsRate) return 'AR$' + Math.round(usd * arsRate).toLocaleString('es-AR');
+  return '$' + usd.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+}
+
+async function fetchArsRate(retriesLeft) {
+  if (retriesLeft == null) retriesLeft = 2;
+  try {
+    const res = await fetch('https://dolarapi.com/v1/dolares/blue');
+    if (res.ok) { const d = await res.json(); if (d && d.venta) arsRate = d.venta; }
+  } catch (e) { /* sin conexión a la API — se reintenta más abajo */ }
+  updateArsRateHint();
+  if (!arsRate && retriesLeft > 0) {
+    setTimeout(() => fetchArsRate(retriesLeft - 1).then(() => renderCartera()), 4000);
+  }
+}
+function updateArsRateHint() {
+  const hint = $('ars-rate-hint');
+  if (!hint) return;
+  if (arsRate) hint.textContent = '1 USD = AR$' + Math.round(arsRate).toLocaleString('es-AR') + ' (blue)';
+  else if (carteraCurrency === 'ARS') hint.textContent = 'Buscando cotización... (mientras tanto se muestra en USD)';
+  else hint.textContent = '';
+}
+
+function setCarteraCurrency(cur, btn) {
+  carteraCurrency = cur;
+  document.querySelectorAll('.currency-toggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === cur));
+  try { localStorage.setItem(LS_CARTERA_CUR, cur); } catch (e) {}
+  updateArsRateHint();
+  if (cur === 'ARS' && !arsRate) fetchArsRate().then(() => renderCartera());
+  renderCartera();
+}
+
+(function () {
+  try { const saved = localStorage.getItem(LS_CARTERA_CUR); if (saved === 'ARS') carteraCurrency = 'ARS'; } catch (e) {}
+  document.querySelectorAll('.currency-toggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === carteraCurrency));
+  fetchArsRate().then(() => renderCartera()); // la primera vez que carga, re-renderiza con formato correcto (fmtC recién queda disponible acá)
+})();
 
 loadHistory();
 </script>
