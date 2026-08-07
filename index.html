@@ -151,6 +151,11 @@ main{display:flex;flex-direction:column;overflow:visible;padding-bottom:calc(78p
 .toggle-btn{font-size:.66rem;font-weight:600;padding:5px 11px;border-radius:100px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
 .toggle-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-card)}
 
+.summary-block{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.summary-block-title{font-size:.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.mover-row{display:flex;align-items:center;justify-content:space-between;font-size:.76rem;padding:3px 0;gap:10px}
+.mover-row span:first-child{color:var(--text)}
+
 /* ── TABLES ── */
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden}
 .table-wrap{max-height:340px;overflow-y:auto}
@@ -1981,6 +1986,22 @@ function setCarteraCurrency(cur, btn) {
 })();
 
 // ── RESUMEN MENSUAL DE CARTERA (aditivo, no toca loadHistory/setCarteraCurrency originales) ──
+const MONTHLY_CAT_LABELS = { crypto: 'Crypto', stock: 'Acciones/ETFs', metal: 'Metales', cash: 'USD/USDT' };
+
+// byCategory en history.json sólo trackea crypto/stock/metal (ver fetch-snapshot.mjs).
+// El resto de "total" es liquidez (cash) — se reconstruye por diferencia.
+function monthlyCatTotal(snap, cat) {
+  const bc = snap.byCategory || {};
+  if (cat === 'cash') return Math.max(0, (snap.total || 0) - (bc.crypto || 0) - (bc.stock || 0) - (bc.metal || 0));
+  return bc[cat] || 0;
+}
+
+function findSnapAtOrBefore(snaps, ts, fallback) {
+  let found = fallback;
+  for (const s of snaps) { if (getSnapTime(s) <= ts) found = s; else break; }
+  return found;
+}
+
 function renderMonthlySummary() {
   const el = $('monthly-summary');
   if (!el || !histData) return;
@@ -1989,8 +2010,9 @@ function renderMonthlySummary() {
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  let startSnap = snaps[0];
-  for (const s of snaps) { if (getSnapTime(s) <= monthStart) startSnap = s; else break; }
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+
+  const startSnap = findSnapAtOrBefore(snaps, monthStart, snaps[0]);
   const endSnap = snaps[snaps.length - 1];
   if (startSnap === endSnap) return;
 
@@ -1998,18 +2020,42 @@ function renderMonthlySummary() {
   const pct = startSnap.total ? (delta / startSnap.total * 100) : 0;
   const sign = delta >= 0 ? '+' : '';
   const cls = delta >= 0 ? 'green' : 'red';
-
-  let bestAsset = null, bestDelta = -Infinity;
-  const assets = new Set([...Object.keys(startSnap.byAsset || {}), ...Object.keys(endSnap.byAsset || {})]);
-  assets.forEach(a => {
-    const d = (endSnap.byAsset?.[a] || 0) - (startSnap.byAsset?.[a] || 0);
-    if (d > bestDelta) { bestDelta = d; bestAsset = a; }
-  });
-
   const monthName = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+
+  // Comparación contra el mes anterior: el snapshot al inicio del mes en
+  // curso es, a la vez, el cierre aproximado del mes anterior.
+  const prevStartSnap = findSnapAtOrBefore(snaps, prevMonthStart, null);
+  let prevComparisonHtml = '';
+  if (prevStartSnap && prevStartSnap !== startSnap) {
+    const prevDelta = startSnap.total - prevStartSnap.total;
+    const better = delta >= prevDelta;
+    prevComparisonHtml = `<div class="field-hint">Mes anterior: ${prevDelta >= 0 ? '+' : ''}${fmtC(prevDelta)} — este mes vas ${better ? 'mejor 📈' : 'más flojo 📉'} que el anterior.</div>`;
+  }
+
+  // Top movers por activo (en $ y %).
+  const assetKeys = new Set([...Object.keys(startSnap.byAsset || {}), ...Object.keys(endSnap.byAsset || {})]);
+  const movers = [...assetKeys].map(a => {
+    const s0 = startSnap.byAsset?.[a] || 0, s1 = endSnap.byAsset?.[a] || 0;
+    return { ticker: a, delta: s1 - s0, pct: s0 ? (s1 - s0) / s0 * 100 : null, isNew: s0 === 0 && s1 > 0 };
+  }).filter(m => Math.abs(m.delta) > 0.005);
+  const gainers = movers.filter(m => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 3);
+  const losers = movers.filter(m => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 3);
+
+  // Desglose por categoría.
+  const catDeltas = Object.keys(MONTHLY_CAT_LABELS)
+    .map(cat => ({ cat, delta: monthlyCatTotal(endSnap, cat) - monthlyCatTotal(startSnap, cat) }))
+    .filter(c => Math.abs(c.delta) > 0.005)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+  const moverRow = (m, isGain) => `<div class="mover-row"><span>${isGain ? '🟢' : '🔴'} ${m.ticker}${m.isNew ? ' (nuevo)' : ''}</span><span class="${isGain ? 'green' : 'red'}">${m.delta >= 0 ? '+' : ''}${fmtC(m.delta)}${m.pct != null ? ` (${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(1)}%)` : ''}</span></div>`;
+  const catRow = c => `<div class="mover-row"><span>${MONTHLY_CAT_LABELS[c.cat]}</span><span class="${c.delta >= 0 ? 'green' : 'red'}">${c.delta >= 0 ? '+' : ''}${fmtC(c.delta)}</span></div>`;
+
   el.innerHTML = `
     <div class="ckpi"><div class="ckpi-label">Cartera en ${monthName}</div><div class="ckpi-val ${cls}">${sign}${fmtC(delta)} (${sign}${pct.toFixed(1)}%)</div></div>
-    ${bestAsset && bestDelta > 0 ? `<div class="field-hint">El que más aportó: <b>${bestAsset}</b> (+${fmtC(bestDelta)})</div>` : ''}
+    ${prevComparisonHtml}
+    ${gainers.length ? `<div class="summary-block"><div class="summary-block-title">📈 Lo que más subió</div>${gainers.map(m => moverRow(m, true)).join('')}</div>` : ''}
+    ${losers.length ? `<div class="summary-block"><div class="summary-block-title">📉 Lo que más cayó</div>${losers.map(m => moverRow(m, false)).join('')}</div>` : ''}
+    ${catDeltas.length ? `<div class="summary-block"><div class="summary-block-title">Por categoría</div>${catDeltas.map(catRow).join('')}</div>` : ''}
   `;
 }
 
