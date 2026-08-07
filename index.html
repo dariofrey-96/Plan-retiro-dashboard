@@ -733,7 +733,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
                 <option value="__total__">Cartera completa</option>
               </select>
               <div class="toggle-wrap" id="hist-period-toggle">
-                <button class="toggle-btn" data-days="today" onclick="setHistPeriod('today',this)">Hoy</button>
+                <button class="toggle-btn" data-days="today" onclick="setHistPeriod('today',this)">24h</button>
                 <button class="toggle-btn active" data-days="30" onclick="setHistPeriod(30,this)">30D</button>
                 <button class="toggle-btn" data-days="90" onclick="setHistPeriod(90,this)">90D</button>
                 <button class="toggle-btn" data-days="365" onclick="setHistPeriod(365,this)">1A</button>
@@ -1599,6 +1599,12 @@ let histData = null, histPeriodDays = 30;
 const chartHist = new Chart(document.getElementById('chart-hist').getContext('2d'), {
   type: 'line', data: { labels: [], datasets: [] }, options: cDef()
 });
+// El gráfico general (cDef) redondea a K/M para las cifras grandes de Proyección
+// (millones). Acá los valores de cartera suelen moverse en rangos chicos
+// (ej. $9.710 a $9.750), y ese redondeo hacía que todo el eje mostrara "$10K"
+// sin distinguir la variación real — se lo pisa con un formateador propio,
+// más preciso, sacando el mínimo/máximo real de los datos en cada render.
+chartHist.options.scales.y.ticks.callback = v => (typeof fmtC === 'function' ? fmtC(v) : fmt(v));
 
 async function loadHistory() {
   const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH_HISTORY}`;
@@ -1644,8 +1650,8 @@ function renderHistChart() {
   const isToday = histPeriodDays === 'today';
 
   if (isToday) {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    snaps = snaps.filter(s => (s.date || '') === todayStr);
+    const cutoff24h = Date.now() - 24 * 3600000;
+    snaps = snaps.filter(s => getSnapTime(s) >= cutoff24h);
   } else {
     if (histPeriodDays > 0) {
       const cutoff = Date.now() - histPeriodDays * 86400000;
