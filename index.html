@@ -1688,7 +1688,7 @@ function renderHistChart() {
     label, data: values,
     borderColor: getCSSVar('--accent') || '#58a6ff',
     backgroundColor: 'transparent',
-    borderWidth: 2.5, pointRadius: isToday ? 2 : 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
+    borderWidth: 2.5, pointRadius: (isToday || snaps.length <= 2) ? 3 : 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
   }];
   chartHist.update();
 }
