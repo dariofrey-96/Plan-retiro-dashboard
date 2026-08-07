@@ -704,6 +704,26 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
       <div class="cartera-main-col">
         <button class="btn-sync" onclick="syncCarteraToCapital()">↔ Usar valor de cartera como capital inicial</button>
 
+        <div class="panel-card">
+          <div class="chart-header">
+            <span class="chart-title">📈 Evolución histórica</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select id="hist-series" class="hist-select" onchange="renderHistChart()">
+                <option value="__total__">Cartera completa</option>
+              </select>
+              <div class="toggle-wrap" id="hist-period-toggle">
+                <button class="toggle-btn" data-days="today" onclick="setHistPeriod('today',this)">24h</button>
+                <button class="toggle-btn active" data-days="30" onclick="setHistPeriod(30,this)">30D</button>
+                <button class="toggle-btn" data-days="90" onclick="setHistPeriod(90,this)">90D</button>
+                <button class="toggle-btn" data-days="365" onclick="setHistPeriod(365,this)">1A</button>
+                <button class="toggle-btn" data-days="0" onclick="setHistPeriod(0,this)">Todo</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap" style="min-height:220px"><canvas id="chart-hist"></canvas></div>
+          <div class="field-hint" id="hist-empty-msg">Todavía no hay historial guardado. Se va a ir completando solo — un robot en GitHub Actions guarda el valor de tu cartera todos los días, aunque no abras la app.</div>
+        </div>
+
         <div class="assets-section" id="section-crypto" style="display:none">
           <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.64rem;color:var(--muted)"></span></div>
           <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table></div>
@@ -723,26 +743,6 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 
         <div class="assets-section">
           <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
-        </div>
-
-        <div class="panel-card">
-          <div class="chart-header">
-            <span class="chart-title">📈 Evolución histórica</span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <select id="hist-series" class="hist-select" onchange="renderHistChart()">
-                <option value="__total__">Cartera completa</option>
-              </select>
-              <div class="toggle-wrap" id="hist-period-toggle">
-                <button class="toggle-btn" data-days="today" onclick="setHistPeriod('today',this)">24h</button>
-                <button class="toggle-btn active" data-days="30" onclick="setHistPeriod(30,this)">30D</button>
-                <button class="toggle-btn" data-days="90" onclick="setHistPeriod(90,this)">90D</button>
-                <button class="toggle-btn" data-days="365" onclick="setHistPeriod(365,this)">1A</button>
-                <button class="toggle-btn" data-days="0" onclick="setHistPeriod(0,this)">Todo</button>
-              </div>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap" style="min-height:220px"><canvas id="chart-hist"></canvas></div>
-          <div class="field-hint" id="hist-empty-msg">Todavía no hay historial guardado. Se va a ir completando solo — un robot en GitHub Actions guarda el valor de tu cartera todos los días, aunque no abras la app.</div>
         </div>
       </div>
 
