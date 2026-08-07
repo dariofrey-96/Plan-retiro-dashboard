@@ -724,6 +724,13 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div class="field-hint" id="hist-empty-msg">Todavía no hay historial guardado. Se va a ir completando solo — un robot en GitHub Actions guarda el valor de tu cartera todos los días, aunque no abras la app.</div>
         </div>
 
+        <div class="panel-card" id="monthly-summary-card">
+          <div class="chart-header">
+            <span class="chart-title">🗓️ Resumen del mes</span>
+          </div>
+          <div id="monthly-summary"><div class="field-hint">Todavía no hay suficiente historial para armar el resumen del mes.</div></div>
+        </div>
+
         <div class="assets-section" id="section-crypto" style="display:none">
           <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.64rem;color:var(--muted)"></span></div>
           <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table></div>
@@ -1971,6 +1978,54 @@ function setCarteraCurrency(cur, btn) {
   try { const saved = localStorage.getItem(LS_CARTERA_CUR); if (saved === 'ARS') carteraCurrency = 'ARS'; } catch (e) {}
   document.querySelectorAll('.currency-toggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === carteraCurrency));
   fetchArsRate().then(() => renderCartera()); // la primera vez que carga, re-renderiza con formato correcto (fmtC recién queda disponible acá)
+})();
+
+// ── RESUMEN MENSUAL DE CARTERA (aditivo, no toca loadHistory/setCarteraCurrency originales) ──
+function renderMonthlySummary() {
+  const el = $('monthly-summary');
+  if (!el || !histData) return;
+  const snaps = [...(histData.snapshots || [])].sort((a, b) => getSnapTime(a) - getSnapTime(b));
+  if (snaps.length < 2) return; // deja el mensaje por defecto del HTML
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  let startSnap = snaps[0];
+  for (const s of snaps) { if (getSnapTime(s) <= monthStart) startSnap = s; else break; }
+  const endSnap = snaps[snaps.length - 1];
+  if (startSnap === endSnap) return;
+
+  const delta = endSnap.total - startSnap.total;
+  const pct = startSnap.total ? (delta / startSnap.total * 100) : 0;
+  const sign = delta >= 0 ? '+' : '';
+  const cls = delta >= 0 ? 'green' : 'red';
+
+  let bestAsset = null, bestDelta = -Infinity;
+  const assets = new Set([...Object.keys(startSnap.byAsset || {}), ...Object.keys(endSnap.byAsset || {})]);
+  assets.forEach(a => {
+    const d = (endSnap.byAsset?.[a] || 0) - (startSnap.byAsset?.[a] || 0);
+    if (d > bestDelta) { bestDelta = d; bestAsset = a; }
+  });
+
+  const monthName = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  el.innerHTML = `
+    <div class="ckpi"><div class="ckpi-label">Cartera en ${monthName}</div><div class="ckpi-val ${cls}">${sign}${fmtC(delta)} (${sign}${pct.toFixed(1)}%)</div></div>
+    ${bestAsset && bestDelta > 0 ? `<div class="field-hint">El que más aportó: <b>${bestAsset}</b> (+${fmtC(bestDelta)})</div>` : ''}
+  `;
+}
+
+(function () {
+  const _loadHistory = loadHistory;
+  loadHistory = async function (...args) {
+    const r = await _loadHistory(...args);
+    renderMonthlySummary();
+    return r;
+  };
+  const _setCarteraCurrency = setCarteraCurrency;
+  setCarteraCurrency = function (...args) {
+    const r = _setCarteraCurrency(...args);
+    renderMonthlySummary();
+    return r;
+  };
 })();
 
 loadHistory();
