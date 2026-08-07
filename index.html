@@ -1660,6 +1660,7 @@ function renderHistChart() {
   if (!histData) return;
   let snaps = [...(histData.snapshots || [])].sort((a, b) => getSnapTime(a) - getSnapTime(b));
   const isToday = histPeriodDays === 'today';
+  let rawHourly = false;
 
   if (isToday) {
     const cutoff24h = Date.now() - 24 * 3600000;
@@ -1669,12 +1670,19 @@ function renderHistChart() {
       const cutoff = Date.now() - histPeriodDays * 86400000;
       snaps = snaps.filter(s => getSnapTime(s) >= cutoff);
     }
-    // Compactar a 1 punto por día (el último snapshot de cada día) — con
-    // snapshots cada hora, mostrar todos los puntos crudos en 30D/90D/1A/Todo
-    // haría un gráfico ilegible y pesado. Para "Hoy" sí se muestran todos.
-    const byDate = {};
-    snaps.forEach(s => { byDate[s.date] = s; }); // ordenado ascendente: el último pisa y gana
-    snaps = Object.values(byDate).sort((a, b) => getSnapTime(a) - getSnapTime(b));
+    // Compactar a 1 punto por día (el último snapshot de cada día) sólo si ya
+    // hay muchos puntos crudos acumulados — con semanas/meses de snapshots
+    // por hora, mostrarlos todos en 30D/90D/1A/Todo haría un gráfico
+    // ilegible y pesado. Con poca historia (los primeros días), se muestran
+    // todos los puntos por hora para que la curva se vea fluida, igual que "Hoy".
+    const MAX_RAW_HIST_POINTS = 150;
+    if (snaps.length > MAX_RAW_HIST_POINTS) {
+      const byDate = {};
+      snaps.forEach(s => { byDate[s.date] = s; }); // ordenado ascendente: el último pisa y gana
+      snaps = Object.values(byDate).sort((a, b) => getSnapTime(a) - getSnapTime(b));
+    } else {
+      rawHourly = true; // varios puntos por día: hay que distinguirlos con hora en el label
+    }
   }
 
   const emptyMsg = $('hist-empty-msg');
@@ -1701,12 +1709,14 @@ function renderHistChart() {
 
   chartHist.data.labels = snaps.map(s => isToday
     ? new Date(getSnapTime(s)).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
-    : s.date);
+    : rawHourly
+      ? s.date + ' ' + new Date(getSnapTime(s)).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+      : s.date);
   chartHist.data.datasets = [{
     label, data: values,
     borderColor: getCSSVar('--accent') || '#58a6ff',
     backgroundColor: 'transparent',
-    borderWidth: 2.5, pointRadius: (isToday || snaps.length <= 2) ? 3 : 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
+    borderWidth: 2.5, pointRadius: (isToday || rawHourly || snaps.length <= 2) ? 3 : 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
   }];
   chartHist.update();
 }
