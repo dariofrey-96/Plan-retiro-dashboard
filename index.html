@@ -680,10 +680,18 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div class="inv-card"><h3>🏦 ¿Con qué capital inicial llego?</h3><p>Manteniendo tu ahorro actual, ¿qué capital inicial necesitás para llegar a la meta?</p><div class="inv-result" id="inv-capital">—</div><div class="inv-result-sub">de capital inicial</div></div>
           <div class="inv-card"><h3>📅 ¿En cuántos años llego?</h3><p>Con tu ahorro y capital actuales, ¿cuándo alcanzás la meta?</p><div class="inv-result" id="inv-anos">—</div><div class="inv-result-sub" id="inv-anos-sub">—</div></div>
           <div class="inv-card"><h3>📉 ¿Cuánto puedo retirar sosteniblemente?</h3><p>Con el capital proyectado al retiro, ¿cuánto podés retirar por mes indefinidamente?</p><div class="inv-result" id="inv-retiro">—</div><div class="inv-result-sub">por mes</div></div>
-          <div class="inv-card"><h3>⏳ ¿Y si me retiro antes o después?</h3><p>Manteniendo el resto de los parámetros igual, así cambia tu capital final si movés la edad de retiro 5 años para cada lado.</p>
-            <div style="display:flex;gap:16px;flex-wrap:wrap">
-              <div><div class="inv-result-sub">5 años antes</div><div class="inv-result" id="inv-retiro-antes" style="font-size:1.3rem">—</div></div>
-              <div><div class="inv-result-sub">5 años después</div><div class="inv-result" id="inv-retiro-despues" style="font-size:1.3rem">—</div></div>
+          <div class="inv-card"><h3>🎚️ ¿Y si ahorro más o me retiro en otro momento?</h3><p>Movés los controles y ves al instante el resultado — sin tocar tu configuración real de Params.</p>
+            <div class="field" style="margin-top:10px">
+              <div class="field-top-row"><label>Ahorro extra por mes</label><span class="val" id="v-whatif-extra">+$0</span></div>
+              <div class="field-row"><input type="range" id="whatif-extra" min="0" max="1000" step="25" value="0" oninput="renderInvWhatIf()"></div>
+            </div>
+            <div class="field">
+              <div class="field-top-row"><label>Edad de retiro deseada</label><span class="val" id="v-whatif-edad">65 años</span></div>
+              <div class="field-row"><input type="range" id="whatif-edad" min="45" max="80" step="1" value="65" oninput="whatifEdadTouched=true;renderInvWhatIf()"></div>
+            </div>
+            <div class="summary-block">
+              <div class="mover-row"><span>Capital estimado a esa edad</span><span class="ckpi-val" id="whatif-capital" style="font-size:1.05rem">—</span></div>
+              <div class="field-hint" id="whatif-msg"></div>
             </div>
           </div>
         </div>
@@ -1788,11 +1796,41 @@ function calcCapitalAtRetAge(offsetYears) {
   for (let i = 0; i < nA2; i++) { const aA = a * 12; c = c + aA + (c + aA / 2) * LC.ret; a *= (1 + LC.ca); }
   return c;
 }
-function renderInvExtra() {
+function calcCapitalCustom(ahorroMensual, edadRetiro) {
+  const n = Math.max(1, edadRetiro - LC.ea);
+  let c = LC.ci, a = ahorroMensual;
+  for (let i = 0; i < n; i++) { const aA = a * 12; c = c + aA + (c + aA / 2) * LC.ret; a *= (1 + LC.ca); }
+  return c;
+}
+// "¿Y si...?" interactivo: el usuario mueve estos controles sin tocar su
+// configuración real (LC no se modifica). whatifEdadTouched evita que
+// recalc() le pise la edad elegida mientras está explorando escenarios.
+let whatifEdadTouched = false;
+function renderInvWhatIf() {
   if (LC.ret == null) return;
-  const edadAntes = Math.max(LC.ea + 1, LC.er - 5), edadDespues = LC.er + 5;
-  if ($('inv-retiro-antes')) $('inv-retiro-antes').textContent = fmt(calcCapitalAtRetAge(edadAntes - LC.er)) + ' · ' + edadAntes + ' años';
-  if ($('inv-retiro-despues')) $('inv-retiro-despues').textContent = fmt(calcCapitalAtRetAge(5)) + ' · ' + edadDespues + ' años';
+  const extraEl = $('whatif-extra'), edadEl = $('whatif-edad');
+  if (!extraEl || !edadEl) return;
+  if (!whatifEdadTouched) { edadEl.min = LC.ea + 1; edadEl.value = LC.er; }
+  const extra = +extraEl.value, edad = +edadEl.value;
+
+  $('v-whatif-extra').textContent = (extra > 0 ? '+' : '') + fmt(extra) + '/mes';
+  $('v-whatif-edad').textContent = edad + ' años';
+
+  const capital = calcCapitalCustom(LC.ai + extra, edad);
+  const cubre = capital >= LC.meta;
+  const deltaEdad = edad - LC.er;
+
+  const capEl = $('whatif-capital');
+  capEl.textContent = fmt(capital);
+  capEl.className = 'ckpi-val ' + (cubre ? 'green' : 'red');
+
+  let msg = cubre
+    ? `✅ Cubre tu meta de ${fmt(LC.meta)} (sobran ${fmt(capital - LC.meta)}).`
+    : `⚠️ Faltarían ${fmt(LC.meta - capital)} para tu meta de ${fmt(LC.meta)}.`;
+  if (deltaEdad !== 0) {
+    msg += ` Es ${Math.abs(deltaEdad)} año${Math.abs(deltaEdad) === 1 ? '' : 's'} ${deltaEdad < 0 ? 'antes' : 'después'} que tu plan actual (${LC.er} años).`;
+  }
+  $('whatif-msg').innerHTML = msg;
 }
 
 // Enganchar todo esto a las funciones originales, sin tocarlas.
@@ -1801,7 +1839,7 @@ function renderInvExtra() {
   recalc = function (...args) { const r = _recalc(...args); renderProyStats(); return r; };
   renderEsc = function (...args) { const r = _renderEsc(...args); renderEscStats(); return r; };
   renderSens = function (...args) { const r = _renderSens(...args); highlightSensCell(); return r; };
-  renderInv = function (...args) { const r = _renderInv(...args); renderInvExtra(); return r; };
+  renderInv = function (...args) { const r = _renderInv(...args); renderInvWhatIf(); return r; };
 })();
 // el recalc() inicial de la página ya corrió antes de instalar este parche
 // (este script corre después), así que disparamos una vez a mano para no
