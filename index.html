@@ -1631,6 +1631,49 @@ const chartHist = new Chart(document.getElementById('chart-hist').getContext('2d
 // más preciso, sacando el mínimo/máximo real de los datos en cada render.
 chartHist.options.scales.y.ticks.callback = v => (typeof fmtC === 'function' ? fmtC(v) : fmt(v));
 
+// El eje X guarda la etiqueta completa (la que se ve en el tooltip: "5 ago 2026,
+// 12:00") pero abajo dibuja una versión corta, si no con snapshots cada hora
+// quedaban decenas de fechas largas encimadas. maxTicksLimit deja ~7 marcas.
+let histAxisLabels = [];
+chartHist.options.scales.x.ticks.callback = function (val, i) {
+  return histAxisLabels[typeof val === 'number' ? val : i] ?? '';
+};
+chartHist.options.scales.x.ticks.maxTicksLimit = 7;
+chartHist.options.scales.x.ticks.maxRotation = 0;
+chartHist.options.scales.x.ticks.autoSkip = true;
+
+// Los colores del tema son oklch(), así que para el degradado hay que
+// inyectarles el alfa con la sintaxis "/ a". Si el navegador no lo parsea,
+// addColorStop tira SyntaxError y se cae el gráfico: de ahí el try/catch.
+function colorConAlfa(color, a) {
+  const c = (color || '').trim();
+  if (!c) return `rgba(88,166,255,${a})`;
+  if (c.startsWith('#')) {
+    const h = c.slice(1);
+    const f = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
+    const n = parseInt(f, 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  if (/^(oklch|oklab|lch|lab|hsl|rgb)a?\(/i.test(c) && !c.includes('/')) return c.replace(/\)\s*$/, ` / ${a})`);
+  return c;
+}
+// Relleno degradado bajo la línea: se define como función porque en el primer
+// render chartArea todavía no existe (Chart.js la calcula después de medir).
+function histGradiente(ctx) {
+  const { chart } = ctx;
+  const { ctx: c, chartArea } = chart;
+  if (!chartArea) return 'transparent';
+  const base = getCSSVar('--accent') || '#58a6ff';
+  try {
+    const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    g.addColorStop(0, colorConAlfa(base, 0.26));
+    g.addColorStop(1, colorConAlfa(base, 0));
+    return g;
+  } catch (e) {
+    return 'transparent'; // navegador viejo que no entiende oklch con alfa
+  }
+}
+
 async function loadHistory() {
   const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH_HISTORY}`;
   try {
@@ -1720,16 +1763,40 @@ function renderHistChart() {
     values = snaps.map(s => (s.byAsset || {})[tk] ?? null);
   }
 
-  chartHist.data.labels = snaps.map(s => isToday
-    ? new Date(getSnapTime(s)).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
-    : rawHourly
-      ? s.date + ' ' + new Date(getSnapTime(s)).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
-      : s.date);
+  // Con puntos por hora, poner la fecha en cada marca del eje no sirve (se
+  // repetiría "5 ago" siete veces): si todo entra en ~2 días se muestra la
+  // hora, y si abarca más, la fecha.
+  const spanDias = (getSnapTime(snaps[snaps.length - 1]) - getSnapTime(snaps[0])) / 86400000;
+  const ejeConHora = isToday || spanDias <= 2;
+  const conHora = isToday || rawHourly;
+  const hora = t => new Date(t).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const fecha = t => new Date(t).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+
+  chartHist.data.labels = snaps.map(s => {
+    const t = getSnapTime(s);
+    const f = new Date(t).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
+    return conHora ? `${f}, ${hora(t)}` : f;
+  });
+  histAxisLabels = snaps.map(s => (ejeConHora ? hora(getSnapTime(s)) : fecha(getSnapTime(s))));
+
+  const accent = getCSSVar('--accent') || '#58a6ff';
   chartHist.data.datasets = [{
     label, data: values,
-    borderColor: getCSSVar('--accent') || '#58a6ff',
-    backgroundColor: 'transparent',
-    borderWidth: 2.5, pointRadius: (isToday || rawHourly || snaps.length <= 2) ? 3 : 0, pointHoverRadius: 5, tension: 0.25, spanGaps: true
+    borderColor: accent,
+    backgroundColor: histGradiente,
+    fill: true,
+    borderWidth: 2,
+    // Sin marcadores: con snapshots cada hora la línea se llenaba de puntitos.
+    // El punto aparece sólo al pasar por encima (o al tocar, en el celular).
+    pointRadius: snaps.length <= 2 ? 3 : 0,
+    pointHoverRadius: 5,
+    pointHoverBackgroundColor: accent,
+    pointHoverBorderColor: getCSSVar('--surface') || '#fff',
+    pointHoverBorderWidth: 2,
+    // 'monotone' suaviza sin inventar picos que no están en los datos, que es
+    // lo que hacía el tension normal en series de precios.
+    cubicInterpolationMode: 'monotone',
+    spanGaps: true
   }];
   chartHist.update();
 }
@@ -1747,7 +1814,13 @@ function renderHistChart() {
       chartHist.options.scales.x.border.color = opts.scales.x.border.color;
       chartHist.options.scales.y.ticks.color = opts.scales.y.ticks.color;
       chartHist.options.scales.y.border.color = opts.scales.y.border.color;
-      chartHist.data.datasets.forEach(ds => { ds.borderColor = getCSSVar('--accent'); });
+      chartHist.data.datasets.forEach(ds => {
+        ds.borderColor = getCSSVar('--accent');
+        ds.pointHoverBackgroundColor = getCSSVar('--accent');
+        ds.pointHoverBorderColor = getCSSVar('--surface');
+        // backgroundColor es la función del degradado: se repinta sola con el
+        // color nuevo en el próximo draw, no hay que tocarla acá.
+      });
       chartHist.update();
     }, 60);
     return r;
