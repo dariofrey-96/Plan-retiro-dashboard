@@ -261,6 +261,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .donut-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
 .donut-total{font-size:.85rem;font-weight:700}
 .donut-sub{font-size:.58rem;color:var(--muted)}
+.donut-row{display:flex;flex-direction:column;gap:14px}
 .cat-legend{display:flex;flex-direction:column;gap:6px;margin-top:12px}
 .cat-leg-row{display:flex;align-items:center;justify-content:space-between;font-size:.7rem}
 .cat-leg-left{display:flex;align-items:center;gap:7px}
@@ -326,6 +327,8 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   .currency-toggle-row{grid-column:1/-1}
   .cartera-main-col{display:flex;flex-direction:column;gap:14px}
   .cartera-side-col{display:flex;flex-direction:column;gap:14px}
+  /* en la columna principal (más ancha que la lateral) los dos donuts entran a la par */
+  .donut-row{display:grid;grid-template-columns:1fr 1fr;align-items:start}
 }
 </style>
 </head>
@@ -744,6 +747,20 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           <div id="monthly-summary"><div class="field-hint">Todavía no hay suficiente historial para armar el resumen del mes.</div></div>
         </div>
 
+        <div class="donut-row">
+          <div class="panel-card">
+            <div class="donut-block-title">Por categoría</div>
+            <div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div>
+            <div class="cat-legend" id="cat-legend"></div>
+          </div>
+
+          <div class="panel-card">
+            <div class="donut-block-title">Por activo</div>
+            <div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div>
+            <div class="cat-legend" id="asset-legend"></div>
+          </div>
+        </div>
+
         <div class="assets-section" id="section-crypto" style="display:none">
           <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.64rem;color:var(--muted)"></span></div>
           <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table></div>
@@ -780,18 +797,6 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 
         <button class="btn btn-refresh" id="btn-refresh" onclick="refreshPrices()"><span id="refresh-icon">⟳</span> Actualizar precios</button>
         <button class="snapshot-btn" onclick="saveSnapshot()">📸 Guardar snapshot mensual</button>
-
-        <div class="panel-card">
-          <div class="donut-block-title">Por categoría</div>
-          <div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div>
-          <div class="cat-legend" id="cat-legend"></div>
-        </div>
-
-        <div class="panel-card">
-          <div class="donut-block-title">Por activo</div>
-          <div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div>
-          <div class="cat-legend" id="asset-legend"></div>
-        </div>
 
         <div class="panel-card" id="snapshot-history" style="display:none">
           <div class="donut-block-title" style="margin-bottom:2px">Historial snapshots</div>
