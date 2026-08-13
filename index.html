@@ -2179,10 +2179,44 @@ function renderMonthlySummary() {
   el.innerHTML = `
     <div class="ckpi"><div class="ckpi-label">Cartera en ${monthName}</div><div class="ckpi-val ${cls}">${sign}${fmtC(delta)} (${sign}${pct.toFixed(1)}%)</div></div>
     ${prevComparisonHtml}
+    ${renderBenchmarkBlock(startSnap, endSnap, pct)}
     ${gainers.length ? `<div class="summary-block"><div class="summary-block-title">📈 Lo que más subió</div>${gainers.map(m => moverRow(m, true)).join('')}</div>` : ''}
     ${losers.length ? `<div class="summary-block"><div class="summary-block-title">📉 Lo que más cayó</div>${losers.map(m => moverRow(m, false)).join('')}</div>` : ''}
     ${catDeltas.length ? `<div class="summary-block"><div class="summary-block-title">Por categoría</div>${catDeltas.map(catRow).join('')}</div>` : ''}
   `;
+}
+
+// ── "¿FUE EL MERCADO O FUI YO?" ────────────────────────────────────────────
+// Los snapshots viejos no traen benchmarks (se agregaron después), así que
+// todo esto devuelve '' si no hay datos en ambas puntas del período.
+const BENCH_LABELS = { spy: 'S&P 500', btc: 'Bitcoin', gold: 'Oro' };
+
+function renderBenchmarkBlock(startSnap, endSnap, carteraPct) {
+  const b0 = startSnap.benchmarks, b1 = endSnap.benchmarks;
+  if (!b0 || !b1) return '';
+
+  const filas = Object.keys(BENCH_LABELS)
+    .filter(k => typeof b0[k] === 'number' && b0[k] > 0 && typeof b1[k] === 'number')
+    .map(k => ({ clave: k, pct: (b1[k] - b0[k]) / b0[k] * 100 }));
+  if (!filas.length) return '';
+
+  const fila = f => `<div class="mover-row"><span>${BENCH_LABELS[f.clave]}</span><span class="${f.pct >= 0 ? 'green' : 'red'}">${f.pct >= 0 ? '+' : ''}${f.pct.toFixed(1)}%</span></div>`;
+
+  // La lectura en criollo: compara tu cartera contra el promedio de las
+  // referencias, para decir si el movimiento fue tuyo o del mercado en general.
+  const promedio = filas.reduce((s, f) => s + f.pct, 0) / filas.length;
+  const dif = carteraPct - promedio;
+  let lectura;
+  if (Math.abs(dif) < 0.5) lectura = 'Tu cartera se movió prácticamente igual que el mercado.';
+  else if (dif > 0) lectura = `Tu cartera le ganó al mercado por ${dif.toFixed(1)} puntos. 👏`;
+  else lectura = `Tu cartera quedó ${Math.abs(dif).toFixed(1)} puntos por debajo del mercado.`;
+
+  return `<div class="summary-block">
+    <div class="summary-block-title">🌍 ¿Fue el mercado o fuiste vos?</div>
+    <div class="mover-row"><span><b>Tu cartera</b></span><span class="${carteraPct >= 0 ? 'green' : 'red'}"><b>${carteraPct >= 0 ? '+' : ''}${carteraPct.toFixed(1)}%</b></span></div>
+    ${filas.map(fila).join('')}
+    <div class="field-hint">${lectura}</div>
+  </div>`;
 }
 
 (function () {

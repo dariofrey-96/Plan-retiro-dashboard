@@ -27,6 +27,12 @@ const COINGECKO_IDS = {
 // "repository secret" en GitHub y va a usar esa en su lugar.
 const TWELVEDATA_API_KEY = process.env.TWELVEDATA_API_KEY || 'b02a61d5eb77400dba83ed33448b639d';
 
+// Referencias de mercado — se guardan en cada snapshot aunque no las tengas en
+// cartera, para poder contestar "¿subí porque subí yo, o porque subió todo?".
+// SPY sigue al S&P 500 (las 500 empresas más grandes de EE.UU.) y XAU/USD al oro.
+const BENCHMARKS_TD = { spy: 'SPY', gold: 'XAU/USD' }; // vía Twelve Data
+const BENCHMARKS_CG = { btc: 'BTC' };                  // vía CoinGecko
+
 async function readJsonSafe(path, fallback) {
   try {
     const raw = await readFile(path, 'utf8');
@@ -86,14 +92,26 @@ async function main() {
     return;
   }
 
-  const cryptoTickers = [...new Set(assets.filter(a => a.cat === 'crypto').map(a => a.ticker))];
-  const otherTickers = [...new Set(assets.filter(a => a.cat !== 'crypto').map(a => a.ticker))];
+  const carteraCrypto = assets.filter(a => a.cat === 'crypto').map(a => a.ticker);
+  const carteraOther = assets.filter(a => a.cat !== 'crypto').map(a => a.ticker);
+
+  // Se piden juntos con los de la cartera para no gastar llamadas de más; si ya
+  // tenés el activo, el Set lo deduplica y no cuesta nada extra.
+  const cryptoTickers = [...new Set([...carteraCrypto, ...Object.values(BENCHMARKS_CG)])];
+  const otherTickers = [...new Set([...carteraOther, ...Object.values(BENCHMARKS_TD)])];
 
   const [cryptoPrices, otherPrices] = await Promise.all([
     fetchCryptoPrices(cryptoTickers),
     fetchTwelveDataPrices(otherTickers),
   ]);
   const allPrices = { ...cryptoPrices, ...otherPrices };
+
+  const benchmarks = {};
+  Object.entries({ ...BENCHMARKS_CG, ...BENCHMARKS_TD }).forEach(([clave, ticker]) => {
+    const p = allPrices[ticker];
+    if (typeof p === 'number' && p > 0) benchmarks[clave] = Math.round(p * 100) / 100;
+    else console.warn('Sin precio de referencia para', ticker, '- se omite del snapshot');
+  });
 
   const byAsset = {};
   const byCategory = { crypto: 0, stock: 0, metal: 0 };
@@ -119,6 +137,7 @@ async function main() {
 
   const history = await readJsonSafe(HISTORY_PATH, { snapshots: [] });
   const snapshot = { date: today, timestamp: now.toISOString(), hourKey, total: Math.round(total * 100) / 100, byCategory, byAsset };
+  if (Object.keys(benchmarks).length) snapshot.benchmarks = benchmarks;
 
   const existingIdx = history.snapshots.findIndex(s => (s.hourKey || (s.date && s.date + 'T' + (s.timestamp ? s.timestamp.slice(11, 13) : '12'))) === hourKey);
   if (existingIdx >= 0) history.snapshots[existingIdx] = snapshot; // ya corrió esta hora -> actualiza en vez de duplicar
