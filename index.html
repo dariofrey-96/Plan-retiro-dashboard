@@ -336,8 +336,8 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 <header>
   <div class="header-left"><h1>Plan de Retiro</h1><span class="sub">USD · personal</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchView('retiro',this)">Proyección</button>
-    <button class="nav-tab" onclick="switchView('cartera',this)">Cartera</button>
+    <button class="nav-tab active" data-view="retiro" onclick="switchView('retiro',this)">Proyección</button>
+    <button class="nav-tab" data-view="cartera" onclick="switchView('cartera',this)">Cartera</button>
   </div>
   <div class="header-right">
     <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">⚙ Params</button>
@@ -601,11 +601,11 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="view active" id="view-retiro">
     <div class="inner-tabs">
       <div class="hscroll-pad" style="flex-basis:10px"></div>
-      <button class="inner-tab active" onclick="switchInner('grafico',this)">Gráfico</button>
-      <button class="inner-tab" onclick="switchInner('tabla',this)">Tabla</button>
-      <button class="inner-tab" onclick="switchInner('escenarios',this)">Escenarios</button>
-      <button class="inner-tab" onclick="switchInner('sensibilidad',this)">Sensibilidad</button>
-      <button class="inner-tab" onclick="switchInner('inversa',this)">Calc. Inversa</button>
+      <button class="inner-tab active" data-inner="grafico" onclick="switchInner('grafico',this)">Gráfico</button>
+      <button class="inner-tab" data-inner="tabla" onclick="switchInner('tabla',this)">Tabla</button>
+      <button class="inner-tab" data-inner="escenarios" onclick="switchInner('escenarios',this)">Escenarios</button>
+      <button class="inner-tab" data-inner="sensibilidad" onclick="switchInner('sensibilidad',this)">Sensibilidad</button>
+      <button class="inner-tab" data-inner="inversa" onclick="switchInner('inversa',this)">Calc. Inversa</button>
       <div class="hscroll-pad" style="flex-basis:10px"></div>
     </div>
 
@@ -2232,6 +2232,84 @@ function renderBenchmarkBlock(startSnap, endSnap, carteraPct) {
     renderMonthlySummary();
     return r;
   };
+})();
+
+// ── DESLIZAR CON EL DEDO PARA CAMBIAR DE SECCIÓN (sólo touch) ──────────────
+// Las secciones se recorren en una sola lista plana: las 5 sub-pestañas de
+// Proyección y después Cartera. Deslizar ← avanza, → retrocede.
+const SECCIONES = [
+  { view: 'retiro', inner: 'grafico' },
+  { view: 'retiro', inner: 'tabla' },
+  { view: 'retiro', inner: 'escenarios' },
+  { view: 'retiro', inner: 'sensibilidad' },
+  { view: 'retiro', inner: 'inversa' },
+  { view: 'cartera' },
+];
+
+function seccionActualIdx() {
+  const enCartera = document.getElementById('view-cartera').classList.contains('active');
+  if (enCartera) return SECCIONES.length - 1;
+  const i = SECCIONES.findIndex(s => s.view === 'retiro' && s.inner === curInner);
+  return i < 0 ? 0 : i;
+}
+
+function irASeccion(idx) {
+  const s = SECCIONES[idx];
+  if (!s) return;
+  // Se reusan los botones reales en vez de duplicar su lógica: así el estado
+  // visual de las pestañas queda igual que si el usuario las hubiera tocado.
+  if (s.view === 'retiro' && !document.getElementById('view-retiro').classList.contains('active')) {
+    document.querySelector('.bn-item[data-tab="retiro"]')?.click();
+  } else if (s.view === 'cartera' && !document.getElementById('view-cartera').classList.contains('active')) {
+    document.querySelector('.bn-item[data-tab="cartera"]')?.click();
+  }
+  if (s.inner && s.inner !== curInner) {
+    document.querySelector(`.inner-tab[data-inner="${s.inner}"]`)?.click();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Un deslizamiento que arranca sobre algo que se mueve de costado (una tabla
+// ancha, la tira de pestañas, la fila de KPIs) tiene que mover ESO, no cambiar
+// de sección. Lo mismo sobre un gráfico (toca para ver el dato) o un slider.
+function gestoBloqueado(el) {
+  for (let n = el; n && n !== document.body; n = n.parentElement) {
+    if (n.tagName === 'CANVAS' || n.tagName === 'SELECT' || n.tagName === 'TEXTAREA') return true;
+    if (n.tagName === 'INPUT' && n.type === 'range') return true;
+    if (n.id === 'aside') return true;
+    const est = getComputedStyle(n);
+    if ((est.overflowX === 'auto' || est.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 4) return true;
+  }
+  return false;
+}
+
+(function () {
+  let x0 = null, y0 = null, valido = false;
+  const MIN_DESPLAZAMIENTO = 60; // px — evita disparar con toques temblorosos
+
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { valido = false; return; }
+    const aside = document.getElementById('aside');
+    if (aside && aside.classList.contains('open')) { valido = false; return; } // sidebar abierto: tiene su propio gesto
+    // Los modales de esta app se muestran/ocultan con `display` inline, no con una clase.
+    const hayModal = [...document.querySelectorAll('.modal-overlay')]
+      .some(m => getComputedStyle(m).display !== 'none');
+    if (hayModal) { valido = false; return; }
+    const t = e.touches[0];
+    x0 = t.clientX; y0 = t.clientY;
+    valido = !gestoBloqueado(e.target);
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!valido || x0 == null) return;
+    valido = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - x0, dy = t.clientY - y0;
+    // Tiene que ser claramente horizontal, si no se confunde con scroll vertical.
+    if (Math.abs(dx) < MIN_DESPLAZAMIENTO || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = seccionActualIdx();
+    irASeccion(dx < 0 ? idx + 1 : idx - 1); // ← siguiente, → anterior
+  }, { passive: true });
 })();
 
 loadHistory();
