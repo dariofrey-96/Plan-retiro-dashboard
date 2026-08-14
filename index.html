@@ -619,6 +619,10 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
                 <button class="toggle-btn active" id="btn-nominal" onclick="setMode('nominal')">Nominal</button>
                 <button class="toggle-btn" id="btn-real" onclick="setMode('real')">Real (hoy)</button>
               </div>
+              <div class="toggle-wrap" id="escala-toggle">
+                <button class="toggle-btn active" onclick="setEscalaY('lineal',this)" title="Escala normal: la altura muestra cuántos dólares son">Lineal</button>
+                <button class="toggle-btn" onclick="setEscalaY('log',this)" title="Escala logarítmica: la altura muestra el crecimiento en %, así los primeros años no se ven aplastados">Log</button>
+              </div>
             </div>
           </div>
           <div class="legend">
@@ -2232,6 +2236,60 @@ function renderBenchmarkBlock(startSnap, endSnap, carteraPct) {
     renderMonthlySummary();
     return r;
   };
+})();
+
+// ── ESCALA LINEAL / LOGARÍTMICA DEL GRÁFICO DE PROYECCIÓN ──────────────────
+// En lineal, el interés compuesto aplasta los primeros 20-30 años contra el
+// piso. En logarítmica, la misma altura siempre significa el mismo % de
+// crecimiento, así que la curva se ve pareja de punta a punta.
+let escalaY = 'lineal';
+const CB_EJE_Y_ORIGINAL = chart.options.scales.y.ticks.callback;
+
+function aplicarEscalaY() {
+  const log = escalaY === 'log';
+  chart.options.scales.y.type = log ? 'logarithmic' : 'linear';
+  // El logaritmo de 0 (o de un negativo) no existe: esos puntos se saltean en
+  // vez de romper la escala. Pasa cuando el capital inicial es 0.
+  if (log) {
+    chart.data.datasets.forEach(ds => {
+      ds.data = ds.data.map(v => (typeof v === 'number' && v <= 0) ? null : v);
+    });
+    // Chart.js en log genera marcas irregulares (30K, 60K, 80K...) y llena el
+    // eje. Se reemplazan por una serie clásica 1-2-5 por década, que da
+    // valores redondos y una cantidad razonable para el celular.
+    chart.options.scales.y.afterBuildTicks = escala => {
+      const marcas = [];
+      for (let e = Math.floor(Math.log10(escala.min)); e <= Math.ceil(Math.log10(escala.max)); e++) {
+        [1, 2, 5].forEach(m => {
+          const v = m * Math.pow(10, e);
+          if (v >= escala.min && v <= escala.max) marcas.push({ value: v });
+        });
+      }
+      if (marcas.length) escala.ticks = marcas;
+    };
+    chart.options.scales.y.ticks.callback = v =>
+      v >= 1e6 ? '$' + (v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + 'M'
+      : v >= 1e3 ? '$' + Math.round(v / 1e3) + 'K'
+      : '$' + Math.round(v);
+  } else {
+    chart.options.scales.y.ticks.callback = CB_EJE_Y_ORIGINAL;
+    delete chart.options.scales.y.afterBuildTicks;
+  }
+  chart.update();
+}
+
+function setEscalaY(tipo, btn) {
+  escalaY = tipo;
+  document.querySelectorAll('#escala-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  recalc(); // rehace los datos desde cero; el enganche de abajo aplica la escala
+}
+
+// Se engancha a recalc() para que la escala sobreviva a cualquier cambio de
+// parámetros, sin tocar la función original.
+(function () {
+  const _recalc = recalc;
+  recalc = function (...args) { const r = _recalc(...args); aplicarEscalaY(); return r; };
 })();
 
 // ── DESLIZAR CON EL DEDO PARA CAMBIAR DE VENTANA (sólo touch) ──────────────
