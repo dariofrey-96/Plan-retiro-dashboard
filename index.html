@@ -1709,6 +1709,47 @@ function getSnapTime(s) {
   return new Date(s.timestamp || (s.date + 'T12:00:00')).getTime();
 }
 
+// Cuántos puntos queremos ver en pantalla, sin importar cuánta historia haya.
+// Con este número la curva se ve fluida en un celular sin volverse un borrón.
+const HIST_PUNTOS_OBJETIVO = 140;
+
+// Achica la serie a ~HIST_PUNTOS_OBJETIVO repartiendo los puntos parejo EN EL
+// TIEMPO: parte el rango en tantas franjas como puntos queremos y se queda con
+// la última medición de cada franja.
+//
+// Antes esto era un corte de golpe ("hasta 150 puntos mostralos todos, pasado
+// eso una sola medición por día"), y al cruzar ese número el gráfico se
+// desplomaba de 150 puntos a 14 de un snapshot al siguiente. Repartiendo por
+// franjas la cantidad dibujada se queda siempre cerca del objetivo y el detalle
+// se va soltando de a poco, sin saltos visibles.
+//
+// Repartir por tiempo y no cada N mediciones también corrige la distancia
+// horizontal: el robot no guarda siempre la misma cantidad por día (hubo días
+// de 6 y días de 17), y como el eje ubica los puntos en fila pareja, tomar una
+// de cada N haría que los días con más mediciones ocuparan más ancho que los
+// otros.
+function compactarHist(snaps, objetivo) {
+  if (snaps.length <= objetivo) return snaps;
+  const t0 = getSnapTime(snaps[0]);
+  const rango = getSnapTime(snaps[snaps.length - 1]) - t0;
+  if (!(rango > 0)) return snaps; // todo en el mismo instante: no hay nada que repartir
+  const ancho = rango / objetivo;
+  const porFranja = new Map();
+  snaps.forEach(s => {
+    // La última medición cae justo en el borde; se la manda a la franja final
+    // para no crear una franja extra con un solo punto.
+    const i = Math.min(objetivo - 1, Math.floor((getSnapTime(s) - t0) / ancho));
+    porFranja.set(i, s); // vienen ordenadas: la última de cada franja pisa y gana
+  });
+  const salida = [...porFranja.keys()].sort((a, b) => a - b).map(i => porFranja.get(i));
+  // De cada franja queda la última medición, así que la primera franja arrancaba
+  // un rato después del comienzo real y el gráfico empezaba más tarde de lo que
+  // debía. Se agrega el arranque real adelante en vez de reemplazar al de su
+  // franja: pisarlo dejaba un hueco del doble de ancho en el primer tramo.
+  if (salida[0] !== snaps[0]) salida.unshift(snaps[0]);
+  return salida;
+}
+
 function setHistPeriod(days, btn) {
   histPeriodDays = days;
   document.querySelectorAll('#hist-period-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -1720,30 +1761,15 @@ function renderHistChart() {
   if (!histData) return;
   let snaps = [...(histData.snapshots || [])].sort((a, b) => getSnapTime(a) - getSnapTime(b));
   const isToday = histPeriodDays === 'today';
-  let rawHourly = false;
 
   if (isToday) {
     const cutoff24h = Date.now() - 24 * 3600000;
     snaps = snaps.filter(s => getSnapTime(s) >= cutoff24h);
-  } else {
-    if (histPeriodDays > 0) {
-      const cutoff = Date.now() - histPeriodDays * 86400000;
-      snaps = snaps.filter(s => getSnapTime(s) >= cutoff);
-    }
-    // Compactar a 1 punto por día (el último snapshot de cada día) sólo si ya
-    // hay muchos puntos crudos acumulados — con semanas/meses de snapshots
-    // por hora, mostrarlos todos en 30D/90D/1A/Todo haría un gráfico
-    // ilegible y pesado. Con poca historia (los primeros días), se muestran
-    // todos los puntos por hora para que la curva se vea fluida, igual que "Hoy".
-    const MAX_RAW_HIST_POINTS = 150;
-    if (snaps.length > MAX_RAW_HIST_POINTS) {
-      const byDate = {};
-      snaps.forEach(s => { byDate[s.date] = s; }); // ordenado ascendente: el último pisa y gana
-      snaps = Object.values(byDate).sort((a, b) => getSnapTime(a) - getSnapTime(b));
-    } else {
-      rawHourly = true; // varios puntos por día: hay que distinguirlos con hora en el label
-    }
+  } else if (histPeriodDays > 0) {
+    const cutoff = Date.now() - histPeriodDays * 86400000;
+    snaps = snaps.filter(s => getSnapTime(s) >= cutoff);
   }
+  snaps = compactarHist(snaps, HIST_PUNTOS_OBJETIVO);
 
   const emptyMsg = $('hist-empty-msg');
   if (!snaps.length) {
@@ -1772,7 +1798,10 @@ function renderHistChart() {
   // hora, y si abarca más, la fecha.
   const spanDias = (getSnapTime(snaps[snaps.length - 1]) - getSnapTime(snaps[0])) / 86400000;
   const ejeConHora = isToday || spanDias <= 2;
-  const conHora = isToday || rawHourly;
+  // Si quedó más de una medición del mismo día, el tooltip tiene que aclarar la
+  // hora o se verían dos puntos con la misma fecha. Se mira lo que quedó después
+  // de compactar, no cuánto había antes.
+  const conHora = isToday || snaps.some((s, i) => i > 0 && s.date === snaps[i - 1].date);
   const hora = t => new Date(t).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
   const fecha = t => new Date(t).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
 
