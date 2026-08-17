@@ -19,7 +19,7 @@ Dos apps hermanas (HTML/JS, hosteadas en GitHub Pages), mismo sistema de diseño
 - **Cartera de inversión** (crypto/acciones/metales/USD-USDT): precios en vivo, venta de activos con conversión a USD y promedio ponderado, alertas de ganancia con ventana de tiempo.
 - **Toggle USD/ARS en Cartera**: dólar blue automático vía dolarapi.com.
 - **Historial automático**: `cartera.json` se sincroniza solo a GitHub con cada cambio de cartera (token fine-grained en el navegador, permisos acotados a "Contents: Read and write"). GitHub Action (`fetch-snapshot.mjs`) corre cada hora y guarda en `history.json`. El bot de snapshots corre en paralelo al trabajo normal — puede generar commits nuevos en `origin/main` que requieren rebase antes de pushear.
-- Gráfico con filtro "24h" (ventana rodante de últimas 24hs, no día calendario) o períodos más largos (compactados a 1 punto/día). Eje vertical con montos exactos, no redondeado a K/M.
+- Gráfico con filtro "24h" (ventana rodante de últimas 24hs, no día calendario) o períodos más largos. Eje vertical con montos exactos, no redondeado a K/M. La serie se adelgaza con `compactarHist()` para dibujar siempre ~140 puntos (`HIST_PUNTOS_OBJETIVO`): parte el rango en franjas de tiempo iguales y se queda con la última medición de cada una. Repartir por tiempo (y no una de cada N mediciones) importa porque el robot guarda una cantidad despareja por día y el eje ubica los puntos en fila pareja.
 - Archivos del repo además de `index.html`: `.github/workflows/snapshot-cartera.yml`, `scripts/fetch-snapshot.mjs`, `cartera.json`, `history.json`, `sales.json`.
 
 ### Ideas pendientes (inspiradas en plata.wtf, en orden de prioridad)
