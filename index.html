@@ -742,6 +742,7 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
           </div>
           <div class="chart-canvas-wrap" style="min-height:220px"><canvas id="chart-hist"></canvas></div>
           <div class="field-hint" id="hist-empty-msg">Todavía no hay historial guardado. Se va a ir completando solo — un robot en GitHub Actions guarda el valor de tu cartera todos los días, aunque no abras la app.</div>
+          <div class="field-hint" id="hist-stale-msg" style="display:none;color:var(--orange)"></div>
         </div>
 
         <div class="panel-card" id="monthly-summary-card">
@@ -1543,6 +1544,38 @@ const GH_PATH_CARTERA = 'cartera.json';
 const GH_PATH_HISTORY = 'history.json';
 const LS_GH_TOKEN = 'planRetiro_gh_token';
 
+// Dónde viven los DATOS (cartera, historial, ventas). Se separa del repo del
+// SITIO a propósito: la página tiene que estar en un repo público para que
+// GitHub la publique gratis, pero tu cartera no tiene por qué serlo. Apuntando
+// esto a un repositorio privado, los montos dejan de ser legibles por cualquiera.
+// Mientras apunte al mismo repo que el sitio, todo funciona como antes.
+const GH_DATA_OWNER = 'dariofrey-96';
+const GH_DATA_REPO = 'Plan-retiro-dashboard';
+
+// Lee un JSON del repo de datos. Si hay token guardado usa la API (única forma
+// de leer un repo privado); si no, cae al archivo público, que es lo que hacía
+// antes. Pide el contenido "crudo" en vez del JSON de la API porque ésta
+// devuelve el archivo empaquetado y se planta arriba de 1 MB — y el historial
+// va camino a pasarlo.
+async function ghLeerJson(path) {
+  const token = (() => { try { return localStorage.getItem(LS_GH_TOKEN); } catch (e) { return null; } })();
+  if (token) {
+    const api = `https://api.github.com/repos/${GH_DATA_OWNER}/${GH_DATA_REPO}/contents/${path}?ref=${GH_BRANCH}`;
+    const res = await fetch(api, {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.raw' }
+    });
+    if (res.status === 404) return null;   // todavía no existe: no es un error
+    if (!res.ok) throw new Error('GitHub respondió ' + res.status);
+    return res.json();
+  }
+  const pub = `https://raw.githubusercontent.com/${GH_DATA_OWNER}/${GH_DATA_REPO}/${GH_BRANCH}/${path}`;
+  const res = await fetch(pub, { cache: 'no-store' });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('GitHub respondió ' + res.status);
+  return res.json();
+}
+
 function setGhStatus(state, msg) {
   const dot = $('gh-status-dot'), m = $('gh-status-msg');
   if (dot) dot.className = 'status-dot ' + state;
@@ -1567,7 +1600,7 @@ async function syncCarteraToGitHub(manual) {
   if (!token) { if (manual) setGhStatus('error', 'Pegá un token primero.'); return; }
 
   setGhStatus('loading', 'Sincronizando...');
-  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH_CARTERA}`;
+  const apiUrl = `https://api.github.com/repos/${GH_DATA_OWNER}/${GH_DATA_REPO}/contents/${GH_PATH_CARTERA}`;
   try {
     let sha = null;
     const getRes = await fetch(apiUrl + `?ref=${GH_BRANCH}`, {
@@ -1576,8 +1609,14 @@ async function syncCarteraToGitHub(manual) {
     if (getRes.ok) { const cur = await getRes.json(); sha = cur.sha; }
     else if (getRes.status !== 404) { setGhStatus('error', 'Error al leer el archivo (revisá el token / nombre del repo).'); return; }
 
+    // Se guardan también el nombre y el precio de compra: el robot no los usa,
+    // pero sin ellos una restauración pierde cómo se llama cada activo y toda
+    // la ganancia/pérdida, que es la mitad de la pantalla de Cartera.
     const payload = {
-      assets: assets.map(a => ({ ticker: a.ticker, cat: a.cat, qty: a.qty })),
+      assets: assets.map(a => ({
+        ticker: a.ticker, cat: a.cat, qty: a.qty,
+        name: a.name, costBasis: a.costBasis
+      })),
       updatedAt: new Date().toISOString()
     };
     const body = {
@@ -1621,10 +1660,55 @@ async function syncCarteraToGitHub(manual) {
   } catch (e) {}
 })();
 
+// ── RESTAURAR LA CARTERA DESDE GITHUB ───────────────────────────────────────
+// La app guardaba la cartera en dos lados (memoria del navegador y cartera.json
+// en GitHub) pero al abrir leía SÓLO la memoria del navegador. O sea: había
+// copia de seguridad pero no había forma de volver de ella. Cambiar de celular,
+// borrar los datos del navegador o entrar desde otra computadora mostraba la
+// cartera vacía con el archivo intacto en GitHub.
+//
+// Sólo actúa si no hay nada guardado localmente, así que nunca puede pisar lo
+// que ya tenés. Como no pasa por addAsset(), tampoco dispara una sincronización
+// de vuelta: es un camino de ida, de GitHub hacia la app.
+async function restaurarCarteraSiEstaVacia() {
+  if (assets.length) return;
+  let remota;
+  try {
+    remota = await ghLeerJson(GH_PATH_CARTERA);
+  } catch (e) {
+    setGhStatus('error', 'No se pudo leer la cartera guardada (' + (e.message || 'error') + ').');
+    return;
+  }
+  const guardados = (remota && remota.assets) || [];
+  if (!guardados.length) return;
+
+  assets = guardados.map(a => ({
+    id: ++assetIdCounter,
+    name: a.name || a.ticker,
+    ticker: a.ticker,
+    cat: a.cat,
+    qty: a.qty,
+    // El precio real lo trae refreshPrices() enseguida; costBasis sólo está en
+    // los archivos guardados por la app nueva, así que en los viejos se cae al
+    // precio de mercado y la ganancia arranca en cero en vez de mentir.
+    price: 0,
+    costBasis: a.costBasis != null ? a.costBasis : null,
+    change24h: null, lastUpdate: null, boughtDate: a.boughtDate || null
+  }));
+  saveAssets();
+  renderCartera();
+  setStatus('loading', 'Cartera restaurada desde GitHub. Cargando precios...');
+  await refreshPrices();
+  assets.forEach(a => { if (a.costBasis == null) a.costBasis = a.price; });
+  saveAssets();
+  renderCartera();
+}
+restaurarCarteraSiEstaVacia();
+
 // ── GRÁFICO DE EVOLUCIÓN HISTÓRICA ──────────────────────────────────────────
 // Lee history.json directo del repo público (sin token, es solo lectura) —
 // ese archivo lo va completando solo el robot diario de GitHub Actions.
-let histData = null, histPeriodDays = 30;
+let histData = null, histPeriodDays = 30, histError = null;
 const chartHist = new Chart(document.getElementById('chart-hist').getContext('2d'), {
   type: 'line', data: { labels: [], datasets: [] }, options: cDef()
 });
@@ -1679,13 +1763,15 @@ function histGradiente(ctx) {
 }
 
 async function loadHistory() {
-  const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH_HISTORY}`;
   try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) { histData = { snapshots: [] }; renderHistChart(); return; }
-    histData = await res.json();
+    histData = (await ghLeerJson(GH_PATH_HISTORY)) || { snapshots: [] };
+    histError = null;
   } catch (e) {
+    // No es lo mismo "todavía no hay mediciones" que "no las pude leer": si no
+    // se distinguen, un token vencido se ve igual que un historial vacío y el
+    // robot puede estar caído meses sin que te enteres.
     histData = { snapshots: [] };
+    histError = e.message || 'no se pudo leer';
   }
   populateHistSeriesSelect();
   renderHistChart();
@@ -1750,6 +1836,29 @@ function compactarHist(snaps, objetivo) {
   return salida;
 }
 
+// El robot mide una vez por hora. Si la última medición quedó vieja, algo se
+// rompió (token vencido, API caída, Actions apagado) y hasta ahora eso no daba
+// ninguna señal: el gráfico simplemente dejaba de crecer y había que darse
+// cuenta mirando. Se avisa recién a las 6 horas para no alarmar por una corrida
+// demorada o un rato sin internet.
+const HORAS_PARA_AVISAR = 6;
+
+function avisarSiElRobotSeColgo() {
+  const aviso = $('hist-stale-msg');
+  if (!aviso) return;
+  const todas = (histData && histData.snapshots) || [];
+  if (!todas.length) { aviso.style.display = 'none'; return; }
+  const ultima = Math.max(...todas.map(getSnapTime));
+  const horas = (Date.now() - ultima) / 3600000;
+  if (horas < HORAS_PARA_AVISAR) { aviso.style.display = 'none'; return; }
+  const cuando = horas < 48
+    ? 'hace ' + Math.round(horas) + ' horas'
+    : 'hace ' + Math.round(horas / 24) + ' días';
+  aviso.textContent = '⚠ La última medición automática es de ' + cuando +
+    '. El robot que guarda el historial puede estar caído, o el token de GitHub vencido.';
+  aviso.style.display = '';
+}
+
 function setHistPeriod(days, btn) {
   histPeriodDays = days;
   document.querySelectorAll('#hist-period-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -1773,11 +1882,17 @@ function renderHistChart() {
 
   const emptyMsg = $('hist-empty-msg');
   if (!snaps.length) {
-    if (emptyMsg) emptyMsg.style.display = '';
+    if (emptyMsg) {
+      emptyMsg.style.display = '';
+      emptyMsg.textContent = histError
+        ? 'No se pudo leer el historial (' + histError + '). Si configuraste un token, puede haber vencido: revisalo en Ajustes.'
+        : 'Todavía no hay mediciones para este período.';
+    }
     chartHist.data.labels = []; chartHist.data.datasets = []; chartHist.update();
     return;
   }
   if (emptyMsg) emptyMsg.style.display = 'none';
+  avisarSiElRobotSeColgo();
 
   const seriesSel = $('hist-series') ? $('hist-series').value : '__total__';
   let label = 'Cartera completa', values;
@@ -2056,7 +2171,7 @@ function renderSalesHistory() {
 async function syncSalesToGitHub() {
   const token = (() => { try { return localStorage.getItem(LS_GH_TOKEN); } catch (e) { return null; } })();
   if (!token) return;
-  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH_SALES}`;
+  const apiUrl = `https://api.github.com/repos/${GH_DATA_OWNER}/${GH_DATA_REPO}/contents/${GH_PATH_SALES}`;
   try {
     let sha = null;
     const getRes = await fetch(apiUrl + `?ref=${GH_BRANCH}`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
@@ -2081,11 +2196,9 @@ async function syncSalesToGitHub() {
 // registros de ninguno de los dos lados.
 async function loadSalesRemote() {
   loadSalesLocal();
-  const url = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_PATH_SALES}`;
   try {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (res.ok) {
-      const remote = await res.json();
+    const remote = await ghLeerJson(GH_PATH_SALES);
+    if (remote) {
       const byId = {};
       [...sales, ...(remote.sales || [])].forEach(s => { byId[s.id] = s; });
       sales = Object.values(byId);
