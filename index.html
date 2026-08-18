@@ -1537,20 +1537,22 @@ document.addEventListener('change', (e) => {
 </script>
 <script>
 // ── SINCRONIZACIÓN CON GITHUB (para el historial automático) ───────────────
-const GH_OWNER = 'dariofrey-96';
-const GH_REPO = 'Plan-retiro-dashboard';
 const GH_BRANCH = 'main'; // si tu repo usa "master", cambiá esto
 const GH_PATH_CARTERA = 'cartera.json';
 const GH_PATH_HISTORY = 'history.json';
 const LS_GH_TOKEN = 'planRetiro_gh_token';
 
-// Dónde viven los DATOS (cartera, historial, ventas). Se separa del repo del
-// SITIO a propósito: la página tiene que estar en un repo público para que
-// GitHub la publique gratis, pero tu cartera no tiene por qué serlo. Apuntando
-// esto a un repositorio privado, los montos dejan de ser legibles por cualquiera.
-// Mientras apunte al mismo repo que el sitio, todo funciona como antes.
+// Dónde viven los DATOS (cartera, historial, ventas): un repositorio PRIVADO,
+// separado del repo público que publica esta página. La página tiene que ser
+// pública para que GitHub la sirva gratis, pero la cartera no: mientras estuvo
+// en el mismo repo, cualquiera podía leer los activos, las cantidades y el
+// patrimonio hora por hora sin necesidad de permiso alguno.
+//
+// Consecuencia esperada: sin token no se lee nada y la app se ve vacía. Es el
+// precio de que nadie más la vea, y hay que pegar el token una vez por
+// dispositivo (se guarda sólo en la memoria de ese navegador).
 const GH_DATA_OWNER = 'dariofrey-96';
-const GH_DATA_REPO = 'Plan-retiro-datos'; // privado: sin token acá no se lee nada
+const GH_DATA_REPO = 'Plan-retiro-datos';
 
 // Lee un JSON del repo de datos. Si hay token guardado usa la API (única forma
 // de leer un repo privado); si no, cae al archivo público, que es lo que hacía
