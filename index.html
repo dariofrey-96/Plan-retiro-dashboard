@@ -204,6 +204,14 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
 .meta-pct-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:7px}
 .meta-pct-fill{height:100%;border-radius:2px;transition:width .4s}
 .btn-sync{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:100px;padding:8px 14px;font-size:.7rem;font-weight:600;cursor:pointer;align-self:flex-end}
+.btn-carteras{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:100px;padding:5px 11px;font-size:.66rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-carteras:hover{color:var(--text);border-color:var(--accent)}
+.cartera-fila{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.cartera-fila:last-child{border-bottom:none}
+.cartera-fila input{flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:7px 9px;font-size:.78rem}
+.cartera-fila .cf-meta{font-size:.66rem;color:var(--muted);white-space:nowrap}
+.cartera-fila button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:4px 6px}
+.cartera-fila button:hover{color:var(--red)}
 
 .assets-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden}
 .section-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
@@ -708,6 +716,10 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   <div class="view" id="view-cartera">
     <div class="cartera-layout">
       <div class="chart-header currency-toggle-row" style="padding:0 2px">
+        <div class="toggle-wrap" id="cartera-selector"></div>
+        <button class="btn-carteras" onclick="abrirGestorCarteras()" title="Crear, renombrar o borrar carteras">⚙ Carteras</button>
+      </div>
+      <div class="chart-header currency-toggle-row" style="padding:0 2px">
         <span class="field-hint" id="ars-rate-hint" style="margin:0"></span>
         <div class="toggle-wrap currency-toggle">
           <button class="toggle-btn active" data-cur="USD" onclick="setCarteraCurrency('USD',this)">USD</button>
@@ -860,6 +872,18 @@ tbody td:first-child{text-align:center;color:var(--muted)}tbody td:nth-child(2){
   </div>
 </div>
 
+<div class="modal-overlay" id="carteras-modal" style="display:none">
+  <div class="modal">
+    <h3>📁 Mis carteras</h3>
+    <div class="field-hint">Sirven para separar por estrategia — por ejemplo largo plazo y trading. El robot mide cada una por separado, y con la vista "Todo" las ves sumadas.</div>
+    <div id="carteras-lista"></div>
+    <button class="btn-sync" style="align-self:flex-start" onclick="agregarCartera()">+ Agregar cartera</button>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="guardarGestorCarteras()">Listo</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $=id=>document.getElementById(id);
 const fmt=n=>n==null?'—':'$'+Math.round(n).toLocaleString('es-AR');
@@ -896,8 +920,151 @@ function loadTheme(){
 
 // STORAGE
 const LS1='planRetiro_cartera_v1',LS2='planRetiro_params_v1',LS3='planRetiro_snapshots_v1';
-function saveAssets(){try{localStorage.setItem(LS1,JSON.stringify({assets,assetIdCounter}));}catch(e){}}
-function loadAssets(){try{const r=localStorage.getItem(LS1);if(r){const p=JSON.parse(r);assets=(p.assets||[]).map(a=>({...a,id:Number(a.id)}));assetIdCounter=p.assetIdCounter||assets.length;}}catch(e){}}
+// La cartera pasó de ser una lista suelta a ser varias carteras. Para no tocar
+// las ~30 funciones que trabajan sobre `assets`, ese sigue siendo el arreglo de
+// trabajo: contiene lo que estás VIENDO. La fuente de la verdad es `carteras`,
+// y saveAssets() devuelve lo visible a la cartera que corresponda.
+//
+// Cada activo lleva un `cId` con la cartera a la que pertenece. Eso es lo que
+// permite que en la vista "Todo" se pueda editar y vender igual: cada fila sabe
+// de dónde salió.
+function saveAssets(){
+  try{
+    if(carteraActiva===TODAS){
+      carteras.forEach(c=>c.assets=[]);
+      assets.forEach(a=>{const c=carteraPorId(a.cId)||carteras[0];a.cId=c.id;c.assets.push(a);});
+    }else{
+      const c=carteraPorId(carteraActiva);
+      if(c){assets.forEach(a=>a.cId=c.id);c.assets=assets;}
+    }
+    localStorage.setItem(LS1,JSON.stringify({carteras,carteraActiva,assetIdCounter}));
+  }catch(e){}
+}
+
+function loadAssets(){
+  try{
+    const r=localStorage.getItem(LS1);
+    if(!r){carteras=[nuevaCarteraVacia('Principal')];carteraActiva=carteras[0].id;assets=[];return;}
+    const p=JSON.parse(r);
+    if(Array.isArray(p.carteras)&&p.carteras.length){
+      carteras=p.carteras.map(c=>({id:Number(c.id),nombre:c.nombre||'Cartera',
+        assets:(c.assets||[]).map(a=>({...a,id:Number(a.id),cId:Number(c.id)}))}));
+    }else{
+      // Formato viejo: una sola lista suelta. Se convierte en la cartera
+      // "Principal" para que nadie tenga que rearmar nada a mano.
+      carteras=[{id:1,nombre:'Principal',
+        assets:(p.assets||[]).map(a=>({...a,id:Number(a.id),cId:1}))}];
+    }
+    assetIdCounter=p.assetIdCounter||carteras.reduce((s,c)=>s+c.assets.length,0);
+    carteraActiva=(p.carteraActiva===TODAS||carteras.some(c=>c.id===p.carteraActiva))
+      ?p.carteraActiva:carteras[0].id;
+    assets=assetsVisibles();
+  }catch(e){
+    carteras=[nuevaCarteraVacia('Principal')];carteraActiva=carteras[0].id;assets=[];
+  }
+}
+
+function nuevaCarteraVacia(nombre){
+  const id=carteras.length?Math.max(...carteras.map(c=>c.id))+1:1;
+  return {id,nombre,assets:[]};
+}
+function carteraPorId(id){return carteras.find(c=>c.id===id);}
+function assetsVisibles(){
+  return carteraActiva===TODAS
+    ? carteras.flatMap(c=>c.assets)
+    : (carteraPorId(carteraActiva)||{assets:[]}).assets;
+}
+function nombreCarteraActiva(){
+  return carteraActiva===TODAS?'Todo':(carteraPorId(carteraActiva)||{}).nombre||'Cartera';
+}
+
+// ── SELECTOR DE CARTERA ─────────────────────────────────────────────────────
+function renderSelectorCarteras(){
+  const cont=$('cartera-selector');
+  if(!cont)return;
+  // Con una sola cartera el selector no aporta nada y ocupa lugar.
+  if(carteras.length<2){cont.innerHTML='';cont.style.display='none';return;}
+  cont.style.display='';
+  const btn=(id,txt)=>`<button class="toggle-btn${carteraActiva===id?' active':''}" onclick="cambiarCartera(${typeof id==='string'?`'${id}'`:id})">${txt}</button>`;
+  cont.innerHTML=carteras.map(c=>btn(c.id,c.nombre)).join('')+btn(TODAS,'Todo');
+}
+
+function cambiarCartera(id){
+  if(carteraActiva===id)return;
+  saveAssets();               // asegurar que lo visible quede guardado antes de soltar
+  carteraActiva=id;
+  assets=assetsVisibles();
+  saveAssets();               // persiste la cartera activa elegida
+  renderSelectorCarteras();
+  renderCartera();
+  // Los precios viven en cada activo y sobreviven al cambio, así que sólo se
+  // vuelve a pedir si alguno todavía no tiene precio (recién agregado o
+  // restaurado desde GitHub).
+  if(assets.some(a=>!a.price)&&assets.length)refreshPrices();
+  if(typeof populateHistSeriesSelect==='function')populateHistSeriesSelect();
+  if(typeof renderHistChart==='function')renderHistChart();
+  if(typeof renderMonthlySummary==='function')renderMonthlySummary();
+  if(typeof renderSalesHistory==='function')renderSalesHistory();
+  if(typeof syncCarteraToGitHub==='function')syncCarteraToGitHub();
+}
+
+// ── GESTOR DE CARTERAS (crear / renombrar / borrar) ─────────────────────────
+function abrirGestorCarteras(){renderGestorCarteras();$('carteras-modal').style.display='flex';}
+
+function renderGestorCarteras(){
+  const cont=$('carteras-lista');
+  if(!cont)return;
+  cont.innerHTML=carteras.map(c=>{
+    const n=c.assets.length;
+    return `<div class="cartera-fila">
+      <input type="text" value="${(c.nombre||'').replace(/"/g,'&quot;')}" data-cid="${c.id}" maxlength="24">
+      <span class="cf-meta">${n} activo${n===1?'':'s'}</span>
+      ${carteras.length>1?`<button onclick="borrarCartera(${c.id})" title="Borrar">🗑</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function agregarCartera(){
+  if(carteras.length>=6){alert('Seis carteras ya son muchas para elegir de un vistazo.');return;}
+  guardarNombresCarteras();
+  carteras.push(nuevaCarteraVacia('Cartera '+(carteras.length+1)));
+  saveAssets();renderGestorCarteras();renderSelectorCarteras();
+}
+
+function borrarCartera(id){
+  const c=carteraPorId(id);
+  if(!c)return;
+  if(carteras.length<2){alert('Tiene que quedar al menos una cartera.');return;}
+  if(c.assets.length&&!confirm(`"${c.nombre}" tiene ${c.assets.length} activo${c.assets.length===1?'':'s'}. Si la borrás se van con ella. ¿Seguro?`))return;
+  guardarNombresCarteras();
+  carteras=carteras.filter(x=>x.id!==id);
+  if(carteraActiva===id)carteraActiva=carteras[0].id;
+  assets=assetsVisibles();
+  saveAssets();
+  renderGestorCarteras();renderSelectorCarteras();renderCartera();
+  if(typeof renderHistChart==='function')renderHistChart();
+  if(typeof syncCarteraToGitHub==='function')syncCarteraToGitHub();
+}
+
+// Los nombres se escriben en inputs sueltos; esto los vuelca al modelo antes de
+// cualquier operación que redibuje la lista (si no, se perderían al tipear).
+function guardarNombresCarteras(){
+  document.querySelectorAll('#carteras-lista input[data-cid]').forEach(inp=>{
+    const c=carteraPorId(Number(inp.dataset.cid));
+    const v=inp.value.trim();
+    if(c&&v)c.nombre=v;
+  });
+}
+
+function guardarGestorCarteras(){
+  guardarNombresCarteras();
+  saveAssets();
+  renderSelectorCarteras();renderCartera();
+  if(typeof renderHistChart==='function')renderHistChart();
+  if(typeof renderMonthlySummary==='function')renderMonthlySummary();
+  if(typeof syncCarteraToGitHub==='function')syncCarteraToGitHub();
+  $('carteras-modal').style.display='none';
+}
 function saveParams(){try{const p={};Object.keys(SL).forEach(id=>{const e=$(id);if(e)p[id]=e.value;});localStorage.setItem(LS2,JSON.stringify(p));}catch(e){}}
 function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e){const nv=parseFloat(v);if(!isNaN(nv)&&nv>parseFloat(e.max))e.max=Math.ceil(nv/50)*50;e.value=v;}});}catch(e){}}
 const LS4='planRetiro_dates_v1';
@@ -1192,6 +1359,9 @@ function renderInv(){
 
 // CARTERA
 let assets=[],assetIdCounter=0;
+// `carteras` es la fuente de la verdad; `assets` es solo lo que se está viendo.
+let carteras=[],carteraActiva=null;
+const TODAS='__todas__';
 const PAL=['#58a6ff','#3fb950','#bc8cff','#d29922','#f85149','#39d353','#79c0ff','#ffa657','#ff7b72','#a5d6ff'];
 const CL={crypto:'Crypto',stock:'Acción/ETF',cash:'USD/USDT'};
 
@@ -1206,6 +1376,8 @@ function addAsset(){
   const cat=$('new-cat').value,qty=parseFloat($('new-qty').value),price=parseFloat($('new-price').value);
   const cost=parseFloat($('new-cost').value)||price;
   if(!nm||!tk||isNaN(qty)||qty<=0||isNaN(price)||price<0){alert('Completá todos los campos.');return;}
+  // En la vista "Todo" no se sabría a cuál de las carteras mandarlo.
+  if(carteraActiva===TODAS){alert('Elegí una cartera antes de agregar un activo — en la vista "Todo" no se sabe a cuál va.');return;}
   const existing=assets.find(a=>a.ticker===tk&&a.cat===cat);
   if(existing){
     const oldQty=existing.qty,oldCost=existing.costBasis||existing.price;
@@ -1216,7 +1388,7 @@ function addAsset(){
     if(nm)existing.name=nm;
     if(!existing.boughtDate)existing.boughtDate=new Date().toISOString().slice(0,10);
   }else{
-    assets.push({id:++assetIdCounter,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null,boughtDate:new Date().toISOString().slice(0,10)});
+    assets.push({id:++assetIdCounter,cId:carteraActiva,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null,boughtDate:new Date().toISOString().slice(0,10)});
   }
   saveAssets();
   ['new-name','new-ticker','new-qty','new-price','new-cost'].forEach(id=>$(id).value='');
@@ -1355,10 +1527,16 @@ async function fetchStocks(list){
 }
 
 async function refreshPrices(){
-  if(!assets.length){setStatus('','No hay activos.');return;}
+  // Se actualizan los precios de TODAS las carteras, no sólo la que estás
+  // viendo: si no, al pasar a la otra te encontrarías valores viejos, y la
+  // vista "Todo" sumaría una cartera con precios de ayer. El costo en llamadas
+  // es el mismo — los tickers repetidos entre carteras viajan en el mismo
+  // pedido y se resuelven con una sola respuesta.
+  const todos=carteras.length?carteras.flatMap(c=>c.assets):assets;
+  if(!todos.length){setStatus('','No hay activos.');return;}
   const btn=$('btn-refresh');btn.classList.add('loading');$('refresh-icon').textContent='⟳';
   setStatus('loading','Actualizando precios...');
-  await Promise.all([fetchCrypto(assets.filter(a=>a.cat==='crypto')),fetchStocks(assets.filter(a=>a.cat==='stock'||a.cat==='metal'))]);
+  await Promise.all([fetchCrypto(todos.filter(a=>a.cat==='crypto')),fetchStocks(todos.filter(a=>a.cat==='stock'||a.cat==='metal'))]);
   renderCartera();saveAssets();btn.classList.remove('loading');
   setStatus('ok','Actualizado · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
 }
@@ -1385,6 +1563,7 @@ function openEditModal(id){
 }
 function closeModal(){
   $('edit-modal').style.display='none';
+  $('carteras-modal').style.display='none';
   editingId=null;
 }
 function saveModal(){
@@ -1406,7 +1585,7 @@ Object.entries(SL).forEach(([id,cfg])=>{const e=$(id),ve=$('v-'+id);if(e&&ve)ve.
 ['tabla','escenarios','sensibilidad','inversa'].forEach(n=>{const e=$('inner-'+n);if(e)e.style.display='none';});
 $('inner-grafico').style.display='flex';
 computeExactAge();computeInvestingTime();
-recalc();renderCartera();updateYearsToRetirement();
+recalc();renderSelectorCarteras();renderCartera();updateYearsToRetirement();
 if(assets.length>0){setStatus('loading','Cargando precios actualizados...');refreshPrices();}
 
 // SW
@@ -1614,11 +1793,16 @@ async function syncCarteraToGitHub(manual) {
     // Se guardan también el nombre y el precio de compra: el robot no los usa,
     // pero sin ellos una restauración pierde cómo se llama cada activo y toda
     // la ganancia/pérdida, que es la mitad de la pantalla de Cartera.
+    const limpiar = a => ({
+      ticker: a.ticker, cat: a.cat, qty: a.qty,
+      name: a.name, costBasis: a.costBasis
+    });
+    // `assets` sigue estando por compatibilidad: es la suma de todas las
+    // carteras, que es exactamente lo que el robot necesitaba antes. Así una
+    // versión vieja de la app o del robot lo sigue leyendo sin romperse.
     const payload = {
-      assets: assets.map(a => ({
-        ticker: a.ticker, cat: a.cat, qty: a.qty,
-        name: a.name, costBasis: a.costBasis
-      })),
+      carteras: carteras.map(c => ({ id: c.id, nombre: c.nombre, assets: c.assets.map(limpiar) })),
+      assets: carteras.flatMap(c => c.assets).map(limpiar),
       updatedAt: new Date().toISOString()
     };
     const body = {
@@ -1673,7 +1857,10 @@ async function syncCarteraToGitHub(manual) {
 // que ya tenés. Como no pasa por addAsset(), tampoco dispara una sincronización
 // de vuelta: es un camino de ida, de GitHub hacia la app.
 async function restaurarCarteraSiEstaVacia() {
-  if (assets.length) return;
+  // Se mira si hay algo en CUALQUIER cartera, no sólo en la que estás viendo:
+  // mirando `assets` a secas, pararse en una cartera vacía teniendo otra con
+  // datos gatillaría una restauración que las pisa a todas.
+  if (carteras.some(c => c.assets.length)) return;
   let remota;
   try {
     remota = await ghLeerJson(GH_PATH_CARTERA);
@@ -1681,11 +1868,18 @@ async function restaurarCarteraSiEstaVacia() {
     setGhStatus('error', 'No se pudo leer la cartera guardada (' + (e.message || 'error') + ').');
     return;
   }
-  const guardados = (remota && remota.assets) || [];
-  if (!guardados.length) return;
+  // Archivos nuevos traen `carteras`; los viejos, una lista suelta que se
+  // restaura como una única cartera "Principal".
+  const gruposRemotos = (remota && remota.carteras && remota.carteras.length)
+    ? remota.carteras
+    : (remota && remota.assets && remota.assets.length)
+      ? [{ id: 1, nombre: 'Principal', assets: remota.assets }]
+      : [];
+  if (!gruposRemotos.length) return;
 
-  assets = guardados.map(a => ({
+  const rehidratar = (a, cId) => ({
     id: ++assetIdCounter,
+    cId,
     name: a.name || a.ticker,
     ticker: a.ticker,
     cat: a.cat,
@@ -1696,12 +1890,23 @@ async function restaurarCarteraSiEstaVacia() {
     price: 0,
     costBasis: a.costBasis != null ? a.costBasis : null,
     change24h: null, lastUpdate: null, boughtDate: a.boughtDate || null
-  }));
+  });
+
+  carteras = gruposRemotos.map((c, i) => {
+    const id = Number(c.id) || i + 1;
+    return { id, nombre: c.nombre || 'Principal', assets: (c.assets || []).map(a => rehidratar(a, id)) };
+  });
+  carteraActiva = carteras[0].id;
+  assets = assetsVisibles();
   saveAssets();
+  renderSelectorCarteras();
   renderCartera();
   setStatus('loading', 'Cartera restaurada desde GitHub. Cargando precios...');
   await refreshPrices();
-  assets.forEach(a => { if (a.costBasis == null) a.costBasis = a.price; });
+  // Se recorren todas las carteras, no sólo la visible: los precios los trae
+  // refreshPrices() sobre lo que se ve, pero el costo por defecto hay que
+  // dejarlo puesto en todas para que ninguna quede con la ganancia en blanco.
+  carteras.forEach(c => c.assets.forEach(a => { if (a.costBasis == null) a.costBasis = a.price || 0; }));
   saveAssets();
   renderCartera();
 }
@@ -1782,19 +1987,73 @@ async function loadHistory() {
 function populateHistSeriesSelect() {
   const sel = $('hist-series');
   if (!sel || !histData) return;
+  // Sólo los tickers y las categorías que la cartera elegida realmente tiene:
+  // ofrecer "Metales" cuando no tenés ninguno dibuja una línea plana en cero.
+  const propios = new Set((carteraActiva === TODAS ? carteras.flatMap(c => c.assets) : assets).map(a => a.ticker));
+  const cats = new Set((carteraActiva === TODAS ? carteras.flatMap(c => c.assets) : assets).map(a => a.cat));
   const tickers = new Set();
-  (histData.snapshots || []).forEach(s => Object.keys(s.byAsset || {}).forEach(t => tickers.add(t)));
+  (histData.snapshots || []).forEach(s => Object.keys(s.byAsset || {}).forEach(t => { if (propios.has(t)) tickers.add(t); }));
   const currentVal = sel.value;
-  sel.innerHTML = '<option value="__total__">Cartera completa</option>' +
-    '<option value="cat:crypto">Categoría: Crypto</option>' +
-    '<option value="cat:stock">Categoría: Acciones/ETFs</option>' +
-    '<option value="cat:metal">Categoría: Metales</option>' +
+  const nombreCat = { crypto: 'Crypto', stock: 'Acciones/ETFs', metal: 'Metales' };
+  sel.innerHTML = `<option value="__total__">${carteraActiva === TODAS ? 'Todas las carteras' : nombreCarteraActiva()}</option>` +
+    ['crypto', 'stock', 'metal'].filter(c => cats.has(c))
+      .map(c => `<option value="cat:${c}">Categoría: ${nombreCat[c]}</option>`).join('') +
     [...tickers].sort().map(t => `<option value="asset:${t}">${t}</option>`).join('');
   if ([...sel.options].some(o => o.value === currentVal)) sel.value = currentVal;
+  else sel.value = '__total__';
 }
 
 function getSnapTime(s) {
   return new Date(s.timestamp || (s.date + 'T12:00:00')).getTime();
+}
+
+// ── UNA MEDICIÓN, VISTA DESDE LA CARTERA ELEGIDA ────────────────────────────
+// Devuelve {total, byCategory, byAsset} de la cartera activa para ese momento.
+//
+// Desde que existen varias carteras el robot guarda `porCartera` y esto es una
+// simple búsqueda. Para las mediciones anteriores no hay tal cosa, pero sí está
+// `byAsset` con el valor de cada activo — así que el pasado se puede reconstruir
+// sumando los activos que hoy están en esta cartera. Por eso el gráfico no
+// arranca en blanco al separar la cartera en dos.
+//
+// Contrapartida honesta: la reconstrucción usa el reparto de HOY. Si mañana
+// movés un activo de una cartera a la otra, su pasado se muda con él.
+function vistaSnapshot(s) {
+  if (carteraActiva === TODAS) return s;
+  const pc = s.porCartera && s.porCartera[carteraActiva];
+  if (pc) return pc;
+  const c = carteraPorId(carteraActiva);
+  if (!c || !s.byAsset) return { total: 0, byCategory: {}, byAsset: {} };
+  const byAsset = {}, byCategory = { crypto: 0, stock: 0, metal: 0 };
+  let total = 0;
+  c.assets.forEach(a => {
+    const v = s.byAsset[a.ticker];
+    if (v == null) return;
+    // Si el mismo ticker está en las dos carteras, la medición vieja guarda el
+    // valor sumado. Se reparte según cuánto tiene cada una hoy, en vez de darle
+    // el total a las dos y contar la misma plata dos veces.
+    const qtyTotal = carteras.reduce((acc, c2) =>
+      acc + c2.assets.reduce((a2, x) => a2 + (x.ticker === a.ticker ? x.qty : 0), 0), 0);
+    const parte = qtyTotal > 0 ? v * (a.qty / qtyTotal) : v;
+    byAsset[a.ticker] = (byAsset[a.ticker] || 0) + parte;
+    if (byCategory[a.cat] != null) byCategory[a.cat] += parte;
+    total += parte;
+  });
+  // Un activo que aparece en la medición vieja pero hoy no está en ninguna
+  // cartera (lo vendiste, o lo borraste) no pertenece a nadie y se perdería:
+  // las carteras sumadas darían menos que el total de aquel momento y parecería
+  // un error de la app. Se le atribuye a la primera cartera, que es de donde
+  // salió cuando había una sola. No se suma a ninguna categoría porque ya no
+  // hay forma de saber cuál era.
+  if (carteras[0] && carteras[0].id === carteraActiva) {
+    const reclamados = new Set(carteras.flatMap(c2 => c2.assets.map(a => a.ticker)));
+    Object.entries(s.byAsset).forEach(([tk, v]) => {
+      if (reclamados.has(tk)) return;
+      byAsset[tk] = (byAsset[tk] || 0) + v;
+      total += v;
+    });
+  }
+  return { total, byCategory, byAsset };
 }
 
 // Cuántos puntos queremos ver en pantalla, sin importar cuánta historia haya.
@@ -1897,17 +2156,18 @@ function renderHistChart() {
   avisarSiElRobotSeColgo();
 
   const seriesSel = $('hist-series') ? $('hist-series').value : '__total__';
-  let label = 'Cartera completa', values;
+  const vistas = snaps.map(vistaSnapshot);
+  let label = carteraActiva === TODAS ? 'Todas las carteras' : nombreCarteraActiva(), values;
   if (seriesSel === '__total__') {
-    values = snaps.map(s => s.total);
+    values = vistas.map(v => v.total);
   } else if (seriesSel.startsWith('cat:')) {
     const cat = seriesSel.slice(4);
-    label = { crypto: 'Crypto', stock: 'Acciones/ETFs', metal: 'Metales' }[cat] || cat;
-    values = snaps.map(s => (s.byCategory || {})[cat] || 0);
+    label = ({ crypto: 'Crypto', stock: 'Acciones/ETFs', metal: 'Metales' }[cat] || cat) + ' · ' + label;
+    values = vistas.map(v => (v.byCategory || {})[cat] || 0);
   } else if (seriesSel.startsWith('asset:')) {
     const tk = seriesSel.slice(6);
     label = tk;
-    values = snaps.map(s => (s.byAsset || {})[tk] ?? null);
+    values = vistas.map(v => (v.byAsset || {})[tk] ?? null);
   }
 
   // Con puntos por hora, poner la fecha en cada marca del eje no sirve (se
@@ -2133,6 +2393,7 @@ function confirmSell() {
   sales.push({
     id: Date.now() + '-' + a.ticker,
     date: new Date().toISOString().slice(0, 10),
+    cId: a.cId, // para poder mostrar las ventas de la cartera que estás mirando
     ticker: a.ticker, name: a.name, cat: a.cat,
     qty, salePrice: a.price,
     saleValue: Math.round(saleValue * 100) / 100,
@@ -2145,9 +2406,12 @@ function confirmSell() {
   if (qty >= a.qty - 1e-9) assets = assets.filter(x => x.id !== a.id);
   else a.qty -= qty;
 
-  let cash = assets.find(x => x.cat === 'cash' && x.ticker === 'USD');
+  // La liquidez de una venta queda en la MISMA cartera del activo vendido, no
+  // en la que estés mirando: si vendés desde la vista "Todo", la plata tiene que
+  // volver a donde estaba el activo.
+  let cash = assets.find(x => x.cat === 'cash' && x.ticker === 'USD' && x.cId === a.cId);
   if (cash) cash.qty += saleValue;
-  else assets.push({ id: ++assetIdCounter, name: 'Liquidez USD', ticker: 'USD', cat: 'cash', qty: saleValue, price: 1, costBasis: 1, change24h: null, lastUpdate: null });
+  else assets.push({ id: ++assetIdCounter, cId: a.cId, name: 'Liquidez USD', ticker: 'USD', cat: 'cash', qty: saleValue, price: 1, costBasis: 1, change24h: null, lastUpdate: null });
 
   saveAssets();
   renderCartera();
@@ -2160,9 +2424,16 @@ function confirmSell() {
 function renderSalesHistory() {
   const wrap = $('sales-history'), list = $('sales-list');
   if (!wrap || !list) return;
-  if (!sales.length) { wrap.style.display = 'none'; return; }
+  // Se muestran las ventas de la cartera que estás mirando. Las ventas viejas,
+  // anteriores a que existieran varias carteras, no tienen `cId` y se cuentan
+  // como de la primera — que es de donde salieron.
+  const dePrimera = carteras.length ? carteras[0].id : 1;
+  const visibles = carteraActiva === TODAS
+    ? sales
+    : sales.filter(s => (s.cId != null ? s.cId : dePrimera) === carteraActiva);
+  if (!visibles.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = '';
-  const sorted = [...sales].sort((x, y) => y.date.localeCompare(x.date));
+  const sorted = [...visibles].sort((x, y) => y.date.localeCompare(x.date));
   list.innerHTML = sorted.map(s => {
     const pc = s.realizedPnl >= 0 ? 'var(--green)' : 'var(--red)';
     return '<div class="snap-row"><span style="color:var(--muted)">' + s.date + ' · ' + s.ticker + ' (' + s.qty.toLocaleString('es-AR', { maximumFractionDigits: 6 }) + ')</span>' +
@@ -2279,7 +2550,11 @@ function findSnapAtOrBefore(snaps, ts, fallback) {
 function renderMonthlySummary() {
   const el = $('monthly-summary');
   if (!el || !histData) return;
-  const snaps = [...(histData.snapshots || [])].sort((a, b) => getSnapTime(a) - getSnapTime(b));
+  // Cada medición se mira desde la cartera elegida antes de hacer cualquier
+  // cuenta, conservando fecha y benchmarks para que el resto siga igual.
+  const snaps = [...(histData.snapshots || [])]
+    .sort((a, b) => getSnapTime(a) - getSnapTime(b))
+    .map(s => ({ ...vistaSnapshot(s), date: s.date, timestamp: s.timestamp, benchmarks: s.benchmarks }));
   if (snaps.length < 2) return; // deja el mensaje por defecto del HTML
 
   const now = new Date();
