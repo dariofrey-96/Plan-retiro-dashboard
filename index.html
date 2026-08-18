@@ -1870,7 +1870,12 @@ async function syncCarteraToGitHub(manual) {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (putRes.ok) setGhStatus('ok', 'Sincronizado · ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }));
+    if (putRes.ok) {
+      // Queda anotado con qué versión quedamos iguales. Es lo que después
+      // permite darse cuenta de que otro dispositivo tocó algo.
+      marcarSincronizado(payload.updatedAt);
+      setGhStatus('ok', 'Sincronizado · ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }));
+    }
     else {
       const errBody = await putRes.json().catch(() => ({}));
       setGhStatus('error', 'Error al sincronizar' + (errBody.message ? ': ' + errBody.message : '.'));
@@ -1898,6 +1903,84 @@ async function syncCarteraToGitHub(manual) {
     if (saved && $('gh-token')) { $('gh-token').value = saved; setGhStatus('ok', 'Token configurado.'); }
   } catch (e) {}
 })();
+
+// ── TRAER LO QUE CAMBIÓ EN OTRO DISPOSITIVO ─────────────────────────────────
+// La sincronización era de ida nomás: cada dispositivo subía sus cambios, pero
+// ninguno los bajaba. Lo único que bajaba era la restauración, y sólo si el
+// dispositivo estaba vacío — así que armar una cartera nueva en la notebook no
+// aparecía jamás en el celular, que ya tenía datos propios.
+//
+// `updatedAt` dice cuándo se guardó la última versión en GitHub. Se anota con
+// cuál quedamos iguales, y si al abrir la de GitHub es otra, es porque la tocó
+// otro dispositivo y hay que adoptarla.
+const LS_SYNC_MARCA = 'planRetiro_cartera_sync_v1';
+const LS_CARTERA_PREVIA = 'planRetiro_cartera_previa_v1';
+
+function marcarSincronizado(updatedAt) {
+  try { if (updatedAt) localStorage.setItem(LS_SYNC_MARCA, updatedAt); } catch (e) {}
+}
+function marcaSincronizacion() {
+  try { return localStorage.getItem(LS_SYNC_MARCA); } catch (e) { return null; }
+}
+
+async function traerCambiosDeOtroDispositivo() {
+  if (!carteras.some(c => c.assets.length)) return; // vacío: de eso se encarga la restauración
+  let remota;
+  try { remota = await ghLeerJson(GH_PATH_CARTERA); } catch (e) { return; }
+  if (!remota || !remota.updatedAt) return;
+  if (remota.updatedAt === marcaSincronizacion()) return; // ya estamos al día
+
+  const gruposRemotos = (remota.carteras && remota.carteras.length)
+    ? remota.carteras
+    : (remota.assets && remota.assets.length)
+      ? [{ id: 1, nombre: 'Principal', assets: remota.assets }]
+      : [];
+  if (!gruposRemotos.length) return;
+
+  // Antes de pisar nada se guarda lo que había. Si algo se hubiera editado sin
+  // conexión y no llegó a subirse, queda recuperable en vez de perdido.
+  try { localStorage.setItem(LS_CARTERA_PREVIA, localStorage.getItem(LS1) || ''); } catch (e) {}
+
+  // Los precios ya cargados se reaprovechan por ticker para no dejar la
+  // pantalla en cero hasta que vuelvan las cotizaciones.
+  const preciosPrevios = {};
+  carteras.forEach(c => c.assets.forEach(a => { if (a.price) preciosPrevios[a.ticker] = a; }));
+
+  assetIdCounter = 0;
+  carteras = gruposRemotos.map((c, i) => {
+    const id = Number(c.id) || i + 1;
+    return {
+      id, nombre: c.nombre || 'Principal',
+      assets: (c.assets || []).map(a => {
+        const prev = preciosPrevios[a.ticker] || {};
+        return {
+          id: ++assetIdCounter, cId: id,
+          name: a.name || a.ticker, ticker: a.ticker, cat: a.cat, qty: a.qty,
+          cgId: a.cgId || prev.cgId || undefined,
+          price: prev.price || 0,
+          costBasis: a.costBasis != null ? a.costBasis : null,
+          change24h: prev.change24h ?? null, lastUpdate: prev.lastUpdate || null,
+          boughtDate: a.boughtDate || null
+        };
+      })
+    };
+  });
+  carteraActiva = carteras.some(c => c.id === carteraActiva) ? carteraActiva : carteras[0].id;
+  assets = assetsVisibles();
+  // Se anota la versión adoptada SIN volver a subir: si se subiera, se generaría
+  // un updatedAt nuevo y los dispositivos se estarían pisando en círculo.
+  marcarSincronizado(remota.updatedAt);
+  try { localStorage.setItem(LS1, JSON.stringify({ carteras, carteraActiva, assetIdCounter })); } catch (e) {}
+
+  renderSelectorCarteras();
+  renderCartera();
+  if (typeof populateHistSeriesSelect === 'function') populateHistSeriesSelect();
+  if (typeof renderHistChart === 'function') renderHistChart();
+  if (typeof renderMonthlySummary === 'function') renderMonthlySummary();
+  if (typeof renderSalesHistory === 'function') renderSalesHistory();
+  setGhStatus('ok', 'Actualizado con los cambios de otro dispositivo.');
+  if (assets.some(a => !a.price)) refreshPrices();
+}
 
 // ── RESTAURAR LA CARTERA DESDE GITHUB ───────────────────────────────────────
 // La app guardaba la cartera en dos lados (memoria del navegador y cartera.json
@@ -1962,9 +2045,19 @@ async function restaurarCarteraSiEstaVacia() {
   // dejarlo puesto en todas para que ninguna quede con la ganancia en blanco.
   carteras.forEach(c => c.assets.forEach(a => { if (a.costBasis == null) a.costBasis = a.price || 0; }));
   saveAssets();
+  // Se restauró tal cual lo que había en GitHub, así que estamos iguales: sin
+  // esta marca, el arranque siguiente creería que otro dispositivo tocó algo.
+  marcarSincronizado(remota && remota.updatedAt);
   renderCartera();
 }
-restaurarCarteraSiEstaVacia();
+
+// Primero se intenta restaurar (dispositivo vacío) y si no, traer lo que haya
+// cambiado en otro lado. Una sola de las dos hace algo: la restauración exige
+// que no haya nada, y traer cambios exige que haya.
+(async () => {
+  await restaurarCarteraSiEstaVacia();
+  await traerCambiosDeOtroDispositivo();
+})();
 
 // ── GRÁFICO DE EVOLUCIÓN HISTÓRICA ──────────────────────────────────────────
 // Lee history.json directo del repo público (sin token, es solo lectura) —
