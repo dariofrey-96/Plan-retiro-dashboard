@@ -1485,14 +1485,63 @@ const GM={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',BNB:'binancecoin',XRP:'rippl
 
 function setStatus(st,msg){$('status-dot').className='status-dot '+st;$('status-msg').textContent=msg;}
 
+// ── RESOLVER EL NOMBRE INTERNO DE UNA CRIPTO ────────────────────────────────
+// CoinGecko no busca por ticker sino por un id propio ("bitcoin", no "BTC").
+// GM tiene los de las 26 más conocidas; para cualquier otra se probaba con el
+// ticker en minúscula, que casi nunca coincide — CKB es "nervos-network", así
+// que la moneda quedaba sin precio y el robot cortaba la medición.
+//
+// Ahora la que no está en la lista se busca sola, una vez, y se recuerda.
+const LS_CG_IDS='planRetiro_cg_ids_v1';
+let cgIds={};
+try{cgIds=JSON.parse(localStorage.getItem(LS_CG_IDS))||{};}catch(e){cgIds={};}
+function guardarCgIds(){try{localStorage.setItem(LS_CG_IDS,JSON.stringify(cgIds));}catch(e){}}
+
+function cgIdDe(ticker){
+  const t=(ticker||'').toUpperCase();
+  return GM[t]||(cgIds[t]&&cgIds[t].id)||null;
+}
+
+// Devuelve {id, nombre} o null. Entre varias monedas con el mismo símbolo se
+// queda con la de mayor capitalización, que es la que la gente quiere decir; el
+// nombre se guarda para poder mostrar cuál eligió y que no sea a ciegas.
+async function resolverCgId(ticker){
+  const t=(ticker||'').toUpperCase();
+  if(GM[t])return {id:GM[t],nombre:t};
+  if(cgIds[t])return cgIds[t];
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/search?query='+encodeURIComponent(t));
+    if(!r.ok)return null;
+    const d=await r.json();
+    const exactas=(d.coins||[]).filter(c=>(c.symbol||'').toUpperCase()===t);
+    if(!exactas.length)return null;
+    exactas.sort((a,b)=>(a.market_cap_rank??1e9)-(b.market_cap_rank??1e9));
+    const elegida={id:exactas[0].id,nombre:exactas[0].name};
+    cgIds[t]=elegida;guardarCgIds();
+    return elegida;
+  }catch(e){return null;}
+}
+
 async function fetchCrypto(list){
   if(!list.length)return;
-  const ids=[...new Set(list.map(a=>GM[a.ticker]||a.ticker.toLowerCase()))].join(',');
+  // Antes de pedir precios hay que saber el id de cada una; las desconocidas se
+  // resuelven una sola vez y después salen de la memoria.
+  const desconocidas=[...new Set(list.map(a=>a.ticker.toUpperCase()).filter(t=>!cgIdDe(t)))];
+  if(desconocidas.length)await Promise.all(desconocidas.map(t=>resolverCgId(t)));
+
+  const idPorTicker={};
+  list.forEach(a=>{const id=cgIdDe(a.ticker);if(id)idPorTicker[a.ticker]=id;});
+  const ids=[...new Set(Object.values(idPorTicker))].join(',');
+  if(!ids){list.forEach(a=>{a.lastUpdate='⚠ no encontrado';});return;}
   try{
     const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true');
     if(!r.ok)throw new Error();
     const d=await r.json();
-    list.forEach(a=>{const id=GM[a.ticker]||a.ticker.toLowerCase();if(d[id]){a.price=d[id].usd;a.change24h=d[id].usd_24h_change;a.lastUpdate=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});}});
+    list.forEach(a=>{
+      const id=idPorTicker[a.ticker];
+      if(id&&d[id]){a.price=d[id].usd;a.change24h=d[id].usd_24h_change;a.lastUpdate=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});a.cgId=id;}
+      else if(!id)a.lastUpdate='⚠ no encontrado';
+    });
   }catch(e){list.forEach(a=>{if(!a.lastUpdate)a.lastUpdate='⚠ error';});}
 }
 
@@ -1793,10 +1842,14 @@ async function syncCarteraToGitHub(manual) {
     // Se guardan también el nombre y el precio de compra: el robot no los usa,
     // pero sin ellos una restauración pierde cómo se llama cada activo y toda
     // la ganancia/pérdida, que es la mitad de la pantalla de Cartera.
-    const limpiar = a => ({
-      ticker: a.ticker, cat: a.cat, qty: a.qty,
-      name: a.name, costBasis: a.costBasis
-    });
+    const limpiar = a => {
+      const o = { ticker: a.ticker, cat: a.cat, qty: a.qty, name: a.name, costBasis: a.costBasis };
+      // El id de CoinGecko viaja resuelto para que el robot no tenga que
+      // averiguarlo cada hora (y no dependa de acertarle al buscar).
+      const cg = a.cgId || cgIdDe(a.ticker);
+      if (a.cat === 'crypto' && cg) o.cgId = cg;
+      return o;
+    };
     // `assets` sigue estando por compatibilidad: es la suma de todas las
     // carteras, que es exactamente lo que el robot necesitaba antes. Así una
     // versión vieja de la app o del robot lo sigue leyendo sin romperse.
@@ -1884,6 +1937,7 @@ async function restaurarCarteraSiEstaVacia() {
     ticker: a.ticker,
     cat: a.cat,
     qty: a.qty,
+    cgId: a.cgId || undefined,
     // El precio real lo trae refreshPrices() enseguida; costBasis sólo está en
     // los archivos guardados por la app nueva, así que en los viejos se cae al
     // precio de mercado y la ganancia arranca en cero en vez de mentir.
