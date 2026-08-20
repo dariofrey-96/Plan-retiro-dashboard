@@ -30,6 +30,16 @@ Dos apps hermanas (HTML/JS, hosteadas en GitHub Pages), mismo sistema de diseño
 - Gráfico con filtro "24h" (ventana rodante de últimas 24hs, no día calendario) o períodos más largos. Eje vertical con montos exactos, no redondeado a K/M. La serie se adelgaza con `compactarHist()` para dibujar siempre ~140 puntos (`HIST_PUNTOS_OBJETIVO`): parte el rango en franjas de tiempo iguales y se queda con la última medición de cada una. Repartir por tiempo (y no una de cada N mediciones) importa porque el robot guarda una cantidad despareja por día y el eje ubica los puntos en fila pareja.
 - Archivos de este repo: `index.html` (la app entera), `manifest.json`, los iconos y este archivo. El resto está en `Plan-retiro-datos`.
 
+### Unificación de las dos apps (rama `unificacion`, en curso desde el 2026-08-20)
+
+La app va a llamarse **FinLab** y vive en este repo (se renombra al final; `main` sigue sirviendo la app vieja mientras tanto). Estado:
+
+- **Hecho**: archivo único partido en `css/` + `js/`; paleta unificada en `css/tokens.css` (tema de tres estados: sin atributo sigue al sistema, `[data-theme]` pisa); JS de Presupuesto traído sin choques de nombres; marcado unificado con una barra de cuatro secciones (Resumen · Gastos · Proyección · Cartera) manejada por `js/navegacion.js`.
+- **Lo que hizo falta decidir**: las dos apps compartían sistema de diseño pero con el tema por defecto **invertido** (`:root` de Presupuesto = claro, el del retiro = oscuro). Eso hacía imposible cargar las dos hojas juntas, así que unificar la paleta **no era una pasada de diseño posterior sino el requisito** para poder unir.
+- **Convenciones**: lo que chocaba y significaba cosas distintas lleva apellido `Presu` (`loadParamsPresu`, `toggleSidebarPresu`, `LS_SYNC_MARCA_PRESU`…). El deslizador `alquiler` del retiro pasó a `alquilerRetiro` con migración en `loadParams()`, porque el id del elemento era también la clave de guardado. Los estilos de Presupuesto están encapsulados bajo `.app-presupuesto` (`css/presupuesto.css`) — los componentes todavía NO están unificados, sólo los colores.
+- **Los tres archivos generados no se editan a mano**: `css/tokens.css`, `css/presupuesto.css` y los `js/presupuesto*.js` salen de los scripts en `scripts/`. Editar `tokens.css` a mano ya rompió el archivo una vez (una declaración cortada se traga todas las reglas siguientes sin dar error).
+- **Falta**: unificar la maquetación de los componentes (las dos mitades se ven distintas entre sí), encabezado/título/manifest todavía dicen "Plan de Retiro", y renombrar el repo.
+
 ### Ideas pendientes (inspiradas en plata.wtf, en orden de prioridad)
 
 1. Importar PDF/resumen de tarjeta con categorización automática (Presupuesto).

@@ -11,9 +11,11 @@
 // Es "gana el último que sube", a propósito: si se edita en dos dispositivos a
 // la vez, queda la versión del que guardó al final. Resolver conflictos de
 // verdad no vale la pena para un presupuesto personal.
-const GH_OWNER = 'dariofrey-96';
-const GH_REPO  = 'Plan-retiro-datos';
-const GH_RAMA  = 'main';
+// El repositorio y la rama salen de sincronizacion.js: las dos mitades guardan
+// en el MISMO repo privado, sólo que en archivos distintos. Tenerlo declarado
+// dos veces era pedir que algún día se cambie uno y quede el otro apuntando a
+// otro lado.
+const GH_RAMA  = GH_BRANCH;
 const GH_PATH_PRESUPUESTO = 'presupuesto.json';
 // LS_GH_TOKEN lo declara sincronizacion.js: es la misma llave para las dos
 // mitades, guardada bajo la misma clave del navegador.
@@ -121,7 +123,7 @@ async function subirPresupuesto(manual) {
 
   subiendo = true;
   setSyncEstado('loading', 'Guardando en GitHub…');
-  const api = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH_PRESUPUESTO}`;
+  const api = `https://api.github.com/repos/${GH_DATA_OWNER}/${GH_DATA_REPO}/contents/${GH_PATH_PRESUPUESTO}`;
   try {
     let sha = null;
     const getRes = await fetch(api + `?ref=${GH_RAMA}`, {
