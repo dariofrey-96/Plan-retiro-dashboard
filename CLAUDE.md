@@ -32,7 +32,7 @@ Dos apps hermanas (HTML/JS, hosteadas en GitHub Pages), mismo sistema de diseño
 
 ### FinLab: la app unificada (hecho el 2026-08-20)
 
-La app se llama **FinLab** y vive en este repo: presupuesto y retiro/cartera en una sola página, cuatro secciones. **Ya está en `main` y publicada.** El repo  queda como archivo histórico — no se le agregan cambios nuevos. La marca  apunta a la última versión previa a la unión, por si hace falta comparar o volver.
+La app se llama **FinLab** y vive en este repo: presupuesto y retiro/cartera en una sola página, cuatro secciones (Resumen · Gastos · Proyección · Cartera). **Ya está en `main` y publicada.** El repo `Presupuesto-personal` queda como archivo histórico — no se le agregan cambios nuevos, todo va acá. La etiqueta `antes-de-finlab` apunta a la última versión previa a la unión, por si hace falta comparar o volver atrás.
 
 - **Hecho**: archivo único partido en `css/` + `js/`; paleta unificada en `css/tokens.css` (tema de tres estados: sin atributo sigue al sistema, `[data-theme]` pisa); JS de Presupuesto traído sin choques de nombres; marcado unificado con una barra de cuatro secciones (Resumen · Gastos · Proyección · Cartera) manejada por `js/navegacion.js`.
 - **Lo que hizo falta decidir**: las dos apps compartían sistema de diseño pero con el tema por defecto **invertido** (`:root` de Presupuesto = claro, el del retiro = oscuro). Eso hacía imposible cargar las dos hojas juntas, así que unificar la paleta **no era una pasada de diseño posterior sino el requisito** para poder unir.
