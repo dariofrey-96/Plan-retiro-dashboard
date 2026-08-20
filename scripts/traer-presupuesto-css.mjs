@@ -17,6 +17,13 @@ const DESTINO = 'C:/Users/Dario/OneDrive/Dokumente/GitHub/Plan-retiro-dashboard/
 
 let css = (await readFile(ORIGEN, 'utf8')).replace(/\r/g, '').split('\n').slice(13, 959).join('\n');
 
+// Los comentarios se quitan ANTES de parsear. Si no, el que va entre dos reglas
+// queda pegado al selector siguiente: `.app-presupuesto /* TABLES */` y abajo
+// `.table-card` suelto, sin encapsular. Peor todavía con los que preceden a un
+// @media, porque entonces el bloque deja de reconocerse como tal y nada de lo
+// que tiene adentro se encapsula.
+css = css.replace(/\/\*[\s\S]*?\*\//g, '');
+
 // Las declaraciones sueltas (@import) terminan en `;`, no en llaves. Si se
 // dejan, el parser las pega al selector siguiente. Ojo que la URL de la fuente
 // lleva `;` adentro del paréntesis.
@@ -101,7 +108,16 @@ function revisarFugas(nodos, dentroDeAt = false) {
     });
   });
 }
-revisarFugas(parsear(salida.slice(cabecera.length)));
+revisarFugas(parsear(salida.slice(cabecera.length).replace(/\/\*[\s\S]*?\*\//g, '')));
+
+// Control independiente del parser, por las dudas: ninguna línea que abra una
+// regla puede quedar sin el contenedor, esté donde esté.
+salida.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').forEach(l => {
+  const m = l.match(/^\s*([^@{}][^{}]*)\{/);
+  if (m && !m[1].includes(AMBITO) && !/^\s*(from|to|\d+%)\s*$/.test(m[1])) {
+    problemas.push('fuga por línea: ' + m[1].trim().slice(0, 50));
+  }
+});
 
 console.log(`css/presupuesto.css: ${salida.split('\n').length} líneas`);
 console.log(`  reglas encapsuladas: ${(salida.match(new RegExp('\\' + AMBITO, 'g')) || []).length}`);

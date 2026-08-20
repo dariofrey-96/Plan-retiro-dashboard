@@ -1,15 +1,7 @@
-/* Estilos de la mitad de PRESUPUESTO, encapsulados bajo .app-presupuesto.
+/* Estilos propios de la mitad de PRESUPUESTO, encapsulados bajo .app-presupuesto.
+   Los compartidos están en componentes.css y los colores en tokens.css.
+   GENERADO por scripts/unificar-componentes.mjs — no editar a mano. */
 
-   Las dos mitades definen las mismas clases (.kpi, .field, .bn-item, .shell…)
-   con valores distintos, y 11 selectores de elemento (header, aside, table…)
-   que pisarían a la otra. Encapsulados, cada mitad conserva su maquetación.
-
-   Los COLORES no están acá: viven en tokens.css, compartidos por las dos.
-   Unificar también los componentes es una pasada posterior.
-
-   GENERADO por scripts/traer-presupuesto-css.mjs — no editar a mano. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-.app-presupuesto *,.app-presupuesto *::before,.app-presupuesto *::after{ box-sizing: border-box; margin: 0; padding: 0; }
 .app-presupuesto[data-theme="dark"]{
   --bg:         #17161a;
   --surface:    #201f23;
@@ -52,24 +44,7 @@
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
-.app-presupuesto .num{ font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; }
 .app-presupuesto button,.app-presupuesto input,.app-presupuesto select{ font-family: 'Inter', sans-serif; }
-.app-presupuesto :focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
-.app-presupuesto /* ══════════════════════════ HEADER ══════════════════════════ */
-header{
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  position: sticky; top: 0; z-index: 50;
-  flex-wrap: wrap;
-}
-.app-presupuesto .header-left{ display: flex; align-items: baseline; gap: 10px; }
-.app-presupuesto header h1{ font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
-.app-presupuesto header .sub{ font-size: .68rem; color: var(--text-3); display: none; }
 .app-presupuesto .tabs{ display: none; gap: 3px; background: var(--surface-2); padding: 3px; border-radius: 100px; }
 .app-presupuesto .tab{
   padding: 7px 15px;
@@ -88,36 +63,18 @@ header{
   color: var(--surface);
   font-weight: 600;
 }
-.app-presupuesto .sidebar-toggle{ display: none; }
-.app-presupuesto .aside-close{
-  align-self: center;
-  background: var(--surface-2);
-  border: none;
-  color: var(--text);
-  border-radius: 100px;
-  padding: 7px 14px;
-  font-size: .72rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-.app-presupuesto .header-right{ display: flex; gap: 8px; align-items: center; order: 2; }
-.app-presupuesto .icon-btn{
-  background: var(--surface); border: 1px solid var(--border); color: var(--text-2);
-  border-radius: 100px; padding: 7px 11px; font-size: .68rem; cursor: pointer; transition: all .15s;
-  display: flex; align-items: center; gap: 5px;
-}
-.app-presupuesto .icon-btn:hover{ color: var(--text); border-color: var(--text-2); }
 .app-presupuesto .icon-btn .lbl{ display: none; }
-.app-presupuesto /* Estado de la sincronización con GitHub. En el celular queda sólo el puntito
-   (la etiqueta se muestra recién en escritorio,.app-presupuesto igual que los demás botones). */
-.sync-dot{
+.app-presupuesto .sync-dot{
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--text-3); flex: 0 0 auto;
 }
 .app-presupuesto .sync-dot.ok{ background: var(--green); }
 .app-presupuesto .sync-dot.error{ background: var(--red); }
 .app-presupuesto .sync-dot.loading{ background: var(--accent); animation: syncPulse 1s ease-in-out infinite; }
-@keyframes syncPulse{ 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+@keyframes syncPulse{
+0%,100%{ opacity: 1; }
+50%{ opacity: .3; }
+}
 .app-presupuesto .sync-linea{ display: flex; align-items: center; gap: 8px; font-size: .72rem; color: var(--text-2); line-height: 1.35; }
 .app-presupuesto .sync-btn{
   margin-top: 10px; width: 100%;
@@ -133,31 +90,6 @@ header{
   border-radius: 10px; padding: 9px 12px; font-size: .75rem; font-family: 'Inter', sans-serif;
 }
 .app-presupuesto .sync-input:focus{ border-color: var(--accent); outline: none; }
-.app-presupuesto /* ══════════════════════════ LAYOUT SHELL ══════════════════════════ */
-.shell{ display: block; min-height: calc(100vh - 57px); }
-.app-presupuesto /* ══════════════════════════ PARAMS SHEET (aside) ══════════════════════════ */
-.sheet-backdrop{
-  display: none; position: fixed; inset: 0; z-index: 149;
-  background: rgba(26,26,24,.34); backdrop-filter: blur(1px);
-}
-.app-presupuesto .sheet-backdrop.open{ display: block; }
-.app-presupuesto aside{
-  display: none;
-  position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 150;
-  max-height: 86vh; background: var(--surface);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0; box-shadow: var(--shadow-pop);
-  padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
-  overflow-y: auto;
-  flex-direction: column;
-  gap: 16px;
-}
-.app-presupuesto aside.open{ display: flex; }
-.app-presupuesto .sheet-handle{
-  display: block; width: 36px; height: 4px; border-radius: 100px;
-  background: var(--surface-3); align-self: center; margin-bottom: 4px; flex-shrink: 0;
-}
-.app-presupuesto .sheet-title-row{ display: flex; align-items: center; justify-content: space-between; padding-bottom: 2px; }
-.app-presupuesto .sheet-title-row h2{ font-size: .98rem; font-weight: 700; letter-spacing: -.01em; }
 .app-presupuesto .param-group{
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -173,20 +105,6 @@ header{
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--text-3);
-}
-.app-presupuesto .field{ display: flex; flex-direction: column; gap: 6px; }
-.app-presupuesto .field label{ font-size: .75rem; color: var(--text); font-weight: 500; }
-.app-presupuesto .field-row{ display: flex; align-items: center; gap: 10px; }
-.app-presupuesto .field input[type="range"]{
-  flex: 1; accent-color: var(--accent); height: 4px; cursor: pointer;
-}
-.app-presupuesto .val{
-  font-variant-numeric: tabular-nums;
-  font-size: .76rem;
-  font-weight: 700;
-  min-width: 82px;
-  text-align: right;
-  color: var(--text);
 }
 .app-presupuesto .toggle-field{ display: flex; align-items: center; justify-content: space-between; }
 .app-presupuesto .toggle-field label{ font-size: .75rem; color: var(--text); font-weight: 500; }
@@ -206,36 +124,18 @@ header{
 .app-presupuesto .switch input:checked + .slider-sw{ background: var(--accent); border-color: var(--accent); }
 .app-presupuesto .switch input:checked + .slider-sw::before{ transform: translateX(16px); }
 .app-presupuesto .sub-field{ padding-top: 2px; }
-.app-presupuesto /* ══════════════════════════ MAIN ══════════════════════════ */
-main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
-.app-presupuesto /* ── KPI SCROLLER ── */
-.kpi-scroll{
+.app-presupuesto .kpi-scroll{
   display: flex; gap: 10px; overflow-x: auto; padding: 14px 16px 4px;
   scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
 }
 .app-presupuesto .kpi-scroll::-webkit-scrollbar{ display: none; }
-.app-presupuesto .kpi{
-  scroll-snap-align: start; flex: 0 0 auto; min-width: 148px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
-  padding: 13px 15px; box-shadow: var(--shadow-card);
-}
 .app-presupuesto .kpi.kpi-hero{ min-width: 190px; }
-.app-presupuesto .kpi-label{ font-size: .6rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; font-weight: 600; }
 .app-presupuesto .kpi-val{
   font-variant-numeric: tabular-nums;
   font-size: 1.28rem; font-weight: 700; line-height: 1; letter-spacing: -.02em;
 }
-.app-presupuesto .kpi-sub{ font-size: .66rem; color: var(--text-3); margin-top: 5px; }
-.app-presupuesto .green{ color: var(--green-text);  }
-.app-presupuesto .red{ color: var(--red-text);    }
-.app-presupuesto .orange{ color: var(--gold-text); }
-.app-presupuesto .blue{ color: var(--accent-text); }
-.app-presupuesto .purple{ color: var(--purple-text); }
-.app-presupuesto /* ── CONTENT AREA ── */
-.content{ flex: 1; }
-.app-presupuesto .view-pad{ padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
-.app-presupuesto /* ── DISTRIBUCIÓN CARD ── */
-.dist-card{
+.app-presupuesto .content{ flex: 1; }
+.app-presupuesto .dist-card{
   margin: 6px 16px 0; padding: 16px 16px 14px; background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
 }
@@ -280,10 +180,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .dist-legend{ display: flex; flex-wrap: wrap; gap: 11px 14px; margin-top: 12px; }
 .app-presupuesto .dist-leg-item{ display: flex; align-items: center; gap: 6px; font-size: .68rem; color: var(--text-2); font-weight: 500; }
 .app-presupuesto .dist-dot{ width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.app-presupuesto /* ── SECTION HEADINGS (for view groupings) ── */
-.section-title{ font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin: 4px 2px 0; }
-.app-presupuesto /* ── HERO / RESUMEN CARD ── */
-.hero-card{
+.app-presupuesto .hero-card{
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-xl); padding: 20px 18px; color: var(--text);
   box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 16px;
@@ -300,8 +197,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .chip-row{ display: flex; flex-wrap: wrap; gap: 7px; }
 .app-presupuesto .stat-chip{ background: var(--surface-3); border-radius: 100px; padding: 6px 11px; font-size: .66rem; color: var(--text-2); display: flex; gap: 6px; align-items: baseline; }
 .app-presupuesto .stat-chip b{ font-variant-numeric: tabular-nums; color: var(--text); font-weight: 700; }
-.app-presupuesto /* ── CATEGORY CARDS ── */
-.cards-grid{ display: flex; flex-direction: column; gap: 12px; }
+.app-presupuesto .cards-grid{ display: flex; flex-direction: column; gap: 12px; }
 .app-presupuesto .cat-card{
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card); overflow: hidden;
@@ -310,7 +206,6 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
   display: flex; align-items: center; gap: 10px; padding: 13px 16px;
   border-bottom: 1px solid var(--border); background: var(--surface-2);
 }
-.app-presupuesto .cat-dot{ width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .app-presupuesto .cat-card-hdr .cat-title{ flex: 1; font-size: .8rem; font-weight: 700; letter-spacing: -.005em; }
 .app-presupuesto .cat-card-hdr .cat-total{ font-variant-numeric: tabular-nums; font-size: .84rem; font-weight: 700; }
 .app-presupuesto .cat-card-body{ padding: 4px 16px; }
@@ -340,10 +235,8 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
   background: var(--teal-soft); color: var(--teal);
   margin-left: 6px; vertical-align: middle;
 }
-.app-presupuesto /* ── PROYECCIÓN / HISTÓRICO ── */
-.proy-view,.app-presupuesto .gastos-view{ display: flex; flex-direction: column; gap: 14px; }
+.app-presupuesto .proy-view,.app-presupuesto .gastos-view{ display: flex; flex-direction: column; gap: 14px; }
 .app-presupuesto .chart-hdr{ display: flex; flex-direction: column; gap: 8px; }
-.app-presupuesto .chart-title{ font-size: .84rem; font-weight: 700; letter-spacing: -.005em; }
 .app-presupuesto .chart-legend-row{ display: flex; gap: 12px; flex-wrap: wrap; font-size: .66rem; color: var(--text-2); }
 .app-presupuesto .chart-legend-row .lg-item{ display: flex; align-items: center; gap: 5px; }
 .app-presupuesto .chart-legend-row .lg-swatch{ display: inline-block; width: 10px; height: 3px; border-radius: 2px; }
@@ -351,27 +244,10 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
   position: relative; height: 240px; background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-card);
 }
-.app-presupuesto /* ── TABLES (used inside cards) ── */
-.table-card{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); overflow: hidden; }
 .app-presupuesto .proy-table-wrap,.app-presupuesto .gastos-table-wrap{ max-height: 340px; overflow-y: auto; }
-.app-presupuesto table{ width: 100%; border-collapse: collapse; font-size: .72rem; font-variant-numeric: tabular-nums; }
-.app-presupuesto thead th{
-  position: sticky; top: 0; background: var(--surface-2);
-  color: var(--text-3); font-size: .6rem; text-transform: uppercase;
-  letter-spacing: .06em; padding: 9px 12px; text-align: right;
-  border-bottom: 1px solid var(--border);
-}
-.app-presupuesto thead th:first-child{ text-align: center; }
-.app-presupuesto thead th:nth-child(2){ text-align: left; }
-.app-presupuesto tbody tr{ border-bottom: 1px solid var(--hairline); }
-.app-presupuesto tbody tr:hover{ background: var(--surface-2); }
-.app-presupuesto tbody td{ padding: 7px 12px; text-align: right; }
-.app-presupuesto tbody td:first-child{ text-align: center; color: var(--text-3); }
-.app-presupuesto tbody td:nth-child(2){ text-align: left; color: var(--text); }
 .app-presupuesto .surplus-pos{ color: var(--green-text); }
 .app-presupuesto .surplus-neg{ color: var(--red-text); }
-.app-presupuesto /* stacked-card table rows (mobile default) */
-.gastos-table-wrap thead,.app-presupuesto .proy-table-wrap thead{ display: none; }
+.app-presupuesto .gastos-table-wrap thead,.app-presupuesto .proy-table-wrap thead{ display: none; }
 .app-presupuesto .gastos-table-wrap tbody tr,.app-presupuesto .proy-table-wrap tbody tr{
   display: flex; flex-wrap: wrap; gap: 3px 12px; padding: 13px 15px;
   border-bottom: 1px solid var(--border);
@@ -384,8 +260,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
   font-size: .56rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em;
 }
 .app-presupuesto .gastos-empty,.app-presupuesto .pv-empty{ padding: 26px; text-align: center; color: var(--text-3); font-size: .76rem; }
-.app-presupuesto /* ── GASTOS DEL MES ── */
-.gastos-hdr{ display: flex; flex-direction: column; gap: 8px; }
+.app-presupuesto .gastos-hdr{ display: flex; flex-direction: column; gap: 8px; }
 .app-presupuesto .gastos-hdr-top{ display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .app-presupuesto .mes-nav{ display: flex; align-items: center; gap: 2px; }
 .app-presupuesto .mes-btn{
@@ -468,71 +343,29 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 }
 .app-presupuesto .del-gasto-btn:hover{ color: var(--red-text); background: var(--red-soft); }
 .app-presupuesto .cat-chip{ font-size: .64rem; font-weight: 500; padding: 3px 8px; border-radius: 100px; background: var(--surface-3); color: var(--text-2); }
-.app-presupuesto /* ══════════════════════════ BOTTOM NAV ══════════════════════════ */
-.bottom-nav{
-  display: flex;
-  position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 120;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 100px; box-shadow: var(--shadow-pop);
-  padding: 6px; justify-content: space-around; align-items: center;
-}
-.app-presupuesto .bn-item{
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  background: none; border: none; color: var(--text-3);
-  font-size: .56rem; font-weight: 600; white-space: nowrap;
-  padding: 7px 2px; border-radius: 16px; cursor: pointer; flex: 1; min-width: 0;
-  transition: background .15s, color .15s;
-}
-.app-presupuesto .bn-item .bn-ic{ font-size: 1.05rem; line-height: 1; }
-.app-presupuesto .bn-item.active{ color: var(--surface); background: var(--text); }
-.app-presupuesto /* ══════════════════════════ DESKTOP ══════════════════════════ */
 @media (min-width: 900px){
-  html { font-size: 14px; }
-  header { padding: 14px 28px; flex-wrap: nowrap; }
-  header .sub { display: block; }
-  .tabs { display: flex; }
-  .icon-btn .lbl { display: inline; }
-
-  .shell { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 61px); }
-
-  .sheet-backdrop { display: none !important; }
-  aside {
-    display: flex; position: static; max-height: none; border-radius: 0;
-    box-shadow: none; border-right: 1px solid var(--border);
-    padding: 20px 16px; overflow-y: auto; gap: 18px;
-  }
-  .sheet-handle, .aside-close { display: none; }
-
-  main { padding-bottom: 24px; }
-  .bottom-nav { display: none; }
-
-  .kpi-scroll { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); padding: 0; overflow: visible; }
-  .kpi { border-radius: 0; box-shadow: none; min-width: 0; }
-
-  .dist-card { margin: 20px 24px 0; }
-  .view-pad { padding: 4px 24px 28px; max-width: 1160px; }
-
-  .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); align-items: start; }
-  .hero-card { grid-column: 1 / -1; }
-
-  .gasto-form { padding: 18px; }
-  .gasto-form-row { grid-template-columns: 130px 1fr 140px 1fr; align-items: end; }
-  .gasto-form-row.row-2 { grid-template-columns: 1fr auto; }
-  .btn-add-gasto { width: auto; }
-  .gastos-kpis { grid-template-columns: repeat(4, 1fr); }
-  .retiro-card .rc-row { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
-  .retiro-card input { width: 160px; }
-  .retiro-card .rc-preview { flex: 1; min-width: 200px; }
-
-  .gastos-table-wrap thead, .proy-table-wrap thead { display: table-header-group; }
-  .gastos-table-wrap tbody tr, .proy-table-wrap tbody tr { display: table-row; padding: 0; }
-  .gastos-table-wrap tbody td, .proy-table-wrap tbody td { padding: 7px 12px; text-align: right !important; font-size: .72rem; }
-  .gastos-table-wrap td:nth-child(1), .gastos-table-wrap td:nth-child(2), .gastos-table-wrap td:nth-child(4),
-  .proy-table-wrap td:nth-child(2) { text-align: left !important; }
-  .gastos-table-wrap tbody td[data-label]::before, .proy-table-wrap tbody td[data-label]::before { content: none; }
+.app-presupuesto{ font-size: 14px; }
+.app-presupuesto .tabs{ display: flex; }
+.app-presupuesto .icon-btn .lbl{ display: inline; }
+.app-presupuesto .kpi-scroll{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); padding: 0; overflow: visible; }
+.app-presupuesto .dist-card{ margin: 20px 24px 0; }
+.app-presupuesto .cards-grid{ display: grid; grid-template-columns: repeat(2, 1fr); align-items: start; }
+.app-presupuesto .hero-card{ grid-column: 1 / -1; }
+.app-presupuesto .gasto-form{ padding: 18px; }
+.app-presupuesto .gasto-form-row{ grid-template-columns: 130px 1fr 140px 1fr; align-items: end; }
+.app-presupuesto .gasto-form-row.row-2{ grid-template-columns: 1fr auto; }
+.app-presupuesto .btn-add-gasto{ width: auto; }
+.app-presupuesto .gastos-kpis{ grid-template-columns: repeat(4, 1fr); }
+.app-presupuesto .retiro-card .rc-row{ flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+.app-presupuesto .retiro-card input{ width: 160px; }
+.app-presupuesto .retiro-card .rc-preview{ flex: 1; min-width: 200px; }
+.app-presupuesto .gastos-table-wrap thead,.app-presupuesto .proy-table-wrap thead{ display: table-header-group; }
+.app-presupuesto .gastos-table-wrap tbody tr,.app-presupuesto .proy-table-wrap tbody tr{ display: table-row; padding: 0; }
+.app-presupuesto .gastos-table-wrap tbody td,.app-presupuesto .proy-table-wrap tbody td{ padding: 7px 12px; text-align: right !important; font-size: .72rem; }
+.app-presupuesto .gastos-table-wrap td:nth-child(1),.app-presupuesto .gastos-table-wrap td:nth-child(2),.app-presupuesto .gastos-table-wrap td:nth-child(4),.app-presupuesto .proy-table-wrap td:nth-child(2){ text-align: left !important; }
+.app-presupuesto .gastos-table-wrap tbody td[data-label]::before,.app-presupuesto .proy-table-wrap tbody td[data-label]::before{ content: none; }
 }
-.app-presupuesto /* ── ALERTAS DE CATEGORÍA ─────────────────────────────────────────────── */
-.alerta-backdrop{
+.app-presupuesto .alerta-backdrop{
   display: none; position: fixed; inset: 0; z-index: 200;
   background: rgba(26,26,24,.45); backdrop-filter: blur(2px);
 }
@@ -548,8 +381,8 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 }
 .app-presupuesto .alerta-modal.open{ display: block; animation: alertaIn .18s ease-out; }
 @keyframes alertaIn{
-  from { opacity: 0; transform: translate(-50%, -46%) scale(.96); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+from{ opacity: 0; transform: translate(-50%, -46%) scale(.96); }
+to{ opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 .app-presupuesto .alerta-ic{ font-size: 2rem; line-height: 1; margin-bottom: 12px; }
 .app-presupuesto .alerta-titulo{ font-size: 1.05rem; font-weight: 700; line-height: 1.3; margin-bottom: 3px; }
@@ -582,8 +415,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .ab-txt{ flex: 1; }
 .app-presupuesto .ab-txt b{ font-weight: 650; }
 .app-presupuesto .ab-pct{ font-weight: 700; font-size: .8rem; flex-shrink: 0; }
-.app-presupuesto /* ── PAGOS REPARTIDOS EN VARIOS MESES ─────────────────────────────────── */
-.cuota-chip{
+.app-presupuesto .cuota-chip{
   display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 100px;
   font-size: .6rem; font-weight: 600; letter-spacing: .02em; white-space: nowrap;
   background: var(--accent-soft); color: var(--accent-text);
@@ -595,8 +427,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
   font-size: .78rem; color: var(--muted); line-height: 1.45;
 }
 .app-presupuesto .futuro-note b{ color: var(--text); font-weight: 650; }
-.app-presupuesto /* ── GASTOS FIJOS / RECURRENTES ───────────────────────────────────────── */
-.fijos-card,.app-presupuesto .sug-card{
+.app-presupuesto .fijos-card,.app-presupuesto .sug-card{
   border: 1px solid var(--border); border-radius: var(--radius-lg);
   background: var(--surface); padding: 14px; margin-bottom: 14px;
 }
@@ -653,8 +484,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .sug-si:hover{ background: var(--accent-dark); }
 .app-presupuesto .sug-no{ border: 1px solid var(--border); background: var(--surface); color: var(--muted); }
 .app-presupuesto .sug-no:hover{ color: var(--text); }
-.app-presupuesto /* ── INICIO / ESTA SEMANA ─────────────────────────────────────────────── */
-.inicio-view{ display: flex; flex-direction: column; gap: 14px; }
+.app-presupuesto .inicio-view{ display: flex; flex-direction: column; gap: 14px; }
 .app-presupuesto .ini-card{
   border: 1px solid var(--border); border-radius: var(--radius-lg);
   background: var(--surface); padding: 16px 14px 14px;
@@ -705,8 +535,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
   background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer;
 }
 .app-presupuesto .ini-cta:hover{ background: var(--accent-dark); }
-.app-presupuesto /* ── IMPORTAR RESUMEN (PDF / TEXTO) ───────────────────────────────────── */
-.btn-importar{
+.app-presupuesto .btn-importar{
   width: 100%; margin-top: 8px; padding: 11px; border: 1px dashed var(--divider);
   border-radius: var(--radius-md); background: transparent; color: var(--text-2);
   font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
@@ -784,8 +613,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .imp-btn-2:hover{ background: var(--surface-2); color: var(--text); }
 .app-presupuesto .imp-estado{ text-align: center; padding: 30px 16px; font-size: .85rem; color: var(--muted); line-height: 1.6; }
 .app-presupuesto .imp-error{ color: var(--red-text); font-weight: 600; }
-.app-presupuesto /* ── RESUMEN POR PERÍODO ──────────────────────────────────────────────── */
-.res-view{ display: flex; flex-direction: column; gap: 14px; }
+.app-presupuesto .res-view{ display: flex; flex-direction: column; gap: 14px; }
 .app-presupuesto .rs-chips{ display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .app-presupuesto .rs-chips::-webkit-scrollbar{ display: none; }
 .app-presupuesto .rs-chip{
@@ -807,8 +635,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .rs-cat-monto{ font-weight: 650; white-space: nowrap; text-align: right; min-width: 60px; }
 .app-presupuesto .rs-cat-pct{ font-size: .68rem; color: var(--text-3); font-weight: 700; width: 32px; text-align: right; }
 .app-presupuesto .rs-vacio{ font-size: .8rem; color: var(--muted); line-height: 1.55; text-align: center; padding: 14px 0; }
-.app-presupuesto /* distribución del ingreso */
-.di-top{ display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+.app-presupuesto .di-top{ display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
 .app-presupuesto .di-ingreso{ font-size: 1.55rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
 .app-presupuesto .di-ingreso-lbl{ font-size: .76rem; color: var(--muted); }
 .app-presupuesto .di-barra{
@@ -823,8 +650,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 }
 .app-presupuesto .di-fila:first-of-type{ border-top: none; }
 .app-presupuesto .di-punto{ width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.app-presupuesto /* los tres fondos,.app-presupuesto colgando de su subtotal */
-.di-fila.hijo{ padding: 5px 0 5px 20px; border-top: none; font-size: .74rem; color: var(--muted); }
+.app-presupuesto .di-fila.hijo{ padding: 5px 0 5px 20px; border-top: none; font-size: .74rem; color: var(--muted); }
 .app-presupuesto .di-fila.hijo .di-punto{ width: 6px; height: 6px; }
 .app-presupuesto .di-fila.hijo .di-monto{ font-weight: 600; }
 .app-presupuesto .di-fila.hijo + .di-fila:not(.hijo){ border-top: 1px solid var(--hairline); margin-top: 3px; }
@@ -832,8 +658,7 @@ main{ display: flex; flex-direction: column; padding-bottom: calc(78px + env(saf
 .app-presupuesto .di-nombre small{ display: block; font-size: .68rem; color: var(--text-3); }
 .app-presupuesto .di-monto{ font-weight: 650; white-space: nowrap; }
 .app-presupuesto .di-pct{ font-size: .68rem; color: var(--text-3); font-weight: 700; width: 34px; text-align: right; }
-.app-presupuesto /* dona de categorías */
-.rs-donut-wrap{ position: relative; height: 190px; margin: 4px 0 14px; }
+.app-presupuesto .rs-donut-wrap{ position: relative; height: 190px; margin: 4px 0 14px; }
 .app-presupuesto .rs-donut-centro{
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; pointer-events: none; gap: 1px;
