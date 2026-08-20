@@ -30,9 +30,9 @@ Dos apps hermanas (HTML/JS, hosteadas en GitHub Pages), mismo sistema de diseño
 - Gráfico con filtro "24h" (ventana rodante de últimas 24hs, no día calendario) o períodos más largos. Eje vertical con montos exactos, no redondeado a K/M. La serie se adelgaza con `compactarHist()` para dibujar siempre ~140 puntos (`HIST_PUNTOS_OBJETIVO`): parte el rango en franjas de tiempo iguales y se queda con la última medición de cada una. Repartir por tiempo (y no una de cada N mediciones) importa porque el robot guarda una cantidad despareja por día y el eje ubica los puntos en fila pareja.
 - Archivos de este repo: `index.html` (la app entera), `manifest.json`, los iconos y este archivo. El resto está en `Plan-retiro-datos`.
 
-### Unificación de las dos apps (rama `unificacion`, en curso desde el 2026-08-20)
+### FinLab: la app unificada (hecho el 2026-08-20)
 
-La app va a llamarse **FinLab** y vive en este repo (se renombra al final; `main` sigue sirviendo la app vieja mientras tanto). Estado:
+La app se llama **FinLab** y vive en este repo: presupuesto y retiro/cartera en una sola página, cuatro secciones. **Ya está en `main` y publicada.** El repo  queda como archivo histórico — no se le agregan cambios nuevos. La marca  apunta a la última versión previa a la unión, por si hace falta comparar o volver.
 
 - **Hecho**: archivo único partido en `css/` + `js/`; paleta unificada en `css/tokens.css` (tema de tres estados: sin atributo sigue al sistema, `[data-theme]` pisa); JS de Presupuesto traído sin choques de nombres; marcado unificado con una barra de cuatro secciones (Resumen · Gastos · Proyección · Cartera) manejada por `js/navegacion.js`.
 - **Lo que hizo falta decidir**: las dos apps compartían sistema de diseño pero con el tema por defecto **invertido** (`:root` de Presupuesto = claro, el del retiro = oscuro). Eso hacía imposible cargar las dos hojas juntas, así que unificar la paleta **no era una pasada de diseño posterior sino el requisito** para poder unir.
