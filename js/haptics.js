@@ -26,7 +26,7 @@ function hapticTick() {
 // Sliders: listener adicional (no reemplaza el que ya actualiza el valor y
 // recalcula), best-effort — funciona en Android; en iOS no hay garantía.
 ['edadActual','edadRetiro','vidaEsperada','gastoMensual','inflacion','swr',
- 'capitalInicial','ahorroMensual','crecAhorro','retorno','alquiler',
+ 'capitalInicial','ahorroMensual','crecAhorro','retorno','alquilerRetiro',
  'dividendos','consultoria','alertaCaida'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', hapticTick);

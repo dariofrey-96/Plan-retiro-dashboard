@@ -2,18 +2,17 @@
 // Recorre las ventanas principales, las mismas de la barra de abajo.
 // Deslizar ← va a la siguiente, → a la anterior. Las sub-pestañas de
 // Proyección se siguen cambiando tocándolas, a propósito.
-const SECCIONES = ['retiro', 'cartera'];
-
+// Al unir las dos apps pasaron de dos ventanas a cuatro. La lista sale de
+// navegacion.js para que el dedo recorra exactamente lo mismo que la barra: si
+// se duplicaba acá, agregar una sección dejaba el gesto desincronizado.
 function seccionActualIdx() {
-  return document.getElementById('view-cartera').classList.contains('active') ? 1 : 0;
+  return SECCIONES_APP.findIndex(s => s.id === seccionActual);
 }
 
 function irASeccion(idx) {
-  const v = SECCIONES[idx];
-  if (!v || document.getElementById('view-' + v).classList.contains('active')) return;
-  // Se reusa el botón real de la barra de abajo en vez de duplicar su lógica:
-  // así el resaltado de las pestañas queda igual que si lo hubieras tocado.
-  document.querySelector(`.bn-item[data-tab="${v}"]`)?.click();
+  const s = SECCIONES_APP[idx];
+  if (!s || s.id === seccionActual) return;
+  irASeccionApp(s.id);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -24,7 +23,7 @@ function gestoBloqueado(el) {
   for (let n = el; n && n !== document.body; n = n.parentElement) {
     if (n.tagName === 'CANVAS' || n.tagName === 'SELECT' || n.tagName === 'TEXTAREA') return true;
     if (n.tagName === 'INPUT' && n.type === 'range') return true;
-    if (n.id === 'aside') return true;
+    if (n.id === 'aside' || n.id === 'aside-presu') return true;
     const est = getComputedStyle(n);
     if ((est.overflowX === 'auto' || est.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 4) return true;
   }
@@ -37,7 +36,9 @@ function gestoBloqueado(el) {
 
   document.addEventListener('touchstart', e => {
     if (e.touches.length !== 1) { valido = false; return; }
-    const aside = document.getElementById('aside');
+    // Cualquiera de los dos paneles abierto bloquea el gesto: cada mitad tiene el suyo.
+    const aside = document.querySelector('#aside.open, #aside-presu.open')
+                || document.getElementById('aside');
     if (aside && aside.classList.contains('open')) { valido = false; return; } // sidebar abierto: tiene su propio gesto
     // Los modales de esta app se muestran/ocultan con `display` inline, no con una clase.
     const hayModal = [...document.querySelectorAll('.modal-overlay')]

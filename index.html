@@ -6,26 +6,32 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Plan Retiro">
+<meta name="apple-mobile-web-app-title" content="FinLab">
 <meta name="theme-color" content="#17161a">
-<title>Plan de Retiro</title>
+<title>FinLab</title>
 <link rel="manifest" href="manifest.json">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/componentes.css">
 <link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/presupuesto.css">
 </head>
 <body>
 <header>
-  <div class="header-left"><h1>Plan de Retiro</h1><span class="sub">USD · personal</span></div>
+  <div class="header-left"><h1>FinLab</h1><span class="sub" id="seccion-actual-nombre"></span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchView('retiro',this)">Proyección</button>
-    <button class="nav-tab" onclick="switchView('cartera',this)">Cartera</button>
+    <button class="nav-tab" data-seccion="resumen" onclick="irASeccionApp('resumen')">Resumen</button>
+    <button class="nav-tab" data-seccion="gastos" onclick="irASeccionApp('gastos')">Gastos</button>
+    <button class="nav-tab active" data-seccion="retiro" onclick="irASeccionApp('retiro')">Proyección</button>
+    <button class="nav-tab" data-seccion="cartera" onclick="irASeccionApp('cartera')">Cartera</button>
   </div>
   <div class="header-right">
-    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">⚙ Params</button>
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="abrirAjustesDeLaSeccion()">⚙ Ajustes</button>
     <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Tema">🌙</button>
   </div>
 </header>
 <div class="sheet-backdrop" id="sheet-backdrop" onclick="toggleSidebar()"></div>
+<div id="mitad-retiro">
 <div class="shell">
 <aside id="aside">
   <div class="sheet-handle"></div>
@@ -175,12 +181,12 @@
     <div class="field">
       <div class="field-top-row">
         <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
-        <span class="val" id="v-alquiler"></span>
+        <span class="val" id="v-alquilerRetiro"></span>
       </div>
       <div class="field-row">
-        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alquiler-21"><input type="checkbox" switch class="pm-switch" id="sw-alquiler-21" data-target="alquiler" data-delta="-100"></label></span>
-        <input type="range" id="alquiler" min="0" max="10000" value="500" step="100">
-        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alquiler-22"><input type="checkbox" switch class="pm-switch" id="sw-alquiler-22" data-target="alquiler" data-delta="100.0"></label></span>
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alquilerRetiro-21"><input type="checkbox" switch class="pm-switch" id="sw-alquilerRetiro-21" data-target="alquilerRetiro" data-delta="-100"></label></span>
+        <input type="range" id="alquilerRetiro" min="0" max="10000" value="500" step="100">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alquilerRetiro-22"><input type="checkbox" switch class="pm-switch" id="sw-alquilerRetiro-22" data-target="alquilerRetiro" data-delta="100.0"></label></span>
       </div>
     </div>
     <div class="field">
@@ -502,11 +508,498 @@
   </div>
 </main>
 </div>
+</div><!-- /mitad-retiro -->
+
+
+<!-- ══════════ MITAD DE PRESUPUESTO ══════════
+     Envuelta en .app-presupuesto: ese contenedor es lo que mantiene sus
+     estilos adentro y evita que pisen a los de retiro/cartera. -->
+<div class="app-presupuesto" id="mitad-presupuesto" style="display:none">
+<div class="sheet-backdrop" id="sheet-backdrop-presu" onclick="toggleSidebarPresu()"></div>
+
+<!-- IMPORTAR RESUMEN -->
+<div class="imp-backdrop" id="imp-backdrop" onclick="cerrarImport()"></div>
+<div class="imp-modal" id="imp-modal" role="dialog" aria-modal="true" aria-labelledby="imp-title">
+  <div class="imp-hdr">
+    <span class="imp-title" id="imp-title">Importar resumen</span>
+    <button class="imp-x" onclick="cerrarImport()" title="Cerrar">✕</button>
+  </div>
+  <div class="imp-body" id="imp-body"></div>
+  <div class="imp-foot" id="imp-foot"></div>
+</div>
+<input type="file" id="imp-file" accept="application/pdf,.pdf" style="display:none" onchange="importarArchivo(event)">
+
+<!-- ALERTA DE CATEGORÍA -->
+<div class="alerta-backdrop" id="alerta-backdrop" onclick="cerrarAlerta()"></div>
+<div class="alerta-modal" id="alerta-modal" role="alertdialog" aria-modal="true" aria-labelledby="alerta-titulo">
+  <div class="alerta-ic" id="alerta-ic">⚠️</div>
+  <div class="alerta-titulo" id="alerta-titulo"></div>
+  <div class="alerta-cat" id="alerta-cat"></div>
+  <div class="alerta-bar"><div class="alerta-fill" id="alerta-fill"></div></div>
+  <div class="alerta-nums" id="alerta-nums"></div>
+  <div class="alerta-msg" id="alerta-msg"></div>
+  <div class="alerta-acciones">
+    <button class="alerta-btn-ok" onclick="cerrarAlerta()">Entendido</button>
+    <button class="alerta-btn-mute" onclick="silenciarAlertaActual()">No avisarme más de este rubro este mes</button>
+  </div>
+</div>
+
+<div class="shell">
+  <aside id="aside-presu">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title-row">
+      <h2>Parámetros</h2>
+      <button class="aside-close" onclick="toggleSidebarPresu()">✕ Cerrar</button>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Ingresos</div>
+      <div class="field">
+        <label>Salario mensual (ARS)</label>
+        <div class="field-row">
+          <input type="range" id="salario" min="500000" max="20000000" value="3000000" step="100000">
+          <span class="val" id="v-salario"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Gastos Fijos</div>
+      <div class="field">
+        <label>Estudios y aprendizaje</label>
+        <div class="field-row">
+          <input type="range" id="estudios" min="0" max="1000000" value="300000" step="10000">
+          <span class="val" id="v-estudios"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Vivienda</div>
+      <div class="field">
+        <label>Alquiler / expensas</label>
+        <div class="field-row">
+          <input type="range" id="alquiler" min="0" max="5000000" value="500000" step="50000">
+          <span class="val" id="v-alquiler"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Servicios (luz, agua, gas, internet)</label>
+        <div class="field-row">
+          <input type="range" id="servicios" min="0" max="800000" value="120000" step="10000">
+          <span class="val" id="v-servicios"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Alimentación</div>
+      <div class="field">
+        <label>Supermercado / almacén</label>
+        <div class="field-row">
+          <input type="range" id="supermercado" min="0" max="1500000" value="350000" step="10000">
+          <span class="val" id="v-supermercado"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Auto</div>
+      <div class="field">
+        <label>Nafta</label>
+        <div class="field-row">
+          <input type="range" id="nafta" min="0" max="500000" value="100000" step="10000">
+          <span class="val" id="v-nafta"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Seguro del auto</label>
+        <label class="switch"><input type="checkbox" id="tog-seguroAuto"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-seguroAuto" style="display:none">
+        <div class="field-row">
+          <input type="range" id="seguroAuto" min="0" max="300000" value="60000" step="5000">
+          <span class="val" id="v-seguroAuto"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Patente / impuestos</label>
+        <label class="switch"><input type="checkbox" id="tog-patente"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-patente" style="display:none">
+        <div class="field-row">
+          <input type="range" id="patente" min="0" max="200000" value="30000" step="5000">
+          <span class="val" id="v-patente"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Mantenimiento / service</label>
+        <label class="switch"><input type="checkbox" id="tog-mantenimientoAuto"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-mantenimientoAuto" style="display:none">
+        <div class="field-row">
+          <input type="range" id="mantenimientoAuto" min="0" max="300000" value="40000" step="5000">
+          <span class="val" id="v-mantenimientoAuto"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Cuota / leasing</label>
+        <label class="switch"><input type="checkbox" id="tog-auto"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-auto" style="display:none">
+        <div class="field-row">
+          <input type="range" id="auto" min="0" max="2000000" value="300000" step="50000">
+          <span class="val" id="v-auto"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Bienestar / Deporte</div>
+      <div class="field">
+        <label>Gimnasio</label>
+        <div class="field-row">
+          <input type="range" id="gimnasio" min="0" max="300000" value="50000" step="5000">
+          <span class="val" id="v-gimnasio"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Deportes (fútbol, pádel, etc.)</label>
+        <label class="switch"><input type="checkbox" id="tog-deportes"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-deportes" style="display:none">
+        <div class="field-row">
+          <input type="range" id="deportes" min="0" max="300000" value="50000" step="5000">
+          <span class="val" id="v-deportes"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Gastos Variables</div>
+      <div class="field">
+        <label>Juntadas / salidas / comidas afuera</label>
+        <div class="field-row">
+          <input type="range" id="juntadas" min="0" max="2000000" value="300000" step="10000">
+          <span class="val" id="v-juntadas"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Suscripciones</label>
+        <div class="field-row">
+          <input type="range" id="suscripciones" min="0" max="300000" value="70000" step="5000">
+          <span class="val" id="v-suscripciones"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>CNC (varios / imprevistos)</label>
+        <div class="field-row">
+          <input type="range" id="cnc" min="0" max="1000000" value="250000" step="10000">
+          <span class="val" id="v-cnc"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Fondos y Ahorros</div>
+      <div class="field">
+        <label>Fondo de Emergencia</label>
+        <div class="field-row">
+          <input type="range" id="fEmergencia" min="0" max="1000000" value="250000" step="10000">
+          <span class="val" id="v-fEmergencia"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fondo de Vacaciones</label>
+        <div class="field-row">
+          <input type="range" id="fVacaciones" min="0" max="500000" value="160000" step="10000">
+          <span class="val" id="v-fVacaciones"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fondo de Inversiones</label>
+        <div class="field-row">
+          <input type="range" id="fInversiones" min="0" max="5000000" value="1000000" step="50000">
+          <span class="val" id="v-fInversiones"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Salud</div>
+      <div class="toggle-field">
+        <label>Prepaga / salud</label>
+        <label class="switch"><input type="checkbox" id="tog-prepaga"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-prepaga" style="display:none">
+        <div class="field-row">
+          <input type="range" id="prepaga" min="0" max="1000000" value="150000" step="10000">
+          <span class="val" id="v-prepaga"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Farmacia / medicamentos</label>
+        <label class="switch"><input type="checkbox" id="tog-farmacia"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-farmacia" style="display:none">
+        <div class="field-row">
+          <input type="range" id="farmacia" min="0" max="200000" value="30000" step="5000">
+          <span class="val" id="v-farmacia"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Otros Gastos (opcionales)</div>
+      <div class="toggle-field">
+        <label>Viajes</label>
+        <label class="switch"><input type="checkbox" id="tog-viajes"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-viajes" style="display:none">
+        <div class="field-row">
+          <input type="range" id="viajes" min="0" max="1000000" value="200000" step="10000">
+          <span class="val" id="v-viajes"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Gastos Familiares (futuro)</div>
+      <div class="toggle-field">
+        <label>Colegio / educación hijos</label>
+        <label class="switch"><input type="checkbox" id="tog-colegio"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-colegio" style="display:none">
+        <div class="field-row">
+          <input type="range" id="colegio" min="0" max="2000000" value="400000" step="50000">
+          <span class="val" id="v-colegio"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Niñera / jardín</label>
+        <label class="switch"><input type="checkbox" id="tog-ninera"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-ninera" style="display:none">
+        <div class="field-row">
+          <input type="range" id="ninera" min="0" max="1500000" value="300000" step="50000">
+          <span class="val" id="v-ninera"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Actividades / deportes hijos</label>
+        <label class="switch"><input type="checkbox" id="tog-actividades"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-actividades" style="display:none">
+        <div class="field-row">
+          <input type="range" id="actividades" min="0" max="500000" value="150000" step="10000">
+          <span class="val" id="v-actividades"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Casa más grande / barrio</label>
+        <label class="switch"><input type="checkbox" id="tog-casaFam"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-casaFam" style="display:none">
+        <div class="field-row">
+          <input type="range" id="casaFam" min="0" max="5000000" value="800000" step="50000">
+          <span class="val" id="v-casaFam"></span>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="param-group">
+      <div class="grp-label">Alertas de gasto</div>
+      <div class="toggle-field">
+        <label>Avisarme si me paso de un rubro</label>
+        <label class="switch"><input type="checkbox" id="tog-alertas" checked><span class="slider-sw"></span></label>
+      </div>
+      <div class="field" id="row-umbralAlerta">
+        <label>Avisar al llegar al</label>
+        <div class="field-row">
+          <input type="range" id="umbralAlerta" min="0.5" max="1" value="0.8" step="0.05">
+          <span class="val" id="v-umbralAlerta"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Copia en GitHub</div>
+      <div class="sync-linea"><span class="sync-dot" id="sync-dot-2"></span><span id="sync-detalle">Sin configurar todavía.</span></div>
+      <div id="gh-token-zona"></div>
+      <button class="sync-btn" onclick="sincronizarAhora()">↻ Sincronizar ahora</button>
+      <button class="sync-btn" id="btn-recuperar" style="display:none" onclick="recuperarDatosPrevios()">⟲ Recuperar lo que había antes</button>
+    </div>
+
+  </aside>
+
+  <main>
+    <div class="content">
+      <!-- VIEW: GASTOS DEL MES -->
+      <div id="view-gastos" style="display:none">
+        <div class="view-pad gastos-view">
+          <div class="gastos-hdr">
+            <div class="gastos-hdr-top">
+              <span class="chart-title">Registro de gastos reales</span>
+              <span class="mes-nav">
+                <button class="mes-btn" onclick="moverMes(-1)" title="Mes anterior" aria-label="Mes anterior">‹</button>
+                <span class="gastos-mes" id="gastos-mes-label"></span>
+                <button class="mes-btn" onclick="moverMes(1)" title="Mes siguiente" aria-label="Mes siguiente">›</button>
+                <button class="mes-hoy" id="mes-hoy" onclick="irAlMesActual()" style="display:none">Volver a hoy</button>
+              </span>
+            </div>
+          </div>
+
+          <div class="alertas-banner" id="alertas-banner" style="display:none"></div>
+
+          <div class="fijos-card" id="fijos-card" style="display:none"></div>
+          <div class="sug-card" id="sug-card" style="display:none"></div>
+
+          <div class="gasto-form">
+            <div class="gasto-form-row">
+              <div class="field">
+                <label>Fecha</label>
+                <input type="date" id="gasto-fecha">
+              </div>
+              <div class="field">
+                <label>Categoría</label>
+                <select id="gasto-cat"></select>
+              </div>
+              <div class="field">
+                <label>¿Cuántos meses cubre?</label>
+                <select id="gasto-meses">
+                  <option value="1" selected>Solo este mes</option>
+                  <option value="auto">Calcularlo según mi presupuesto</option>
+                  <option value="2">2 meses</option>
+                  <option value="3">3 meses</option>
+                  <option value="4">4 meses</option>
+                  <option value="5">5 meses</option>
+                  <option value="6">6 meses</option>
+                  <option value="9">9 meses</option>
+                  <option value="12">12 meses (un año)</option>
+                </select>
+              </div>
+            </div>
+            <div class="gasto-form-row">
+              <div class="field">
+                <label>Monto (ARS)</label>
+                <input type="number" id="gasto-monto" placeholder="0" min="0" step="1000">
+              </div>
+              <div class="field">
+                <label>Nota (opcional)</label>
+                <input type="text" id="gasto-nota" placeholder="Ej: Uber al aeropuerto" maxlength="60">
+              </div>
+            </div>
+            <button class="btn-add-gasto" onclick="addGasto()">+ Agregar gasto</button>
+            <button class="btn-importar" onclick="abrirImport()">📄 Importar resumen de tarjeta o billetera</button>
+          </div>
+
+          <div class="gastos-kpis">
+            <div class="gk">
+              <div class="gk-label">Gastado este mes</div>
+              <div class="gk-val red" id="gk-total">$0</div>
+            </div>
+            <div class="gk">
+              <div class="gk-label">Disponible este mes</div>
+              <div class="gk-val" id="gk-disponible">$0</div>
+            </div>
+            <div class="gk">
+              <div class="gk-label">Cantidad de registros</div>
+              <div class="gk-val" id="gk-count">0</div>
+            </div>
+            <div class="gk">
+              <div class="gk-label">Categoría con más gasto</div>
+              <div class="gk-val" id="gk-top" style="font-size:.85rem">—</div>
+            </div>
+          </div>
+
+          <div class="futuro-note" id="futuro-note" style="display:none"></div>
+
+          <div class="pv-wrap">
+            <div class="pv-hdr">Presupuestado vs. Real por categoría</div>
+            <div id="pv-list"></div>
+          </div>
+
+          <div class="retiro-card">
+            <div class="rc-hdr">🔗 Conectar con el plan de retiro</div>
+            <div class="rc-row">
+              <div class="field">
+                <label>Tipo de cambio (ARS por USD)</label>
+                <input type="number" id="tipoCambio" placeholder="Ej: 1200" min="1" step="10">
+              </div>
+              <div class="rc-preview" id="retiro-preview">Superávit real: — · en USD: —</div>
+              <button class="btn-add-gasto" onclick="syncAhorroARetiro()">→ Enviar como ahorro mensual</button>
+            </div>
+            <div class="rc-note">Convierte tu superávit real de este mes (salario − gastos reales) a USD y lo carga como "Ahorro mensual" en el plan de retiro. Funciona automáticamente si abrís ambas apps desde el mismo dominio (comparten el almacenamiento del navegador); si no, copiá el valor en USD manualmente.</div>
+          </div>
+
+          <div class="table-card gastos-table-wrap">
+            <table>
+              <thead>
+                <tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Nota</th><th></th></tr>
+              </thead>
+              <tbody id="tbody-gastos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: RESUMEN -->
+      <div id="view-resumen" style="display:none">
+        <div class="view-pad res-view">
+          <div class="rs-chips" id="rs-chips"></div>
+
+          <div class="ini-card">
+            <div class="ini-card-hdr">A dónde va tu ingreso</div>
+            <div class="di-top">
+              <span class="di-ingreso" id="di-ingreso">$0</span>
+              <span class="di-ingreso-lbl" id="di-ingreso-lbl">de ingreso</span>
+            </div>
+            <div class="di-barra" id="di-barra"></div>
+            <div id="di-detalle"></div>
+          </div>
+
+          <div class="ini-card">
+            <div class="ini-hero-label" id="rs-label">Gastado</div>
+            <div class="ini-hero-val" id="rs-total">$0</div>
+            <div class="ini-hero-sub" id="rs-sub"></div>
+          </div>
+
+          <div class="ini-card">
+            <div class="ini-card-hdr">Evolución mes a mes</div>
+            <div class="rs-chart-wrap"><canvas id="chart-rs"></canvas></div>
+          </div>
+
+          <div class="ini-card">
+            <div class="ini-card-hdr" id="rs-cats-hdr">En qué se te va</div>
+            <div class="rs-donut-wrap">
+              <canvas id="chart-cats"></canvas>
+              <div class="rs-donut-centro">
+                <span class="rs-donut-num" id="rs-donut-num">$0</span>
+                <span class="rs-donut-cap" id="rs-donut-cap">en total</span>
+              </div>
+            </div>
+            <div id="rs-cats"></div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </main>
+</div>
+</div>
 
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bn-item active" data-tab="retiro" onclick="document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));switchView('retiro',this)"><span class="bn-ic">📈</span>Proyección</button>
-  <button class="bn-item" data-tab="cartera" onclick="document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));switchView('cartera',this)"><span class="bn-ic">💼</span>Cartera</button>
-  <button class="bn-item" onclick="toggleSidebar()"><span class="bn-ic">⚙</span>Ajustes</button>
+  <button class="bn-item" data-seccion="resumen" onclick="irASeccionApp('resumen')"><span class="bn-ic">◔</span>Resumen</button>
+  <button class="bn-item" data-seccion="gastos" onclick="irASeccionApp('gastos')"><span class="bn-ic">＋</span>Gastos</button>
+  <button class="bn-item active" data-seccion="retiro" onclick="irASeccionApp('retiro')"><span class="bn-ic">📈</span>Proyección</button>
+  <button class="bn-item" data-seccion="cartera" onclick="irASeccionApp('cartera')"><span class="bn-ic">💼</span>Cartera</button>
+  <button class="bn-item" onclick="abrirAjustesDeLaSeccion()"><span class="bn-ic">⚙</span>Ajustes</button>
 </nav>
 
 <div class="modal-overlay" id="edit-modal" style="display:none">
@@ -565,6 +1058,10 @@
 <script src="js/ventas.js"></script>
 <script src="js/moneda.js"></script>
 <script src="js/resumen-mensual.js"></script>
+<script src="js/presupuesto.js"></script>
+<script src="js/presupuesto-tooltip.js"></script>
+<script src="js/presupuesto-sync.js"></script>
+<script src="js/navegacion.js"></script>
 <script src="js/deslizar.js"></script>
 </body>
 </html>
