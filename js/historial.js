@@ -300,9 +300,13 @@ function renderHistChart() {
 // Enganchar el gráfico nuevo al refresco de colores que ya hace toggleTheme()
 // para los otros dos charts (sin tocar esa función original).
 (function () {
-  const _toggleTheme = toggleTheme;
-  toggleTheme = function (...args) {
-    const r = _toggleTheme(...args);
+  // Se engancha a refrescarColoresDeGraficos() y no a toggleTheme(): el tema
+  // ahora también puede cambiar solo, cuando el sistema pasa a modo noche y el
+  // usuario nunca eligió a mano. Colgado del botón, en ese caso el histórico se
+  // quedaba con los colores del tema anterior.
+  const _refrescar = refrescarColoresDeGraficos;
+  refrescarColoresDeGraficos = function (...args) {
+    const r = _refrescar(...args);
     setTimeout(() => {
       const opts = cDef();
       chartHist.options.plugins.tooltip = opts.plugins.tooltip;

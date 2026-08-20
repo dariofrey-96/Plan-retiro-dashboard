@@ -1,42 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* Estilos de la mitad de RETIRO/CARTERA.
+   Los colores y medidas viven en tokens.css, compartidos con la mitad del
+   presupuesto. Antes estaban aca, con el tema por defecto invertido respecto
+   de la otra app, que es lo que impedia que las dos convivieran. */
 
-/* ══════════════════════════ DESIGN TOKENS ══════════════════════════
-   Mismo sistema que Presupuesto Personal. Nombres de variable preservados
-   (--bg, --surface, --surface2, --border, --text, --muted, etc.) porque
-   el JS original los lee vía getComputedStyle para pintar los charts —
-   así no hace falta tocar ni una línea de lógica.
-   Por defecto es oscuro (igual que el archivo original); [data-theme="light"]
-   sobreescribe con la paleta clara. */
-:root{
-  --bg:#17161a; --surface:#201f23; --surface2:#29282d; --surface3:#333136;
-  --border:#3a383e; --text:#f2f0ec; --muted:#b3aea6; --hairline:rgba(247,246,244,.08);
-
-  --accent:oklch(72% .13 264); --green:oklch(72% .13 150); --red:oklch(72% .15 25);
-  --orange:oklch(78% .13 80); --purple:oklch(74% .14 300); --teal:oklch(72% .11 175);
-
-  --accent-soft:oklch(28% .06 264); --green-soft:oklch(26% .06 150); --red-soft:oklch(28% .08 25);
-  --orange-soft:oklch(30% .07 80); --purple-soft:oklch(27% .06 300); --teal-soft:oklch(27% .05 175);
-
-  --radius-sm:8px; --radius-md:12px; --radius-lg:18px; --radius-xl:22px;
-  --shadow-card:0 1px 2px rgba(0,0,0,.35),0 1px 1px rgba(0,0,0,.2);
-  --shadow-pop:0 -8px 30px rgba(0,0,0,.5);
-  --shadow-float:0 6px 20px rgba(0,0,0,.4);
-}
-[data-theme="light"]{
-  --bg:#f7f6f4; --surface:#ffffff; --surface2:#f2f1ee; --surface3:#efece8;
-  --border:#e7e4e0; --text:#1a1a18; --muted:#6f6d68; --hairline:rgba(26,26,24,.06);
-
-  --accent:oklch(45% .15 264); --green:oklch(38% .1 150); --red:oklch(40% .12 25);
-  --orange:oklch(40% .1 80); --purple:oklch(52% .16 300); --teal:oklch(42% .1 175);
-
-  --accent-soft:oklch(94% .03 264); --green-soft:oklch(94% .045 150); --red-soft:oklch(94% .05 25);
-  --orange-soft:oklch(93% .06 80); --purple-soft:oklch(94% .035 300); --teal-soft:oklch(94% .04 175);
-
-  --shadow-card:0 1px 2px rgba(26,26,24,.05),0 1px 1px rgba(26,26,24,.03);
-  --shadow-pop:0 -8px 30px rgba(26,26,24,.16);
-  --shadow-float:0 6px 20px rgba(26,26,24,.10);
-}
 
 html{font-size:15px;-webkit-tap-highlight-color:transparent}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;transition:background .2s,color .2s;-webkit-font-smoothing:antialiased}

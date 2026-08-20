@@ -4,12 +4,34 @@ const fmtPct=n=>(n*100).toFixed(1)+'%';
 const fmtCh=n=>n==null?'—':(n>=0?'+':'')+n.toFixed(2)+'%';
 
 // THEME
+// Tres estados, no dos: sin atributo la app sigue al tema del sistema, y el
+// atributo aparece sólo cuando el usuario elige a mano. Antes se forzaba
+// siempre un valor explícito con "oscuro" por defecto, así que la preferencia
+// del celular no se miraba nunca.
+function temaEfectivo(){
+  const puesto=document.documentElement.getAttribute('data-theme');
+  if(puesto) return puesto;
+  return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function pintarBotonTema(){
+  const b=$('theme-btn');
+  if(b) b.textContent=temaEfectivo()==='dark'?'☀️':'🌙';
+}
 function toggleTheme(){
-  const d=document.documentElement,dark=d.getAttribute('data-theme')==='dark';
-  d.setAttribute('data-theme',dark?'light':'dark');
-  $('theme-btn').textContent=dark?'🌙':'☀️';
-  try{localStorage.setItem('prt',dark?'light':'dark');}catch(e){}
-  // Aplicar colores actualizados a todos los charts
+  // Se invierte lo que se está VIENDO, no el atributo: sin esto, el primer
+  // toque con el sistema en oscuro escribía "dark" y no pasaba nada.
+  const nuevo=temaEfectivo()==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',nuevo);
+  pintarBotonTema();
+  try{localStorage.setItem('prt',nuevo);}catch(e){}
+  refrescarColoresDeGraficos();
+}
+
+// Los gráficos se dibujan en canvas: no heredan colores del CSS y hay que
+// repintarlos a mano cuando cambia el tema. Estaba suelto dentro de
+// toggleTheme(); ahora es una función aparte porque también hace falta cuando
+// el tema lo cambia el sistema y el usuario nunca eligió a mano.
+function refrescarColoresDeGraficos(){
   setTimeout(()=>{
     const opts=cDef();
     [chart,chartEsc].forEach(c=>{
@@ -28,7 +50,23 @@ function toggleTheme(){
   },50);
 }
 function loadTheme(){
-  try{const t=localStorage.getItem('prt')||'dark';document.documentElement.setAttribute('data-theme',t);$('theme-btn').textContent=t==='dark'?'🌙':'☀️';}catch(e){}
+  try{
+    const t=localStorage.getItem('prt');
+    // Sin elección guardada NO se pone atributo: así manda el sistema.
+    if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t);
+    else document.documentElement.removeAttribute('data-theme');
+  }catch(e){}
+  pintarBotonTema();
+  // Si nunca eligió a mano y el sistema cambia (modo noche automático), la app
+  // acompaña sin necesidad de recargar.
+  try{
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
+      if(!document.documentElement.getAttribute('data-theme')){
+        pintarBotonTema();
+        if(typeof refrescarColoresDeGraficos==='function') refrescarColoresDeGraficos();
+      }
+    });
+  }catch(e){}
 }
 
 // STORAGE
