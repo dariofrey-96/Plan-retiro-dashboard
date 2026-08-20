@@ -217,7 +217,15 @@ function guardarGestorCarteras(){
   $('carteras-modal').style.display='none';
 }
 function saveParams(){try{const p={};Object.keys(SL).forEach(id=>{const e=$(id);if(e)p[id]=e.value;});localStorage.setItem(LS2,JSON.stringify(p));}catch(e){}}
-function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e){const nv=parseFloat(v);if(!isNaN(nv)&&nv>parseFloat(e.max))e.max=Math.ceil(nv/50)*50;e.value=v;}});}catch(e){}}
+function loadParams(){try{const r=localStorage.getItem(LS2);if(!r)return;const p=JSON.parse(r);
+  // El deslizador de alquileres se llamaba "alquiler" a secas, igual que el del
+  // presupuesto, y al unir las dos mitades uno tapaba al otro. Se renombró éste
+  // porque es un supuesto a futuro y no un dato cargado a mano. Como el nombre
+  // del elemento es también la clave con la que se guardaba el valor, sin esto
+  // la fila volvía a cero en silencio.
+  if(p.alquiler!=null&&p.alquilerRetiro==null){p.alquilerRetiro=p.alquiler;delete p.alquiler;
+    try{localStorage.setItem(LS2,JSON.stringify(p));}catch(e){}}
+  Object.entries(p).forEach(([id,v])=>{const e=$(id);if(e){const nv=parseFloat(v);if(!isNaN(nv)&&nv>parseFloat(e.max))e.max=Math.ceil(nv/50)*50;e.value=v;}});}catch(e){}}
 const LS4='planRetiro_dates_v1';
 function saveDates(){try{localStorage.setItem(LS4,JSON.stringify({fechaNacimiento:$('fechaNacimiento').value,fechaInicioInversion:$('fechaInicioInversion').value}));}catch(e){}}
 function loadDates(){try{const r=localStorage.getItem(LS4);if(!r)return;const p=JSON.parse(r);if(p.fechaNacimiento)$('fechaNacimiento').value=p.fechaNacimiento;if(p.fechaInicioInversion)$('fechaInicioInversion').value=p.fechaInicioInversion;}catch(e){}}
@@ -291,10 +299,18 @@ function renderSnaps(){
 
 // TABS
 function switchView(v,btn){
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$('view-'+v).classList.add('active');
+  // btn puede no venir: la barra unificada llama a esta función sin botón, y
+  // antes eso tiraba error antes de alcanzar a cambiar de vista. Si no viene,
+  // se busca la pestaña que corresponde.
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  const pestania=btn||document.querySelector(`.nav-tab[data-vista="${v}"]`);
+  if(pestania)pestania.classList.add('active');
+  // Acotado a la mitad de retiro: la de presupuesto tiene sus propias pantallas
+  // y no hay que tocarlas desde acá.
+  document.querySelectorAll('#mitad-retiro .view').forEach(x=>x.classList.remove('active'));
+  $('view-'+v).classList.add('active');
   if(v==='cartera')renderCartera();
-  const a=document.querySelector('aside');if(a.classList.contains('open'))toggleSidebar();
+  const a=$('aside');if(a&&a.classList.contains('open'))toggleSidebar();
 }
 let curInner='grafico';
 function switchInner(n,btn){
@@ -319,7 +335,7 @@ const SL={
   edadActual:{d:v=>v+' años'},edadRetiro:{d:v=>v+' años'},vidaEsperada:{d:v=>v+' años'},
   gastoMensual:{d:v=>fmt(v)},inflacion:{d:v=>fmtPct(v)},swr:{d:v=>fmtPct(v)},
   capitalInicial:{d:v=>fmt(v)},ahorroMensual:{d:v=>fmt(v)},crecAhorro:{d:v=>fmtPct(v)},
-  retorno:{d:v=>fmtPct(v)},alquiler:{d:v=>fmt(v)},dividendos:{d:v=>fmt(v)},
+  retorno:{d:v=>fmtPct(v)},alquilerRetiro:{d:v=>fmt(v)},dividendos:{d:v=>fmt(v)},
   consultoria:{d:v=>fmt(v)},alertaCaida:{d:v=>v+'%'},
   alertaGanancia:{d:v=>v+'%'},alertaGananciaMeses:{d:v=>v==0?'sin límite':v+' meses'}
 };
@@ -381,7 +397,7 @@ function recalc(){
   const ea=gv('edadActual'),er=gv('edadRetiro'),ev=gv('vidaEsperada');
   const gh=gv('gastoMensual'),inf=gv('inflacion'),swr=gv('swr');
   const ci=gv('capitalInicial'),ai=gv('ahorroMensual'),ca=gv('crecAhorro'),ret=gv('retorno');
-  const ip=gv('alquiler')+gv('dividendos')+gv('consultoria');
+  const ip=gv('alquilerRetiro')+gv('dividendos')+gv('consultoria');
   const nA=Math.max(1,er-ea),nR=Math.max(1,ev-er);
 
   const rA=[]; let cap=ci,aho=ai;
