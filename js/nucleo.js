@@ -754,6 +754,10 @@ async function refreshPrices(){
   setStatus('loading','Actualizando precios...');
   await Promise.all([fetchCrypto(todos.filter(a=>a.cat==='crypto')),fetchStocks(todos.filter(a=>a.cat==='stock'||a.cat==='metal'))]);
   renderCartera();saveAssets();btn.classList.remove('loading');
+  // La portada usa el valor vivo (cantidad × precio). Los precios llegan async,
+  // después del primer dibujo de Inicio, así que se la redibuja para que el
+  // patrimonio quede con el precio recién traído y no con el cacheado.
+  if(typeof renderInicio==='function')renderInicio();
   setStatus('ok','Actualizado · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
 }
 

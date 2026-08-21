@@ -68,6 +68,10 @@ async function loadHistory() {
   }
   populateHistSeriesSelect();
   renderHistChart();
+  // La portada dibuja apenas abrís la app, ANTES de que este historial termine
+  // de bajar de GitHub. Sin este redibujo, la variación de 24h se quedaba en
+  // "sin historial suficiente" aunque el robot tenga semanas de mediciones.
+  if (typeof renderInicio === 'function') renderInicio();
 }
 
 function populateHistSeriesSelect() {
