@@ -1,0 +1,16 @@
+/* Sección Inicio. Hoja aparte (no la generan los scripts) para que un
+   regenerado de tokens/componentes no la pise. Reusa .panel-card y los tokens
+   de color, así que hereda el estilo del resto sin definir casi nada propio. */
+
+#mitad-inicio .view-pad { padding-top: 14px; }
+
+/* Con seis secciones abajo, el toggle Todo/Jubilación/Trading del patrimonio
+   puede quedar sin lugar en pantallas angostas; que envuelva en vez de cortar. */
+#inicio-content .chart-header { flex-wrap: wrap; gap: 8px; }
+#inicio-content .toggle-wrap { flex-wrap: wrap; }
+
+/* La barra de abajo pasó de 5 a 6 items: se aprieta un poco el padding lateral
+   para que los seis entren sin encimarse en un teléfono angosto. */
+@media (max-width: 420px) {
+  #bottom-nav .bn-item { padding-left: 1px; padding-right: 1px; font-size: .54rem; }
+}

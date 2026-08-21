@@ -181,3 +181,9 @@ function setEscalaY(tipo, btn) {
   recalc = function (...args) { const r = _recalc(...args); aplicarEscalaY(); return r; };
 })();
 
+// El primer dibujo del gráfico ocurre en el INIT de nucleo.js, ANTES de que se
+// enganche la escala de acá. Sin esto el eje arrancaba en lineal aunque el
+// estado y el botón dijeran "log". Se aplica una vez, ahora que el enganche ya
+// está puesto y el gráfico ya tiene datos.
+try { aplicarEscalaY(); } catch (e) {}
+

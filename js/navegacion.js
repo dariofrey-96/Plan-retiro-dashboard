@@ -5,7 +5,12 @@
 // que decide qué mitad se muestra y después le pide a esa mitad que cambie de
 // pantalla. Ninguna de las dos funciones originales se toca.
 
+// Hay tres mitades (contenedores de nivel superior): inicio, presupuesto y
+// retiro. Inicio es la portada que resume las otras dos.
+const MITADES = ['inicio', 'presupuesto', 'retiro'];
+
 const SECCIONES_APP = [
+  { id: 'inicio',  mitad: 'inicio',      ir: () => { if (typeof renderInicio === 'function') renderInicio(); } },
   { id: 'resumen', mitad: 'presupuesto', ir: () => setTab('resumen') },
   { id: 'gastos',  mitad: 'presupuesto', ir: () => setTab('gastos') },
   { id: 'retiro',  mitad: 'retiro',      ir: () => switchView('retiro') },
@@ -15,6 +20,7 @@ const SECCIONES_APP = [
 // El subtítulo del encabezado dice en qué sección estás. Antes ese lugar decía
 // "USD · personal", que valía sólo para una de las dos mitades.
 const NOMBRES_SECCION = {
+  inicio:  'Tu resumen',
   resumen: 'Resumen del mes',
   gastos:  'Gastos del mes',
   retiro:  'Proyección de retiro · USD',
@@ -22,7 +28,7 @@ const NOMBRES_SECCION = {
 };
 
 const LS_SECCION = 'app_seccion_v1';
-let seccionActual = 'retiro';
+let seccionActual = 'inicio';
 
 function seccionPorId(id) { return SECCIONES_APP.find(s => s.id === id); }
 
@@ -32,10 +38,10 @@ function irASeccionApp(id) {
   seccionActual = id;
   try { localStorage.setItem(LS_SECCION, id); } catch (e) {}
 
-  const rt = document.getElementById('mitad-retiro');
-  const pp = document.getElementById('mitad-presupuesto');
-  if (rt) rt.style.display = s.mitad === 'retiro' ? '' : 'none';
-  if (pp) pp.style.display = s.mitad === 'presupuesto' ? '' : 'none';
+  MITADES.forEach(m => {
+    const el = document.getElementById('mitad-' + m);
+    if (el) el.style.display = (s.mitad === m) ? '' : 'none';
+  });
 
   // Cerrar cualquier panel de parámetros abierto: quedaba flotando encima al
   // saltar a la otra mitad.
@@ -68,11 +74,13 @@ function cerrarPanelesDeParametros() {
   });
 }
 
-// El botón de ajustes abre el panel de la mitad que estés viendo.
+// El botón de ajustes abre el panel de la mitad que estés viendo. Inicio no
+// tiene parámetros propios; abre los del presupuesto, que es de donde salen los
+// objetivos de fondos y las alertas que muestra la portada.
 function abrirAjustesDeLaSeccion() {
   const s = seccionPorId(seccionActual);
-  if (s && s.mitad === 'presupuesto') { if (typeof toggleSidebarPresu === 'function') toggleSidebarPresu(); }
-  else if (typeof toggleSidebar === 'function') toggleSidebar();
+  if (s && s.mitad === 'retiro') { if (typeof toggleSidebar === 'function') toggleSidebar(); }
+  else if (typeof toggleSidebarPresu === 'function') toggleSidebarPresu();
 }
 
 function redibujarGraficosVisibles() {
@@ -85,9 +93,6 @@ function redibujarGraficosVisibles() {
   });
 }
 
-// Al abrir, volver a la última sección usada.
-(function () {
-  let guardada = null;
-  try { guardada = localStorage.getItem(LS_SECCION); } catch (e) {}
-  irASeccionApp(seccionPorId(guardada) ? guardada : 'retiro');
-})();
+// La app SIEMPRE abre en Inicio: es la portada que resume todo. Dentro de la
+// sesión el resto de la navegación funciona normal; sólo el arranque es fijo.
+irASeccionApp('inicio');

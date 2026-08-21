@@ -15,14 +15,16 @@
 <link rel="stylesheet" href="css/componentes.css">
 <link rel="stylesheet" href="css/estilos.css">
 <link rel="stylesheet" href="css/presupuesto.css">
+<link rel="stylesheet" href="css/inicio.css">
 </head>
 <body>
 <header>
   <div class="header-left"><h1>FinLab</h1><span class="sub" id="seccion-actual-nombre"></span></div>
   <div class="nav-tabs">
+    <button class="nav-tab active" data-seccion="inicio" onclick="irASeccionApp('inicio')">Inicio</button>
     <button class="nav-tab" data-seccion="resumen" onclick="irASeccionApp('resumen')">Resumen</button>
     <button class="nav-tab" data-seccion="gastos" onclick="irASeccionApp('gastos')">Gastos</button>
-    <button class="nav-tab active" data-seccion="retiro" onclick="irASeccionApp('retiro')">Proyección</button>
+    <button class="nav-tab" data-seccion="retiro" onclick="irASeccionApp('retiro')">Proyección</button>
     <button class="nav-tab" data-seccion="cartera" onclick="irASeccionApp('cartera')">Cartera</button>
   </div>
   <div class="header-right">
@@ -31,6 +33,11 @@
   </div>
 </header>
 <div class="sheet-backdrop" id="sheet-backdrop" onclick="toggleSidebar()"></div>
+<div id="mitad-inicio">
+  <div class="shell"><main><div class="view active"><div class="view-pad" style="max-width:760px;margin:0 auto;">
+    <div id="inicio-content" style="display:flex;flex-direction:column;gap:14px;padding-bottom:90px;"></div>
+  </div></div></main></div>
+</div>
 <div id="mitad-retiro">
 <div class="shell">
 <aside id="aside">
@@ -995,9 +1002,10 @@
 </div>
 
 <nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" data-seccion="inicio" onclick="irASeccionApp('inicio')"><span class="bn-ic">⌂</span>Inicio</button>
   <button class="bn-item" data-seccion="resumen" onclick="irASeccionApp('resumen')"><span class="bn-ic">◔</span>Resumen</button>
   <button class="bn-item" data-seccion="gastos" onclick="irASeccionApp('gastos')"><span class="bn-ic">＋</span>Gastos</button>
-  <button class="bn-item active" data-seccion="retiro" onclick="irASeccionApp('retiro')"><span class="bn-ic">📈</span>Proyección</button>
+  <button class="bn-item" data-seccion="retiro" onclick="irASeccionApp('retiro')"><span class="bn-ic">📈</span>Proyección</button>
   <button class="bn-item" data-seccion="cartera" onclick="irASeccionApp('cartera')"><span class="bn-ic">💼</span>Cartera</button>
   <button class="bn-item" onclick="abrirAjustesDeLaSeccion()"><span class="bn-ic">⚙</span>Ajustes</button>
 </nav>
@@ -1061,6 +1069,7 @@
 <script src="js/presupuesto.js"></script>
 <script src="js/presupuesto-tooltip.js"></script>
 <script src="js/presupuesto-sync.js"></script>
+<script src="js/inicio.js"></script>
 <script src="js/navegacion.js"></script>
 <script src="js/deslizar.js"></script>
 </body>
