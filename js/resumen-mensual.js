@@ -129,7 +129,9 @@ function renderBenchmarkBlock(startSnap, endSnap, carteraPct) {
 // En lineal, el interés compuesto aplasta los primeros 20-30 años contra el
 // piso. En logarítmica, la misma altura siempre significa el mismo % de
 // crecimiento, así que la curva se ve pareja de punta a punta.
-let escalaY = 'lineal';
+// Arranca en logarítmica: en lineal el interés compuesto aplasta los primeros
+// 20-30 años contra el piso y no se aprecia nada. El botón "Lineal" sigue ahí.
+let escalaY = 'log';
 const CB_EJE_Y_ORIGINAL = chart.options.scales.y.ticks.callback;
 
 function aplicarEscalaY() {
