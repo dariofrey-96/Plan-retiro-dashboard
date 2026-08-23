@@ -1360,6 +1360,44 @@ function renderResumen() {
   partes.push(`${d.gastos.length} movimiento${d.gastos.length === 1 ? '' : 's'}`);
   $('rs-sub').innerHTML = d.total > 0 ? partes.join(' · ') : 'No hay gastos cargados en este período.';
 
+  // ── Barra de presupuesto consumido ──
+  // El presupuesto de las categorías es MENSUAL; para un período de varios meses
+  // se multiplica por la cantidad de meses (igual que el ingreso en la barra de
+  // distribución), así la comparación es contra el presupuesto de todo el tramo.
+  const rsPresu = $('rs-presu');
+  if (rsPresu) {
+    const presuMes = (typeof PV_CAT_IDS !== 'undefined')
+      ? PV_CAT_IDS.reduce((s, id) => s + (getPresupuestoCat(id) || 0), 0) : 0;
+    const presuPeriodo = presuMes * p.meses;
+    if (presuPeriodo > 0 && d.total > 0) {
+      const pct = d.total / presuPeriodo;
+      const w = Math.min(100, Math.round(pct * 100));
+      const col = pct > 1 ? 'var(--red)' : (pct >= 0.8 ? 'var(--orange)' : 'var(--green)');
+      const rotulo = p.meses > 1 ? `Presupuesto de ${p.meses} meses` : 'Presupuesto del mes';
+      const pie = pct > 1
+        ? `Te pasaste por <b>${fmtARS(d.total - presuPeriodo)}</b>`
+        : `Te queda <b>${fmtARS(presuPeriodo - d.total)}</b> ${p.meses > 1 ? 'en el período' : 'este mes'}`;
+      rsPresu.innerHTML = `
+        <div style="margin-top:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;margin-bottom:6px;">
+            <span style="color:var(--muted);">${rotulo}</span>
+            <span style="font-weight:700;">${Math.round(pct * 100)}% de ${fmtARS(presuPeriodo)}</span></div>
+          <div style="height:12px;background:var(--surface-3);border-radius:100px;overflow:hidden;">
+            <div id="rs-presu-fill" style="height:100%;width:${w}%;background:${col};border-radius:100px;transform-origin:left center;"></div></div>
+          <div style="font-size:.78rem;color:${pct > 1 ? 'var(--red-text)' : 'var(--muted)'};margin-top:6px;">${pie}</div>
+        </div>`;
+      const fill = $('rs-presu-fill');
+      if (fill && fill.animate) {
+        try { fill.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+          { duration: 650, easing: 'cubic-bezier(.22,.61,.36,1)' }); } catch (e) {}
+      }
+    } else if (presuPeriodo <= 0) {
+      rsPresu.innerHTML = `<div style="font-size:.76rem;color:var(--muted);margin-top:12px;">Definí un presupuesto en las categorías (pestaña Gastos) para ver acá cuánto llevás usado.</div>`;
+    } else {
+      rsPresu.innerHTML = '';
+    }
+  }
+
   renderDistribucionIngreso(d, p);
 
   // ── Desglose por categoría: la dona da la proporción, la lista los números ──
