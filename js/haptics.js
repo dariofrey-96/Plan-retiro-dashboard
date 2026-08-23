@@ -40,6 +40,12 @@ document.addEventListener('change', (e) => {
     const id = e.target.dataset.target;
     const delta = parseFloat(e.target.dataset.delta);
     hapticTick(); // fallback extra por si el switch no sonó (p.ej. Android)
-    adjustSlider(id, delta);
+    // Los +/- del panel de gastos llevan data-presu y usan su propio ajuste
+    // (guardado/repintado de presupuesto); los de retiro usan adjustSlider.
+    if (e.target.dataset.presu) {
+      if (typeof adjustSliderPresu === 'function') adjustSliderPresu(id, delta);
+    } else {
+      adjustSlider(id, delta);
+    }
   }
 });

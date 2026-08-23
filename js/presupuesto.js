@@ -199,7 +199,12 @@ const GASTO_CATS = [
   { id: 'casaFam',           label: 'Casa más grande / barrio' },
   { id: 'otro',              label: 'Otro' },
 ];
-const catLabel = id => (GASTO_CATS.find(c => c.id === id) || {}).label || id;
+// Nombres personalizados de categorías (renombradas por el usuario), por
+// dispositivo. catLabel los prioriza; si no hay, usa el nombre por defecto.
+function catNombresCustom() {
+  try { return JSON.parse(localStorage.getItem('finlab_cat_nombres') || '{}'); } catch (e) { return {}; }
+}
+const catLabel = id => catNombresCustom()[id] || (GASTO_CATS.find(c => c.id === id) || {}).label || id;
 
 function monthKey(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
 function monthLabel(key) {
@@ -230,7 +235,7 @@ function saveGastosAll(all) {
 }
 function initGastoCatSelect() {
   const sel = $('gasto-cat');
-  sel.innerHTML = GASTO_CATS.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+  sel.innerHTML = GASTO_CATS.map(c => `<option value="${c.id}">${catLabel(c.id)}</option>`).join('');
 }
 // Un pago único puede corresponder a varios meses (ej. pagás 3 meses de gimnasio
 // juntos). Lo repartimos en una parte por mes, así el mes del pago no queda
@@ -1197,7 +1202,7 @@ function prepararRevision(filas, origen) {
 }
 
 function renderRevisionImport(origen) {
-  const opciones = cat => GASTO_CATS.map(c => `<option value="${c.id}"${c.id === cat ? ' selected' : ''}>${c.label}</option>`).join('');
+  const opciones = cat => GASTO_CATS.map(c => `<option value="${c.id}"${c.id === cat ? ' selected' : ''}>${catLabel(c.id)}</option>`).join('');
   const dups = impFilas.filter(f => f.dup).length;
   const reconocidos = impFilas.filter(f => f.cat !== 'otro').length;
   const cuotas = impFilas.filter(f => f.reubicada).length;
