@@ -1,0 +1,8 @@
+/* Transiciones fluidas entre secciones (ver js/transiciones.js y js/deslizar.js).
+   Mientras arrastrás con el dedo el contenido no debe seleccionarse ni sacar el
+   menú de copiar, y conviene avisarle al navegador que la sección se va a
+   transformar para que el movimiento vaya parejo. */
+body.nav-dragging,
+body.nav-dragging * { user-select: none; -webkit-user-select: none; }
+body.nav-dragging { -webkit-tap-highlight-color: transparent; }
+.nav-arrastrando { will-change: transform; }
