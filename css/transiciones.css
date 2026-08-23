@@ -4,5 +4,5 @@
    transformar para que el movimiento vaya parejo. */
 body.nav-dragging,
 body.nav-dragging * { user-select: none; -webkit-user-select: none; }
-body.nav-dragging { -webkit-tap-highlight-color: transparent; }
+body.nav-dragging { -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
 .nav-arrastrando { will-change: transform; }

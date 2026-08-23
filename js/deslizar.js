@@ -3,10 +3,11 @@
 // Deslizar ← va a la siguiente, → a la anterior. Las sub-pestañas de Proyección
 // se siguen cambiando tocándolas, a propósito.
 //
-// El contenido sigue al dedo en vivo: mientras arrastrás se mueve con vos y, al
-// soltar, o confirma el cambio (y la sección nueva entra deslizándose, vía
-// transiciones.js) o vuelve a su lugar con un rebote. La lista de secciones sale
-// de navegacion.js para que el dedo recorra exactamente lo mismo que la barra.
+// El grueso del efecto lo hace el "pager" de transiciones.js: mientras arrastrás,
+// la sección actual y la vecina se mueven juntas siguiendo el dedo. Acá se detecta
+// el gesto (con los mismos guardas de siempre) y se le pasa el desplazamiento.
+// En los bordes (no hay vecina) o con "reducir movimiento", se usa un modo simple:
+// la sección se corre un poco con resistencia y, al soltar, cambia o vuelve.
 function seccionActualIdx() {
   return SECCIONES_APP.findIndex(s => s.id === seccionActual);
 }
@@ -33,18 +34,17 @@ function gestoBloqueado(el) {
 }
 
 (function () {
-  const MIN_COMMIT = 60;   // respaldo mínimo en px si no se pudo medir el ancho
+  const MIN_COMMIT = 60;
   let x0 = null, y0 = null, valido = false, decidido = false,
-      arrastrando = false, el = null, anchoVista = 0;
+      arrastrando = false, modo = null, el = null, anchoVista = 0;
 
-  function limpiar(elem) {
+  function limpiarSimple(elem) {
     if (!elem) return;
     elem.style.transition = '';
     elem.style.transform = '';
     elem.classList.remove('nav-arrastrando');
   }
 
-  // Cualquier panel o modal abierto tiene su propio gesto: soltamos éste.
   function bloqueadoPorPanel() {
     if (document.querySelector('#aside.open, #aside-presu.open')) return true;
     return [...document.querySelectorAll('.modal-overlay')]
@@ -52,7 +52,7 @@ function gestoBloqueado(el) {
   }
 
   document.addEventListener('touchstart', e => {
-    valido = false; decidido = false; arrastrando = false; el = null;
+    valido = false; decidido = false; arrastrando = false; modo = null; el = null;
     if (e.touches.length !== 1) return;
     if (bloqueadoPorPanel()) return;
     if (gestoBloqueado(e.target)) return;
@@ -68,53 +68,65 @@ function gestoBloqueado(el) {
     const dx = t.clientX - x0, dy = t.clientY - y0;
 
     if (!decidido) {
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;   // todavía indeciso
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       decidido = true;
-      // Más vertical que horizontal ⇒ es scroll: soltamos el gesto.
-      if (Math.abs(dx) < Math.abs(dy) * 1.2) { valido = false; return; }
-      el = (typeof pageElDe === 'function') ? pageElDe(seccionActual) : null;
-      if (!el) { valido = false; return; }
+      if (Math.abs(dx) < Math.abs(dy) * 1.2) { valido = false; return; }  // es scroll vertical
+      const pdir = dx < 0 ? 1 : -1;
+      if (typeof pagerInicio === 'function' && pagerInicio(pdir)) {
+        modo = 'pager';
+      } else {
+        // Modo simple (borde o motion reducido): arrastre con resistencia.
+        modo = 'simple';
+        el = (typeof pageElDe === 'function') ? pageElDe(seccionActual) : null;
+        if (!el) { valido = false; return; }
+        document.body.classList.add('nav-dragging');
+        el.classList.add('nav-arrastrando');
+      }
       arrastrando = true;
-      document.body.classList.add('nav-dragging');
-      el.classList.add('nav-arrastrando');
     }
-    if (!arrastrando || !el) return;
-    e.preventDefault();   // evita que la página arranque un scroll horizontal raro
-    const idx = seccionActualIdx();
-    let d = dx;
-    // Resistencia elástica en los extremos: si no hay a dónde ir, cuesta más.
-    if ((idx === 0 && dx > 0) || (idx === SECCIONES_APP.length - 1 && dx < 0)) d = dx * 0.32;
-    el.style.transition = 'none';
-    el.style.transform = 'translateX(' + d + 'px)';
+    if (!arrastrando) return;
+    e.preventDefault();
+    if (modo === 'pager') {
+      pagerMover(dx);
+    } else if (el) {
+      let d = dx;
+      const idx = seccionActualIdx();
+      if ((idx === 0 && dx > 0) || (idx === SECCIONES_APP.length - 1 && dx < 0)) d = dx * 0.32;
+      else d = dx * 0.5;   // sin animación de vecina: se corre poco
+      el.style.transition = 'none';
+      el.style.transform = 'translateX(' + d + 'px)';
+    }
   }, { passive: false });
 
   function terminar(e) {
-    const elem = el, arr = arrastrando;
+    const arr = arrastrando, md = modo, elem = el;
     const t = (e.changedTouches && e.changedTouches[0]) || null;
     const dx = (arr && x0 != null && t) ? (t.clientX - x0) : 0;
-    // Reset del estado antes de cualquier animación.
-    valido = false; decidido = false; arrastrando = false;
-    x0 = null; y0 = null; el = null;
-    document.body.classList.remove('nav-dragging');
-    if (!arr || !elem) { limpiar(elem); return; }
+    valido = false; decidido = false; arrastrando = false; modo = null; el = null;
+    x0 = null; y0 = null;
 
+    if (!arr) { if (typeof pagerActivo === 'function' && pagerActivo()) {} return; }
+
+    const umbral = Math.min(120, anchoVista * 0.25) || MIN_COMMIT;
+
+    if (md === 'pager') {
+      pagerFin(dx, umbral);
+      return;
+    }
+    // Modo simple:
+    document.body.classList.remove('nav-dragging');
     const idx = seccionActualIdx();
     const objetivo = dx < 0 ? idx + 1 : idx - 1;
     const puede = objetivo >= 0 && objetivo < SECCIONES_APP.length;
-    const umbral = Math.min(120, anchoVista * 0.25) || MIN_COMMIT;
-
     if (puede && Math.abs(dx) > umbral) {
-      // Confirmar: cambiamos de sección (el saliente se oculta al instante) y
-      // dejamos limpio su transform. La entrante aparece deslizándose sola.
+      limpiarSimple(elem);
       irASeccion(objetivo);
-      limpiar(elem);
-    } else {
-      // Volver a su lugar con un rebote corto.
+    } else if (elem) {
       elem.style.transition = 'transform .22s cubic-bezier(.22,.61,.36,1)';
       elem.style.transform = 'translateX(0)';
-      const fin = () => { limpiar(elem); elem.removeEventListener('transitionend', fin); };
+      const fin = () => { limpiarSimple(elem); elem.removeEventListener('transitionend', fin); };
       elem.addEventListener('transitionend', fin);
-      setTimeout(fin, 320);   // respaldo por si transitionend no dispara
+      setTimeout(fin, 320);
     }
   }
 
