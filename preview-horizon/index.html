@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="FinLab">
+<meta name="theme-color" content="#17161a">
+<title>FinLab</title>
+<link rel="manifest" href="../manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="js/horizon-tweaks.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/componentes.css">
+<link rel="stylesheet" href="../css/estilos.css">
+<link rel="stylesheet" href="../css/presupuesto.css">
+<link rel="stylesheet" href="../css/inicio.css">
+<link rel="stylesheet" href="../css/transiciones.css">
+<link rel="stylesheet" href="css/horizon.css">
+</head>
+<body>
+<header>
+  <div class="header-left"><h1>FinLab</h1><span class="sub" id="seccion-actual-nombre"></span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-seccion="inicio" onclick="irASeccionApp('inicio')">Inicio</button>
+    <button class="nav-tab" data-seccion="resumen" onclick="irASeccionApp('resumen')">Resumen</button>
+    <button class="nav-tab" data-seccion="gastos" onclick="irASeccionApp('gastos')">Gastos</button>
+    <button class="nav-tab" data-seccion="retiro" onclick="irASeccionApp('retiro')">Proyección</button>
+    <button class="nav-tab" data-seccion="cartera" onclick="irASeccionApp('cartera')">Cartera</button>
+  </div>
+  <div class="header-right">
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="abrirAjustesDeLaSeccion()">⚙ Ajustes</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Tema">🌙</button>
+  </div>
+</header>
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="toggleSidebar()"></div>
+<div id="mitad-inicio">
+  <div class="shell"><main><div class="view active"><div class="view-pad" style="max-width:760px;margin:0 auto;">
+    <div id="inicio-content" style="display:flex;flex-direction:column;gap:14px;padding-bottom:90px;"></div>
+  </div></div></main></div>
+</div>
+<div id="mitad-retiro">
+<div class="shell">
+<aside id="aside">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title-row">
+    <h2>Parámetros</h2>
+    <button class="aside-close" onclick="toggleSidebar()">✕ Cerrar</button>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Perfil</div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Fecha de nacimiento <span class="tooltip-icon" data-tip="Se usa para calcular tu edad exacta y los años reales hasta el retiro">ⓘ</span></label>
+      <div class="field-row">
+        <input type="date" id="fechaNacimiento">
+      </div>
+      <div class="field-hint" id="edad-exacta-info"></div>
+    </div>
+    <div class="field">
+      <label>Fecha de inicio de inversión <span class="tooltip-icon" data-tip="Desde cuándo estás invirtiendo activamente">ⓘ</span></label>
+      <div class="field-row">
+        <input type="date" id="fechaInicioInversion">
+      </div>
+      <div class="field-hint" id="tiempo-invirtiendo-info"></div>
+    </div>
+    <div class="field">
+      <label>Edad actual <span class="tooltip-icon" data-tip="Tu edad de hoy. Se autocompleta desde la fecha de nacimiento, pero podés ajustarla manualmente">ⓘ</span></label>
+        <span class="val" id="v-edadActual"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-edadActual-1"><input type="checkbox" switch class="pm-switch" id="sw-edadActual-1" data-target="edadActual" data-delta="-1"></label></span>
+        <input type="range" id="edadActual" min="20" max="60" value="30" step="1">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-edadActual-2"><input type="checkbox" switch class="pm-switch" id="sw-edadActual-2" data-target="edadActual" data-delta="1.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Edad de retiro <span class="tooltip-icon" data-tip="Edad objetivo para retirarte">ⓘ</span></label>
+        <span class="val" id="v-edadRetiro"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-edadRetiro-3"><input type="checkbox" switch class="pm-switch" id="sw-edadRetiro-3" data-target="edadRetiro" data-delta="-1"></label></span>
+        <input type="range" id="edadRetiro" min="45" max="80" value="65" step="1">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-edadRetiro-4"><input type="checkbox" switch class="pm-switch" id="sw-edadRetiro-4" data-target="edadRetiro" data-delta="1.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Esperanza de vida <span class="tooltip-icon" data-tip="Hasta qué edad proyectamos el plan">ⓘ</span></label>
+        <span class="val" id="v-vidaEsperada"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-vidaEsperada-5"><input type="checkbox" switch class="pm-switch" id="sw-vidaEsperada-5" data-target="vidaEsperada" data-delta="-1"></label></span>
+        <input type="range" id="vidaEsperada" min="70" max="110" value="100" step="1">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-vidaEsperada-6"><input type="checkbox" switch class="pm-switch" id="sw-vidaEsperada-6" data-target="vidaEsperada" data-delta="1.0"></label></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Metas</div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Gasto mensual deseado (USD hoy) <span class="tooltip-icon" data-tip="Cuánto querés gastar por mes en el retiro en dólares de hoy">ⓘ</span></label>
+        <span class="val" id="v-gastoMensual"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-gastoMensual-7"><input type="checkbox" switch class="pm-switch" id="sw-gastoMensual-7" data-target="gastoMensual" data-delta="-100"></label></span>
+        <input type="range" id="gastoMensual" min="500" max="15000" value="3000" step="100">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-gastoMensual-8"><input type="checkbox" switch class="pm-switch" id="sw-gastoMensual-8" data-target="gastoMensual" data-delta="100.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Inflación USD anual <span class="tooltip-icon" data-tip="Históricamente 2-3% anual en USD. Subila si sos conservador">ⓘ</span></label>
+        <span class="val" id="v-inflacion"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-inflacion-9"><input type="checkbox" switch class="pm-switch" id="sw-inflacion-9" data-target="inflacion" data-delta="-0.005"></label></span>
+        <input type="range" id="inflacion" min="0.01" max="0.08" value="0.035" step="0.005">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-inflacion-10"><input type="checkbox" switch class="pm-switch" id="sw-inflacion-10" data-target="inflacion" data-delta="0.005"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Tasa de retiro segura (SWR) <span class="tooltip-icon" data-tip="Regla del 4%: retirás ese % del portafolio por año sin agotarlo">ⓘ</span></label>
+        <span class="val" id="v-swr"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-swr-11"><input type="checkbox" switch class="pm-switch" id="sw-swr-11" data-target="swr" data-delta="-0.005"></label></span>
+        <input type="range" id="swr" min="0.02" max="0.07" value="0.04" step="0.005">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-swr-12"><input type="checkbox" switch class="pm-switch" id="sw-swr-12" data-target="swr" data-delta="0.005"></label></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Inversión</div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Capital inicial invertido (USD) <span class="tooltip-icon" data-tip="Lo que ya tenés invertido hoy">ⓘ</span></label>
+        <span class="val" id="v-capitalInicial"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-capitalInicial-13"><input type="checkbox" switch class="pm-switch" id="sw-capitalInicial-13" data-target="capitalInicial" data-delta="-1000"></label></span>
+        <input type="range" id="capitalInicial" min="0" max="500000" value="5000" step="1000">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-capitalInicial-14"><input type="checkbox" switch class="pm-switch" id="sw-capitalInicial-14" data-target="capitalInicial" data-delta="1000.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Ahorro mensual actual (USD) <span class="tooltip-icon" data-tip="Cuánto invertís por mes. Cada $100 más equivale a ~$150k adicionales al retiro">ⓘ</span></label>
+        <span class="val" id="v-ahorroMensual"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-ahorroMensual-15"><input type="checkbox" switch class="pm-switch" id="sw-ahorroMensual-15" data-target="ahorroMensual" data-delta="-50"></label></span>
+        <input type="range" id="ahorroMensual" min="0" max="10000" value="500" step="50">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-ahorroMensual-16"><input type="checkbox" switch class="pm-switch" id="sw-ahorroMensual-16" data-target="ahorroMensual" data-delta="50.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Crecimiento anual del ahorro <span class="tooltip-icon" data-tip="Cuánto aumenta tu ahorro mensual cada año a medida que ganás más">ⓘ</span></label>
+        <span class="val" id="v-crecAhorro"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-crecAhorro-17"><input type="checkbox" switch class="pm-switch" id="sw-crecAhorro-17" data-target="crecAhorro" data-delta="-0.005"></label></span>
+        <input type="range" id="crecAhorro" min="0" max="0.15" value="0.03" step="0.005">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-crecAhorro-18"><input type="checkbox" switch class="pm-switch" id="sw-crecAhorro-18" data-target="crecAhorro" data-delta="0.005"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Retorno anual esperado (nominal) <span class="tooltip-icon" data-tip="S&P500 históricamente ~10% nominal anual. Portafolio diversificado: 9-12%">ⓘ</span></label>
+        <span class="val" id="v-retorno"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-retorno-19"><input type="checkbox" switch class="pm-switch" id="sw-retorno-19" data-target="retorno" data-delta="-0.005"></label></span>
+        <input type="range" id="retorno" min="0.02" max="0.2" value="0.09" step="0.005">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-retorno-20"><input type="checkbox" switch class="pm-switch" id="sw-retorno-20" data-target="retorno" data-delta="0.005"></label></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Ingresos pasivos en retiro</div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Alquileres netos (USD/mes) <span class="tooltip-icon" data-tip="Ingreso neto de alquileres. Reduce el capital que necesitás acumular">ⓘ</span></label>
+        <span class="val" id="v-alquilerRetiro"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alquilerRetiro-21"><input type="checkbox" switch class="pm-switch" id="sw-alquilerRetiro-21" data-target="alquilerRetiro" data-delta="-100"></label></span>
+        <input type="range" id="alquilerRetiro" min="0" max="10000" value="500" step="100">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alquilerRetiro-22"><input type="checkbox" switch class="pm-switch" id="sw-alquilerRetiro-22" data-target="alquilerRetiro" data-delta="100.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Dividendos / rentas (USD/mes) <span class="tooltip-icon" data-tip="Dividendos de ETFs y otras rentas en el retiro">ⓘ</span></label>
+        <span class="val" id="v-dividendos"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-dividendos-23"><input type="checkbox" switch class="pm-switch" id="sw-dividendos-23" data-target="dividendos" data-delta="-50"></label></span>
+        <input type="range" id="dividendos" min="0" max="5000" value="0" step="50">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-dividendos-24"><input type="checkbox" switch class="pm-switch" id="sw-dividendos-24" data-target="dividendos" data-delta="50.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Consultoría / part-time (USD/mes) <span class="tooltip-icon" data-tip="Si pensás trabajar ocasionalmente en el retiro">ⓘ</span></label>
+        <span class="val" id="v-consultoria"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-consultoria-25"><input type="checkbox" switch class="pm-switch" id="sw-consultoria-25" data-target="consultoria" data-delta="-50"></label></span>
+        <input type="range" id="consultoria" min="0" max="5000" value="0" step="50">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-consultoria-26"><input type="checkbox" switch class="pm-switch" id="sw-consultoria-26" data-target="consultoria" data-delta="50.0"></label></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Alertas de cartera</div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Alerta caída 24h (%) <span class="tooltip-icon" data-tip="Si un activo cae más de este % en 24h se marca con alerta roja">ⓘ</span></label>
+        <span class="val" id="v-alertaCaida"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaCaida-27"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-27" data-target="alertaCaida" data-delta="-1"></label></span>
+        <input type="range" id="alertaCaida" min="1" max="30" value="10" step="1">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaCaida-28"><input type="checkbox" switch class="pm-switch" id="sw-alertaCaida-28" data-target="alertaCaida" data-delta="1.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>Alerta ganancia total (%) <span class="tooltip-icon" data-tip="Si un activo acumula más de este % de ganancia se marca con una alerta 🎯, como recordatorio de que capaz vale la pena venderlo">ⓘ</span></label>
+        <span class="val" id="v-alertaGanancia"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaGanancia-29"><input type="checkbox" switch class="pm-switch" id="sw-alertaGanancia-29" data-target="alertaGanancia" data-delta="-5"></label></span>
+        <input type="range" id="alertaGanancia" min="10" max="500" value="50" step="5">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaGanancia-30"><input type="checkbox" switch class="pm-switch" id="sw-alertaGanancia-30" data-target="alertaGanancia" data-delta="5.0"></label></span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top-row">
+        <label>...dentro de esta ventana de tiempo <span class="tooltip-icon" data-tip="Solo alerta si esa ganancia se dio dentro de estos meses desde que compraste. Ponelo en 0 para ignorar el tiempo y alertar siempre que se supere el %.">ⓘ</span></label>
+        <span class="val" id="v-alertaGananciaMeses"></span>
+      </div>
+      <div class="field-row">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">−</button><label class="pm-switch-label" for="sw-alertaGananciaMeses-31"><input type="checkbox" switch class="pm-switch" id="sw-alertaGananciaMeses-31" data-target="alertaGananciaMeses" data-delta="-1"></label></span>
+        <input type="range" id="alertaGananciaMeses" min="0" max="60" value="6" step="1">
+        <span class="pm-wrap"><button class="pm-btn" tabindex="-1" aria-hidden="true">+</button><label class="pm-switch-label" for="sw-alertaGananciaMeses-32"><input type="checkbox" switch class="pm-switch" id="sw-alertaGananciaMeses-32" data-target="alertaGananciaMeses" data-delta="1.0"></label></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-block">
+    <div class="group-label">Sincronización con GitHub (historial automático)</div>
+    <div class="field-hint" style="margin-bottom:2px">Pegá acá un token de GitHub con permiso de escritura solo sobre este repositorio. La cartera se sube sola cada vez que agregás, editás o borrás un activo — un robot en GitHub Actions guarda el valor todos los días, aunque no abras la app.</div>
+    <div class="field">
+      <label>Token de GitHub (fine-grained)</label>
+      <div class="field-row">
+        <input type="password" id="gh-token" placeholder="github_pat_..." autocomplete="off" style="flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:9px 10px;font-size:.78rem">
+      </div>
+    </div>
+    <div class="field-row" style="gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveGhToken()">Guardar token</button>
+      <button class="btn btn-refresh" style="flex:1" onclick="syncCarteraToGitHub(true)">↻ Sincronizar ahora</button>
+    </div>
+    <div class="status-bar" id="gh-status-bar" style="padding:4px 0 0"><div class="status-dot" id="gh-status-dot"></div><span id="gh-status-msg">Sin configurar todavía.</span></div>
+  </div>
+</aside>
+<main>
+  <div class="kpi-strip">
+    <div class="hscroll-pad" style="flex-basis:6px"></div>
+    <div class="kpi"><div class="kpi-label">Capital necesario</div><div class="kpi-value blue" id="kpi-meta">—</div><div class="kpi-sub" id="kpi-meta-sub">al retiro</div></div>
+    <div class="kpi"><div class="kpi-label">Capital proyectado</div><div class="kpi-value" id="kpi-proy">—</div><div class="kpi-sub" id="kpi-proy-sub">—</div><div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-proy-bar"></div></div></div>
+    <div class="kpi"><div class="kpi-label">% de meta</div><div class="kpi-value" id="kpi-pct">—</div><div class="kpi-sub" id="kpi-pct-sub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Gasto mensual retiro</div><div class="kpi-value purple" id="kpi-gasto">—</div><div class="kpi-sub" id="kpi-gasto-sub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Capital dura hasta</div><div class="kpi-value" id="kpi-duracion">—</div><div class="kpi-sub" id="kpi-duracion-sub">—</div></div>
+    <div class="hscroll-pad" style="flex-basis:6px"></div>
+  </div>
+  <div class="health-strip">
+    <div class="hscroll-pad" style="flex-basis:8px"></div>
+    <div class="health-item"><div class="health-dot" id="h-ahorro-dot"></div><span class="health-label">Ahorro mensual</span><span class="health-val" id="h-ahorro-val">—</span></div>
+    <div class="health-item"><div class="health-dot" id="h-retorno-dot"></div><span class="health-label">Retorno real</span><span class="health-val" id="h-retorno-val">—</span></div>
+    <div class="health-item"><div class="health-dot" id="h-brecha-dot"></div><span class="health-label">Brecha capital</span><span class="health-val" id="h-brecha-val">—</span></div>
+    <div class="health-item"><div class="health-dot" id="h-plan-dot"></div><span class="health-label">Estado del plan</span><span class="health-val" id="h-plan-val">—</span></div>
+    <div class="hscroll-pad" style="flex-basis:8px"></div>
+  </div>
+
+  <div class="view active" id="view-retiro">
+    <div class="inner-tabs">
+      <div class="hscroll-pad" style="flex-basis:10px"></div>
+      <button class="inner-tab active" onclick="switchInner('grafico',this)">Gráfico</button>
+      <button class="inner-tab" onclick="switchInner('tabla',this)">Tabla</button>
+      <button class="inner-tab" onclick="switchInner('escenarios',this)">Escenarios</button>
+      <button class="inner-tab" onclick="switchInner('sensibilidad',this)">Sensibilidad</button>
+      <button class="inner-tab" onclick="switchInner('inversa',this)">Calc. Inversa</button>
+      <div class="hscroll-pad" style="flex-basis:10px"></div>
+    </div>
+
+    <div id="inner-grafico" style="display:flex;flex-direction:column">
+      <div class="view-pad">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Portafolio · Acumulación + Retiro</span>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div class="toggle-wrap">
+                <button class="toggle-btn active" id="btn-nominal" onclick="setMode('nominal')">Nominal</button>
+                <button class="toggle-btn" id="btn-real" onclick="setMode('real')">Real (hoy)</button>
+              </div>
+              <div class="toggle-wrap" id="escala-toggle">
+                <button class="toggle-btn" onclick="setEscalaY('lineal',this)" title="Escala normal: la altura muestra cuántos dólares son">Lineal</button>
+                <button class="toggle-btn active" onclick="setEscalaY('log',this)" title="Escala logarítmica: la altura muestra el crecimiento en %, así los primeros años no se ven aplastados">Log</button>
+              </div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Acumulación</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Retiro</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Real</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Meta</div>
+          </div>
+          <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
+        </div>
+        <div class="cartera-kpis" style="overflow-x:visible;flex-wrap:wrap">
+          <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Total aportado de tu bolsillo</div><div class="ckpi-val blue" id="proy-stat-aportado">—</div></div>
+          <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Generado por interés compuesto</div><div class="ckpi-val green" id="proy-stat-interes">—</div><div class="field-hint" id="proy-stat-interes-pct" style="margin-top:3px"></div></div>
+          <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Años de retiro cubiertos</div><div class="ckpi-val" id="proy-stat-anos">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inner-tabla" style="display:none">
+      <div class="view-pad">
+        <div class="table-card">
+          <div class="table-wrap" style="max-height:calc(100vh - 340px)">
+            <table><thead><tr><th>Año</th><th>Edad</th><th class="ph-a">Ahorro/Retiro Mens.</th><th class="ph-a">Ahorro/Retiro Anual</th><th>Rendimiento</th><th>Cap. Inicio</th><th>Cap. Fin</th><th style="color:var(--purple)">Cap. Real</th><th>Estado</th></tr></thead><tbody id="tabla-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inner-escenarios" style="display:none;flex-direction:column">
+      <div class="view-pad">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Escenarios de retorno comparados</span>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Pesimista 6%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Base (tu config)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Optimista 12%</div>
+          </div>
+          <div class="chart-canvas-wrap"><canvas id="chart-escenarios"></canvas></div>
+        </div>
+        <div class="cartera-kpis" style="overflow-x:visible;flex-wrap:wrap">
+          <div class="ckpi" style="flex:1;min-width:150px;border-top:2px solid var(--red)"><div class="ckpi-label">Pesimista (6%) al retiro</div><div class="ckpi-val red" id="esc-stat-pesimista">—</div></div>
+          <div class="ckpi" style="flex:1;min-width:150px;border-top:2px solid var(--orange)"><div class="ckpi-label">Base (tu config) al retiro</div><div class="ckpi-val orange" id="esc-stat-base">—</div></div>
+          <div class="ckpi" style="flex:1;min-width:150px;border-top:2px solid var(--green)"><div class="ckpi-label">Optimista (12%) al retiro</div><div class="ckpi-val green" id="esc-stat-optimista">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inner-sensibilidad" style="display:none">
+      <div class="sens-view">
+        <div class="sens-title">Tabla de sensibilidad</div>
+        <div class="sens-sub">% de la meta según ahorro mensual × retorno anual. Verde = supera la meta. <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border:2px solid var(--accent);display:inline-block;border-radius:2px"></span>= tu configuración actual.</span></div>
+        <div class="table-card"><div id="sens-table-wrap" style="overflow-x:auto"></div></div>
+      </div>
+    </div>
+
+    <div id="inner-inversa" style="display:none">
+      <div class="view-pad">
+        <div class="inv-grid">
+          <div class="inv-card"><h3>💰 ¿Cuánto ahorro mensual necesito?</h3><p>Con tu capital inicial actual, ¿cuánto tenés que ahorrar por mes para llegar a la meta?</p><div class="inv-result" id="inv-ahorro">—</div><div class="inv-result-sub" id="inv-ahorro-sub">por mes</div></div>
+          <div class="inv-card"><h3>🏦 ¿Con qué capital inicial llego?</h3><p>Manteniendo tu ahorro actual, ¿qué capital inicial necesitás para llegar a la meta?</p><div class="inv-result" id="inv-capital">—</div><div class="inv-result-sub">de capital inicial</div></div>
+          <div class="inv-card"><h3>📅 ¿En cuántos años llego?</h3><p>Con tu ahorro y capital actuales, ¿cuándo alcanzás la meta?</p><div class="inv-result" id="inv-anos">—</div><div class="inv-result-sub" id="inv-anos-sub">—</div></div>
+          <div class="inv-card"><h3>📉 ¿Cuánto puedo retirar sosteniblemente?</h3><p>Con el capital proyectado al retiro, ¿cuánto podés retirar por mes indefinidamente?</p><div class="inv-result" id="inv-retiro">—</div><div class="inv-result-sub">por mes</div></div>
+          <div class="inv-card"><h3>🎚️ ¿Y si ahorro más o me retiro en otro momento?</h3><p>Movés los controles y ves al instante el resultado — sin tocar tu configuración real de Params.</p>
+            <div class="field" style="margin-top:10px">
+              <div class="field-top-row"><label>Ahorro extra por mes</label><span class="val" id="v-whatif-extra">+$0</span></div>
+              <div class="field-row"><input type="range" id="whatif-extra" min="0" max="1000" step="25" value="0" oninput="renderInvWhatIf()"></div>
+            </div>
+            <div class="field">
+              <div class="field-top-row"><label>Edad de retiro deseada</label><span class="val" id="v-whatif-edad">65 años</span></div>
+              <div class="field-row"><input type="range" id="whatif-edad" min="45" max="80" step="1" value="65" oninput="whatifEdadTouched=true;renderInvWhatIf()"></div>
+            </div>
+            <div class="summary-block">
+              <div class="mover-row"><span>Capital estimado a esa edad</span><span class="ckpi-val" id="whatif-capital" style="font-size:1.05rem">—</span></div>
+              <div class="field-hint" id="whatif-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="view" id="view-cartera">
+    <div class="cartera-layout">
+      <div class="chart-header currency-toggle-row" style="padding:0 2px">
+        <div class="toggle-wrap" id="cartera-selector"></div>
+        <button class="btn-carteras" onclick="abrirGestorCarteras()" title="Crear, renombrar o borrar carteras">⚙ Carteras</button>
+      </div>
+      <div class="chart-header currency-toggle-row" style="padding:0 2px">
+        <span class="field-hint" id="ars-rate-hint" style="margin:0"></span>
+        <div class="toggle-wrap currency-toggle">
+          <button class="toggle-btn active" data-cur="USD" onclick="setCarteraCurrency('USD',this)">USD</button>
+          <button class="toggle-btn" data-cur="ARS" onclick="setCarteraCurrency('ARS',this)">ARS</button>
+        </div>
+      </div>
+      <div class="cartera-kpis">
+        <div class="ckpi"><div class="ckpi-label">Valor total</div><div class="ckpi-val blue" id="ck-total">$0</div></div>
+        <div class="ckpi"><div class="ckpi-label">P&L total</div><div class="ckpi-val" id="ck-pnl">—</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-pnl-bar"></div></div></div>
+        <div class="ckpi"><div class="ckpi-label">Cambio 24h</div><div class="ckpi-val" id="ck-24h">—</div></div>
+        <div class="ckpi"><div class="ckpi-label">% meta cubierta</div><div class="ckpi-val" id="ck-meta">0%</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-meta-bar"></div></div></div>
+      </div>
+
+      <div class="cartera-main-col">
+        <button class="btn-sync" onclick="syncCarteraToCapital()">↔ Usar valor de cartera como capital inicial</button>
+
+        <div class="panel-card">
+          <div class="chart-header">
+            <span class="chart-title">📈 Evolución histórica</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select id="hist-series" class="hist-select" onchange="renderHistChart()">
+                <option value="__total__">Cartera completa</option>
+              </select>
+              <div class="toggle-wrap" id="hist-period-toggle">
+                <button class="toggle-btn" data-days="today" onclick="setHistPeriod('today',this)">24h</button>
+                <button class="toggle-btn active" data-days="30" onclick="setHistPeriod(30,this)">30D</button>
+                <button class="toggle-btn" data-days="90" onclick="setHistPeriod(90,this)">90D</button>
+                <button class="toggle-btn" data-days="365" onclick="setHistPeriod(365,this)">1A</button>
+                <button class="toggle-btn" data-days="0" onclick="setHistPeriod(0,this)">Todo</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap" style="min-height:220px"><canvas id="chart-hist"></canvas></div>
+          <div class="field-hint" id="hist-empty-msg">Todavía no hay historial guardado. Se va a ir completando solo — un robot en GitHub Actions guarda el valor de tu cartera todos los días, aunque no abras la app.</div>
+          <div class="field-hint" id="hist-stale-msg" style="display:none;color:var(--orange)"></div>
+        </div>
+
+        <div class="panel-card" id="monthly-summary-card">
+          <div class="chart-header">
+            <span class="chart-title">🗓️ Resumen del mes</span>
+          </div>
+          <div id="monthly-summary"><div class="field-hint">Todavía no hay suficiente historial para armar el resumen del mes.</div></div>
+        </div>
+
+        <div class="donut-row">
+          <div class="panel-card">
+            <div class="donut-block-title">Por categoría</div>
+            <div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div>
+            <div class="cat-legend" id="cat-legend"></div>
+          </div>
+
+          <div class="panel-card">
+            <div class="donut-block-title">Por activo</div>
+            <div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div>
+            <div class="cat-legend" id="asset-legend"></div>
+          </div>
+        </div>
+
+        <div class="assets-section" id="section-crypto" style="display:none">
+          <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table></div>
+        </div>
+        <div class="assets-section" id="section-stocks" style="display:none">
+          <div class="section-title"><span>Acciones / ETFs <span style="color:var(--green);margin-left:6px" id="total-stocks"></span></span><span id="pct-stocks" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-stocks"></tbody></table></div>
+        </div>
+        <div class="assets-section" id="section-metal" style="display:none">
+          <div class="section-title"><span>Metales <span style="color:var(--orange);margin-left:6px" id="total-metal"></span></span><span id="pct-metal" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-metal"></tbody></table></div>
+        </div>
+        <div class="assets-section" id="section-cash" style="display:none">
+          <div class="section-title"><span>USD / USDT (liquidez) <span style="color:var(--green);margin-left:6px" id="total-cash"></span></span><span id="pct-cash" style="font-size:.64rem;color:var(--muted)"></span></div>
+          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-cash"></tbody></table></div>
+        </div>
+
+        <div class="assets-section">
+          <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-msg">Sin datos. Agregá activos y actualizá precios.</span></div>
+        </div>
+      </div>
+
+      <div class="cartera-side-col">
+        <div class="panel-card">
+          <h3>➕ Agregar activo</h3>
+          <div class="form-row"><select id="new-cat" onchange="updateTickerHint()"><option value="crypto">Crypto</option><option value="stock">Acción/ETF</option><option value="metal">Metal</option><option value="cash">USD/USDT</option></select></div>
+          <div class="form-row"><input id="new-name" placeholder="Nombre (ej. Bitcoin)"></div>
+          <div class="form-row"><input id="new-ticker" placeholder="Ticker (ej. BTC / SPY)"></div>
+          <div id="ticker-hint" class="ticker-hint" style="display:none">Formato Twelve Data: <b>XAU/USD</b> (oro) o <b>XAG/USD</b> (plata)</div>
+          <div class="form-row"><input id="new-qty" type="number" placeholder="Cantidad" min="0" step="any"><input id="new-price" type="number" placeholder="Precio USD" min="0" step="any"></div>
+          <div class="form-row"><input id="new-cost" type="number" placeholder="Precio de compra (P&L)" min="0" step="any"></div>
+          <div class="form-row"><button class="btn btn-primary" onclick="addAsset()" style="flex:1">Agregar</button></div>
+        </div>
+
+        <button class="btn btn-refresh" id="btn-refresh" onclick="refreshPrices()"><span id="refresh-icon">⟳</span> Actualizar precios</button>
+        <button class="snapshot-btn" onclick="saveSnapshot()">📸 Guardar snapshot mensual</button>
+
+        <div class="panel-card" id="snapshot-history" style="display:none">
+          <div class="donut-block-title" style="margin-bottom:2px">Historial snapshots</div>
+          <div id="snapshot-list"></div>
+        </div>
+
+        <div class="panel-card" id="sales-history" style="display:none">
+          <div class="donut-block-title" style="margin-bottom:2px">💵 Historial de ventas</div>
+          <div id="sales-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+</div><!-- /mitad-retiro -->
+
+
+<!-- ══════════ MITAD DE PRESUPUESTO ══════════
+     Envuelta en .app-presupuesto: ese contenedor es lo que mantiene sus
+     estilos adentro y evita que pisen a los de retiro/cartera. -->
+<div class="app-presupuesto" id="mitad-presupuesto" style="display:none">
+<div class="sheet-backdrop" id="sheet-backdrop-presu" onclick="toggleSidebarPresu()"></div>
+
+<!-- IMPORTAR RESUMEN -->
+<div class="imp-backdrop" id="imp-backdrop" onclick="cerrarImport()"></div>
+<div class="imp-modal" id="imp-modal" role="dialog" aria-modal="true" aria-labelledby="imp-title">
+  <div class="imp-hdr">
+    <span class="imp-title" id="imp-title">Importar resumen</span>
+    <button class="imp-x" onclick="cerrarImport()" title="Cerrar">✕</button>
+  </div>
+  <div class="imp-body" id="imp-body"></div>
+  <div class="imp-foot" id="imp-foot"></div>
+</div>
+<input type="file" id="imp-file" accept="application/pdf,.pdf" style="display:none" onchange="importarArchivo(event)">
+
+<!-- ALERTA DE CATEGORÍA -->
+<div class="alerta-backdrop" id="alerta-backdrop" onclick="cerrarAlerta()"></div>
+<div class="alerta-modal" id="alerta-modal" role="alertdialog" aria-modal="true" aria-labelledby="alerta-titulo">
+  <div class="alerta-ic" id="alerta-ic">⚠️</div>
+  <div class="alerta-titulo" id="alerta-titulo"></div>
+  <div class="alerta-cat" id="alerta-cat"></div>
+  <div class="alerta-bar"><div class="alerta-fill" id="alerta-fill"></div></div>
+  <div class="alerta-nums" id="alerta-nums"></div>
+  <div class="alerta-msg" id="alerta-msg"></div>
+  <div class="alerta-acciones">
+    <button class="alerta-btn-ok" onclick="cerrarAlerta()">Entendido</button>
+    <button class="alerta-btn-mute" onclick="silenciarAlertaActual()">No avisarme más de este rubro este mes</button>
+  </div>
+</div>
+
+<div class="shell">
+  <aside id="aside-presu">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title-row">
+      <h2>Parámetros</h2>
+      <button class="aside-close" onclick="toggleSidebarPresu()">✕ Cerrar</button>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Ingresos</div>
+      <div class="field">
+        <label>Salario mensual (ARS)</label>
+        <div class="field-row">
+          <input type="range" id="salario" min="500000" max="20000000" value="3000000" step="100000">
+          <span class="val" id="v-salario"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Gastos Fijos</div>
+      <div class="field">
+        <label>Estudios y aprendizaje</label>
+        <div class="field-row">
+          <input type="range" id="estudios" min="0" max="1000000" value="300000" step="10000">
+          <span class="val" id="v-estudios"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Vivienda</div>
+      <div class="field">
+        <label>Alquiler / expensas</label>
+        <div class="field-row">
+          <input type="range" id="alquiler" min="0" max="5000000" value="500000" step="50000">
+          <span class="val" id="v-alquiler"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Servicios (luz, agua, gas, internet)</label>
+        <div class="field-row">
+          <input type="range" id="servicios" min="0" max="800000" value="120000" step="10000">
+          <span class="val" id="v-servicios"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Alimentación</div>
+      <div class="field">
+        <label>Supermercado / almacén</label>
+        <div class="field-row">
+          <input type="range" id="supermercado" min="0" max="1500000" value="350000" step="10000">
+          <span class="val" id="v-supermercado"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Auto</div>
+      <div class="field">
+        <label>Nafta</label>
+        <div class="field-row">
+          <input type="range" id="nafta" min="0" max="500000" value="100000" step="10000">
+          <span class="val" id="v-nafta"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Seguro del auto</label>
+        <label class="switch"><input type="checkbox" id="tog-seguroAuto"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-seguroAuto" style="display:none">
+        <div class="field-row">
+          <input type="range" id="seguroAuto" min="0" max="300000" value="60000" step="5000">
+          <span class="val" id="v-seguroAuto"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Patente / impuestos</label>
+        <label class="switch"><input type="checkbox" id="tog-patente"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-patente" style="display:none">
+        <div class="field-row">
+          <input type="range" id="patente" min="0" max="200000" value="30000" step="5000">
+          <span class="val" id="v-patente"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Mantenimiento / service</label>
+        <label class="switch"><input type="checkbox" id="tog-mantenimientoAuto"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-mantenimientoAuto" style="display:none">
+        <div class="field-row">
+          <input type="range" id="mantenimientoAuto" min="0" max="300000" value="40000" step="5000">
+          <span class="val" id="v-mantenimientoAuto"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Cuota / leasing</label>
+        <label class="switch"><input type="checkbox" id="tog-auto"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-auto" style="display:none">
+        <div class="field-row">
+          <input type="range" id="auto" min="0" max="2000000" value="300000" step="50000">
+          <span class="val" id="v-auto"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Bienestar / Deporte</div>
+      <div class="field">
+        <label>Gimnasio</label>
+        <div class="field-row">
+          <input type="range" id="gimnasio" min="0" max="300000" value="50000" step="5000">
+          <span class="val" id="v-gimnasio"></span>
+        </div>
+      </div>
+      <div class="toggle-field">
+        <label>Deportes (fútbol, pádel, etc.)</label>
+        <label class="switch"><input type="checkbox" id="tog-deportes"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-deportes" style="display:none">
+        <div class="field-row">
+          <input type="range" id="deportes" min="0" max="300000" value="50000" step="5000">
+          <span class="val" id="v-deportes"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Gastos Variables</div>
+      <div class="field">
+        <label>Juntadas / salidas / comidas afuera</label>
+        <div class="field-row">
+          <input type="range" id="juntadas" min="0" max="2000000" value="300000" step="10000">
+          <span class="val" id="v-juntadas"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Suscripciones</label>
+        <div class="field-row">
+          <input type="range" id="suscripciones" min="0" max="300000" value="70000" step="5000">
+          <span class="val" id="v-suscripciones"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>CNC (varios / imprevistos)</label>
+        <div class="field-row">
+          <input type="range" id="cnc" min="0" max="1000000" value="250000" step="10000">
+          <span class="val" id="v-cnc"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Fondos y Ahorros</div>
+      <div class="field">
+        <label>Fondo de Emergencia</label>
+        <div class="field-row">
+          <input type="range" id="fEmergencia" min="0" max="1000000" value="250000" step="10000">
+          <span class="val" id="v-fEmergencia"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fondo de Vacaciones</label>
+        <div class="field-row">
+          <input type="range" id="fVacaciones" min="0" max="500000" value="160000" step="10000">
+          <span class="val" id="v-fVacaciones"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fondo de Inversiones</label>
+        <div class="field-row">
+          <input type="range" id="fInversiones" min="0" max="5000000" value="1000000" step="50000">
+          <span class="val" id="v-fInversiones"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Salud</div>
+      <div class="toggle-field">
+        <label>Prepaga / salud</label>
+        <label class="switch"><input type="checkbox" id="tog-prepaga"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-prepaga" style="display:none">
+        <div class="field-row">
+          <input type="range" id="prepaga" min="0" max="1000000" value="150000" step="10000">
+          <span class="val" id="v-prepaga"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Farmacia / medicamentos</label>
+        <label class="switch"><input type="checkbox" id="tog-farmacia"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-farmacia" style="display:none">
+        <div class="field-row">
+          <input type="range" id="farmacia" min="0" max="200000" value="30000" step="5000">
+          <span class="val" id="v-farmacia"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Otros Gastos (opcionales)</div>
+      <div class="toggle-field">
+        <label>Viajes</label>
+        <label class="switch"><input type="checkbox" id="tog-viajes"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-viajes" style="display:none">
+        <div class="field-row">
+          <input type="range" id="viajes" min="0" max="1000000" value="200000" step="10000">
+          <span class="val" id="v-viajes"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Gastos Familiares (futuro)</div>
+      <div class="toggle-field">
+        <label>Colegio / educación hijos</label>
+        <label class="switch"><input type="checkbox" id="tog-colegio"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-colegio" style="display:none">
+        <div class="field-row">
+          <input type="range" id="colegio" min="0" max="2000000" value="400000" step="50000">
+          <span class="val" id="v-colegio"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Niñera / jardín</label>
+        <label class="switch"><input type="checkbox" id="tog-ninera"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-ninera" style="display:none">
+        <div class="field-row">
+          <input type="range" id="ninera" min="0" max="1500000" value="300000" step="50000">
+          <span class="val" id="v-ninera"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Actividades / deportes hijos</label>
+        <label class="switch"><input type="checkbox" id="tog-actividades"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-actividades" style="display:none">
+        <div class="field-row">
+          <input type="range" id="actividades" min="0" max="500000" value="150000" step="10000">
+          <span class="val" id="v-actividades"></span>
+        </div>
+      </div>
+
+      <div class="toggle-field">
+        <label>Casa más grande / barrio</label>
+        <label class="switch"><input type="checkbox" id="tog-casaFam"><span class="slider-sw"></span></label>
+      </div>
+      <div class="field sub-field" id="row-casaFam" style="display:none">
+        <div class="field-row">
+          <input type="range" id="casaFam" min="0" max="5000000" value="800000" step="50000">
+          <span class="val" id="v-casaFam"></span>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="param-group">
+      <div class="grp-label">Alertas de gasto</div>
+      <div class="toggle-field">
+        <label>Avisarme si me paso de un rubro</label>
+        <label class="switch"><input type="checkbox" id="tog-alertas" checked><span class="slider-sw"></span></label>
+      </div>
+      <div class="field" id="row-umbralAlerta">
+        <label>Avisar al llegar al</label>
+        <div class="field-row">
+          <input type="range" id="umbralAlerta" min="0.5" max="1" value="0.8" step="0.05">
+          <span class="val" id="v-umbralAlerta"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="param-group">
+      <div class="grp-label">Copia en GitHub</div>
+      <div class="sync-linea"><span class="sync-dot" id="sync-dot-2"></span><span id="sync-detalle">Sin configurar todavía.</span></div>
+      <div id="gh-token-zona"></div>
+      <button class="sync-btn" onclick="sincronizarAhora()">↻ Sincronizar ahora</button>
+      <button class="sync-btn" id="btn-recuperar" style="display:none" onclick="recuperarDatosPrevios()">⟲ Recuperar lo que había antes</button>
+    </div>
+
+  </aside>
+
+  <main>
+    <div class="content">
+      <!-- VIEW: GASTOS DEL MES -->
+      <div id="view-gastos" style="display:none">
+        <div class="view-pad gastos-view">
+          <div class="gastos-hdr">
+            <div class="gastos-hdr-top">
+              <span class="chart-title">Registro de gastos reales</span>
+              <span class="mes-nav">
+                <button class="mes-btn" onclick="moverMes(-1)" title="Mes anterior" aria-label="Mes anterior">‹</button>
+                <span class="gastos-mes" id="gastos-mes-label"></span>
+                <button class="mes-btn" onclick="moverMes(1)" title="Mes siguiente" aria-label="Mes siguiente">›</button>
+                <button class="mes-hoy" id="mes-hoy" onclick="irAlMesActual()" style="display:none">Volver a hoy</button>
+              </span>
+            </div>
+          </div>
+
+          <div class="alertas-banner" id="alertas-banner" style="display:none"></div>
+
+          <div class="fijos-card" id="fijos-card" style="display:none"></div>
+          <div class="sug-card" id="sug-card" style="display:none"></div>
+
+          <div class="gasto-form">
+            <div class="gasto-form-row">
+              <div class="field">
+                <label>Fecha</label>
+                <input type="date" id="gasto-fecha">
+              </div>
+              <div class="field">
+                <label>Categoría</label>
+                <select id="gasto-cat"></select>
+              </div>
+              <div class="field">
+                <label>¿Cuántos meses cubre?</label>
+                <select id="gasto-meses">
+                  <option value="1" selected>Solo este mes</option>
+                  <option value="auto">Calcularlo según mi presupuesto</option>
+                  <option value="2">2 meses</option>
+                  <option value="3">3 meses</option>
+                  <option value="4">4 meses</option>
+                  <option value="5">5 meses</option>
+                  <option value="6">6 meses</option>
+                  <option value="9">9 meses</option>
+                  <option value="12">12 meses (un año)</option>
+                </select>
+              </div>
+            </div>
+            <div class="gasto-form-row">
+              <div class="field">
+                <label>Monto (ARS)</label>
+                <input type="number" id="gasto-monto" placeholder="0" min="0" step="1000">
+              </div>
+              <div class="field">
+                <label>Nota (opcional)</label>
+                <input type="text" id="gasto-nota" placeholder="Ej: Uber al aeropuerto" maxlength="60">
+              </div>
+            </div>
+            <button class="btn-add-gasto" onclick="addGasto()">+ Agregar gasto</button>
+            <button class="btn-importar" onclick="abrirImport()">📄 Importar resumen de tarjeta o billetera</button>
+          </div>
+
+          <div class="gastos-kpis">
+            <div class="gk">
+              <div class="gk-label">Gastado este mes</div>
+              <div class="gk-val red" id="gk-total">$0</div>
+            </div>
+            <div class="gk">
+              <div class="gk-label">Disponible este mes</div>
+              <div class="gk-val" id="gk-disponible">$0</div>
+            </div>
+            <div class="gk">
+              <div class="gk-label">Cantidad de registros</div>
+              <div class="gk-val" id="gk-count">0</div>
+            </div>
+            <div class="gk">
+              <div class="gk-label">Categoría con más gasto</div>
+              <div class="gk-val" id="gk-top" style="font-size:.85rem">—</div>
+            </div>
+          </div>
+
+          <div class="futuro-note" id="futuro-note" style="display:none"></div>
+
+          <div class="pv-wrap">
+            <div class="pv-hdr">Presupuestado vs. Real por categoría</div>
+            <div id="pv-list"></div>
+          </div>
+
+          <div class="retiro-card">
+            <div class="rc-hdr">🔗 Conectar con el plan de retiro</div>
+            <div class="rc-row">
+              <div class="field">
+                <label>Tipo de cambio (ARS por USD)</label>
+                <input type="number" id="tipoCambio" placeholder="Ej: 1200" min="1" step="10">
+              </div>
+              <div class="rc-preview" id="retiro-preview">Superávit real: — · en USD: —</div>
+              <button class="btn-add-gasto" onclick="syncAhorroARetiro()">→ Enviar como ahorro mensual</button>
+            </div>
+            <div class="rc-note">Convierte tu superávit real de este mes (salario − gastos reales) a USD y lo carga como "Ahorro mensual" en el plan de retiro. Funciona automáticamente si abrís ambas apps desde el mismo dominio (comparten el almacenamiento del navegador); si no, copiá el valor en USD manualmente.</div>
+          </div>
+
+          <div class="table-card gastos-table-wrap">
+            <table>
+              <thead>
+                <tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Nota</th><th></th></tr>
+              </thead>
+              <tbody id="tbody-gastos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: RESUMEN -->
+      <div id="view-resumen" style="display:none">
+        <div class="view-pad res-view">
+          <div class="rs-chips" id="rs-chips"></div>
+
+          <div class="ini-card">
+            <div class="ini-card-hdr">A dónde va tu ingreso</div>
+            <div class="di-top">
+              <span class="di-ingreso" id="di-ingreso">$0</span>
+              <span class="di-ingreso-lbl" id="di-ingreso-lbl">de ingreso</span>
+            </div>
+            <div class="di-barra" id="di-barra"></div>
+            <div id="di-detalle"></div>
+          </div>
+
+          <div class="ini-card">
+            <div class="ini-hero-label" id="rs-label">Gastado</div>
+            <div class="ini-hero-val" id="rs-total">$0</div>
+            <div class="ini-hero-sub" id="rs-sub"></div>
+            <div id="rs-presu"></div>
+          </div>
+
+          <div class="ini-card">
+            <div class="ini-card-hdr">Evolución mes a mes</div>
+            <div class="rs-chart-wrap"><canvas id="chart-rs"></canvas></div>
+          </div>
+
+          <div class="ini-card">
+            <div class="ini-card-hdr" id="rs-cats-hdr">En qué se te va</div>
+            <div class="rs-donut-wrap">
+              <canvas id="chart-cats"></canvas>
+              <div class="rs-donut-centro">
+                <span class="rs-donut-num" id="rs-donut-num">$0</span>
+                <span class="rs-donut-cap" id="rs-donut-cap">en total</span>
+              </div>
+            </div>
+            <div id="rs-cats"></div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </main>
+</div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" data-seccion="inicio" onclick="irASeccionApp('inicio')"><span class="bn-ic">⌂</span>Inicio</button>
+  <button class="bn-item" data-seccion="resumen" onclick="irASeccionApp('resumen')"><span class="bn-ic">◔</span>Resumen</button>
+  <button class="bn-item" data-seccion="gastos" onclick="irASeccionApp('gastos')"><span class="bn-ic">＋</span>Gastos</button>
+  <button class="bn-item" data-seccion="retiro" onclick="irASeccionApp('retiro')"><span class="bn-ic">📈</span>Proyección</button>
+  <button class="bn-item" data-seccion="cartera" onclick="irASeccionApp('cartera')"><span class="bn-ic">💼</span>Cartera</button>
+  <button class="bn-item" onclick="abrirAjustesDeLaSeccion()"><span class="bn-ic">⚙</span>Ajustes</button>
+</nav>
+
+<div class="modal-overlay" id="edit-modal" style="display:none">
+  <div class="modal">
+    <h3>Editar activo</h3>
+    <div class="modal-info" id="modal-info"></div>
+    <div class="modal-field">
+      <label>Precio de compra (USD)</label>
+      <input type="number" id="modal-cost" step="0.000001" min="0">
+    </div>
+    <div class="modal-field">
+      <label>Cantidad</label>
+      <input type="number" id="modal-qty" step="0.000001" min="0">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sell-modal" style="display:none">
+  <div class="modal">
+    <h3>💵 Vender activo</h3>
+    <div class="modal-info" id="sell-info"></div>
+    <div class="modal-field">
+      <label>Cantidad a vender</label>
+      <input type="number" id="sell-qty" step="0.000001" min="0">
+    </div>
+    <div class="modal-info" id="sell-preview"></div>
+    <div class="field-hint">El importe se acredita como USD/USDT dentro de tu misma cartera, y queda registrado en el historial de ventas.</div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeSellModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmSell()">Confirmar venta</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="carteras-modal" style="display:none">
+  <div class="modal">
+    <h3>📁 Mis carteras</h3>
+    <div class="field-hint">Sirven para separar por estrategia — por ejemplo largo plazo y trading. El robot mide cada una por separado, y con la vista "Todo" las ves sumadas.</div>
+    <div id="carteras-lista"></div>
+    <button class="btn-sync" style="align-self:flex-start" onclick="agregarCartera()">+ Agregar cartera</button>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="guardarGestorCarteras()">Listo</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/nucleo.js"></script>
+<script src="../js/haptics.js"></script>
+<script src="../js/panel-parametros.js"></script>
+<script src="../js/sincronizacion.js"></script>
+<script src="../js/historial.js"></script>
+<script src="../js/ventas.js"></script>
+<script src="../js/moneda.js"></script>
+<script src="../js/resumen-mensual.js"></script>
+<script src="../js/presupuesto.js"></script>
+<script src="../js/gastos-params.js"></script>
+<script src="../js/presupuesto-tooltip.js"></script>
+<script src="../js/presupuesto-sync.js"></script>
+<script src="../js/inicio.js"></script>
+<script src="../js/navegacion.js"></script>
+<script src="../js/transiciones.js"></script>
+<script src="../js/parametros.js"></script>
+<script src="../js/deslizar.js"></script>
+</body>
+</html>

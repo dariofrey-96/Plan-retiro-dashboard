@@ -1,0 +1,157 @@
+/* ═══════════════ PREVIEW "HORIZON UI" ═══════════════
+   Experimento visual. Se carga ÚLTIMA, así pisa los tokens sin editar ningún
+   archivo original. Toma los VALORES de diseño de Horizon UI (repo MIT):
+   violeta #4318FF / #7551FF, fondo claro #F4F7FE, navy oscuro #0b1437/#111c44,
+   gris secundario #A3AED0, tarjetas muy redondeadas con sombra suave azulada, y
+   tipografía DM Sans. Los conecta a los tokens y clases REALES de la app, para
+   que el cambio se vea en toda la pantalla, en claro y en oscuro.
+
+   NOTA: no se tocan los tokens de SOMBRA (--shadow-*), que en pruebas previas
+   metían a Chart.js en un bucle. La sombra Horizon se pone con un token nuevo
+   (--hz-shadow) directo en la regla de las tarjetas. */
+
+/* ---------- CLARO (y elección manual "light") ---------- */
+:root,
+:root[data-theme="light"] {
+  --bg:         #F4F7FE;
+  --surface:    #FFFFFF;
+  --surface-2:  #F4F7FE;
+  --surface-3:  #E9EDF7;
+  --border:     #E6EDF7;
+  --divider:    #E0E5F2;
+  --hairline:   rgba(43,54,116,.08);
+  --text:       #2B3674;
+  --text-2:     #A3AED0;
+  --text-3:     #B0B7CB;
+
+  --accent:      #4318FF;
+  --accent-dark: #3311DB;
+  --accent-soft: #EDE9FF;
+  --accent-text: #4318FF;
+
+  --green:      #05CD99;
+  --green-dark: #02905F;
+  --green-soft: #E6FAF5;
+  --green-text: #02905F;
+
+  --red:      #EE5D50;
+  --red-dark: #B42318;
+  --red-soft: #FDECEC;
+  --red-text: #B42318;
+
+  --gold:      #FFB547;
+  --gold-dark: #B54708;
+  --gold-soft: #FFF4E5;
+  --gold-text: #B54708;
+
+  --purple: #7551FF;
+  --teal:   #33B4C9;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  --hz-shadow: 0 18px 40px rgba(112,144,176,.14);
+}
+
+/* ---------- OSCURO (sistema, si no eligió claro a mano) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:         #0B1437;
+    --surface:    #111C44;
+    --surface-2:  #1B254B;
+    --surface-3:  #1B254B;
+    --border:     #1B254B;
+    --divider:    #1B254B;
+    --hairline:   rgba(255,255,255,.08);
+    --text:       #FFFFFF;
+    --text-2:     #A3AED0;
+    --text-3:     #8390B3;
+
+    --accent:      #7551FF;
+    --accent-dark: #7551FF;
+    --accent-soft: rgba(117,81,255,.18);
+    --accent-text: #A195FD;
+
+    --green:      #05CD99;
+    --green-soft: rgba(5,205,153,.16);
+    --green-text: #05CD99;
+
+    --red:      #EE5D50;
+    --red-soft: rgba(238,93,80,.16);
+    --red-text: #FF8A80;
+
+    --gold:      #FFB547;
+    --gold-soft: rgba(255,181,71,.16);
+    --gold-text: #FFCE7A;
+
+    --purple: #868CFF;
+    --teal:   #33B4C9;
+
+    --hz-shadow: 0 18px 40px rgba(0,0,0,.35);
+  }
+}
+
+/* ---------- OSCURO (elección manual "dark") ---------- */
+:root[data-theme="dark"] {
+  --bg:         #0B1437;
+  --surface:    #111C44;
+  --surface-2:  #1B254B;
+  --surface-3:  #1B254B;
+  --border:     #1B254B;
+  --divider:    #1B254B;
+  --hairline:   rgba(255,255,255,.08);
+  --text:       #FFFFFF;
+  --text-2:     #A3AED0;
+  --text-3:     #8390B3;
+
+  --accent:      #7551FF;
+  --accent-dark: #7551FF;
+  --accent-soft: rgba(117,81,255,.18);
+  --accent-text: #A195FD;
+
+  --green:      #05CD99;
+  --green-soft: rgba(5,205,153,.16);
+  --green-text: #05CD99;
+
+  --red:      #EE5D50;
+  --red-soft: rgba(238,93,80,.16);
+  --red-text: #FF8A80;
+
+  --gold:      #FFB547;
+  --gold-soft: rgba(255,181,71,.16);
+  --gold-text: #FFCE7A;
+
+  --purple: #868CFF;
+  --teal:   #33B4C9;
+
+  --hz-shadow: 0 18px 40px rgba(0,0,0,.35);
+}
+
+/* ---------- Tipografía DM Sans ---------- */
+body, .app-presupuesto {
+  font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+}
+
+/* ---------- Tarjetas estilo Horizon: bien redondeadas, sombra suave ---------- */
+.panel-card, .group-block, .table-card, .assets-section,
+.app-presupuesto .ini-card, .app-presupuesto .cat-card, .app-presupuesto .pv-wrap,
+.app-presupuesto .table-card, .app-presupuesto .rs-cat, .modal-card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--hz-shadow);
+  border-color: var(--border);
+}
+
+/* ---------- Botones y controles en violeta Horizon ---------- */
+.btn { border-radius: var(--radius-md); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+.toggle-btn.active, .nav-tab.active, .bn-item.active,
+.rs-chip.on, .ps-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+input.pm-switch { accent-color: var(--accent); }
+input[type=range] { accent-color: var(--accent); }
+
+/* ---------- Barra flotante inferior más "card" ---------- */
+#bottom-nav { border-radius: var(--radius-xl); box-shadow: var(--hz-shadow); }
