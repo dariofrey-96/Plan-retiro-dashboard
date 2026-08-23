@@ -125,6 +125,7 @@ function renderCustomCatRows() {
     : '<div class="field-hint" style="margin:2px 0 8px 0;">Todavía no agregaste categorías propias.</div>';
   arr.forEach(c => bindCustomSlider(c.id));
   inyectarSteppersPanel();   // los sliders nuevos necesitan sus botones − / +
+  if (typeof actualizarTotalPresupuesto === 'function') actualizarTotalPresupuesto();
 }
 
 function agregarCategoria() {
@@ -155,6 +156,50 @@ function eliminarCategoria(id) {
   if (typeof catNombresCustom === 'function') { const n = catNombresCustom(); if (id in n) { delete n[id]; guardarNombresCat(n); } }
   renderCustomCatRows();
   refrescarApp();
+}
+
+// ══════════════ Total presupuestado (con desglose) ══════════════
+// Suma en vivo lo presupuestado para gastos = todas las categorías ACTIVADAS
+// (las apagadas dan 0). Sirve para ver el total sin sumar a mano y para
+// encontrar de dónde sale cada peso (desglose).
+function actualizarTotalPresupuesto() {
+  if (typeof PV_CAT_IDS === 'undefined' || typeof getPresupuestoCat !== 'function') return;
+  // Número exacto (sin abreviar a K/M) para poder comparar montos al peso.
+  const fmt = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
+  let total = 0; const filas = [];
+  PV_CAT_IDS.forEach(id => { const v = getPresupuestoCat(id) || 0; if (v > 0) { total += v; filas.push([id, v]); } });
+
+  const valEl = document.getElementById('presu-total-val');
+  if (valEl) valEl.textContent = fmt(total);
+
+  const sub = document.getElementById('presu-total-sub');
+  if (sub) {
+    const salEl = document.getElementById('salario');
+    const sal = salEl ? (parseFloat(salEl.value) || 0) : 0;
+    sub.textContent = sal > 0
+      ? 'Es el ' + Math.round(total / sal * 100) + '% de tu ingreso (' + fmt(sal) + ')'
+      : filas.length + ' categoría' + (filas.length === 1 ? '' : 's') + ' activa' + (filas.length === 1 ? '' : 's');
+  }
+
+  const bd = document.getElementById('presu-total-breakdown');
+  if (bd && bd.style.display !== 'none') {
+    filas.sort((a, b) => b[1] - a[1]);
+    bd.innerHTML = filas.map(([id, v]) =>
+      '<div style="display:flex;justify-content:space-between;gap:10px;font-size:.76rem;padding:4px 0;border-bottom:1px dashed var(--border);">' +
+      '<span>' + ((typeof catLabel === 'function') ? catLabel(id) : id) + '</span>' +
+      '<span style="font-weight:600;white-space:nowrap;">' + fmt(v) + '</span></div>').join('') +
+      '<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:7px 0 0;font-weight:800;"><span>Total</span><span>' + fmt(total) + '</span></div>';
+  }
+}
+
+function togglePresuBreakdown() {
+  const bd = document.getElementById('presu-total-breakdown');
+  const car = document.getElementById('presu-total-caret');
+  if (!bd) return;
+  const abrir = bd.style.display === 'none';
+  bd.style.display = abrir ? '' : 'none';
+  if (car) car.textContent = abrir ? '▴' : '▾';
+  actualizarTotalPresupuesto();
 }
 
 // ══════════════ Inyección de botones y lápices en el panel ══════════════
@@ -207,6 +252,22 @@ function inyectarPencilsBuiltin() {
 
   mergeCatsCustom();
 
+  // Total presupuestado, fijo arriba del panel (después del título).
+  if (!document.getElementById('presu-total-box')) {
+    const fila = panel.querySelector('.sheet-title-row');
+    const html =
+      '<div id="presu-total-box" style="position:sticky;top:0;z-index:3;background:var(--surface);margin:0 -16px;padding:10px 16px;border-bottom:1px solid var(--border);">' +
+      '<button type="button" onclick="togglePresuBreakdown()" style="width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:10px;background:none;border:none;color:var(--text);cursor:pointer;padding:0;text-align:left;">' +
+      '<span style="color:var(--muted);font-size:.82rem;">Total presupuestado <span id="presu-total-caret" style="font-size:.7rem;">▾</span></span>' +
+      '<span id="presu-total-val" style="font-weight:800;font-size:1.1rem;white-space:nowrap;">$0</span></button>' +
+      '<div id="presu-total-sub" style="font-size:.74rem;color:var(--muted);margin-top:2px;"></div>' +
+      '<div id="presu-total-breakdown" style="display:none;margin-top:8px;"></div></div>';
+    if (fila) fila.insertAdjacentHTML('afterend', html);
+    else panel.insertAdjacentHTML('afterbegin', html);
+    panel.addEventListener('input', actualizarTotalPresupuesto);
+    panel.addEventListener('change', actualizarTotalPresupuesto);
+  }
+
   if (!document.getElementById('pg-custom')) {
     panel.insertAdjacentHTML('beforeend',
       '<div class="param-group" id="pg-custom">' +
@@ -220,5 +281,6 @@ function inyectarPencilsBuiltin() {
   inyectarSteppersPanel();    // botones en los sliders fijos
   inyectarPencilsBuiltin();   // lápiz en las categorías fijas
   aplicarNombresCategorias();
+  actualizarTotalPresupuesto();
   if (typeof initGastoCatSelect === 'function') { try { initGastoCatSelect(); } catch (e) {} }
 })();
