@@ -1,28 +1,17 @@
-// ── PARÁMETROS DE GASTOS: botones + / − con vibración y renombrar categorías ──
-// Aditivo. Al cargar, mete en el panel de presupuesto los mismos botones − y +
-// que ya tiene el panel de retiro (con su misma vibración, vía el switch nativo
-// de iOS), y un lápiz para renombrar cada categoría. Los nombres nuevos se
-// guardan por dispositivo y los lee catLabel(), así aparecen en toda la app
-// (lista de gastos, resumen, inicio, alertas y el desplegable al cargar gastos).
+// ── PARÁMETROS DE GASTOS: botones + / −, renombrar y agregar categorías ──────
+// Aditivo. Al cargar, el panel de presupuesto recibe:
+//   • los mismos botones − / + que el panel de retiro (con su vibración, vía el
+//     switch nativo de iOS; ver haptics.js, que rutea por data-presu),
+//   • un lápiz para renombrar cada categoría,
+//   • un grupo "Categorías personalizadas" con las que agregás vos, cada una con
+//     su slider, botones, renombrar y tacho para borrar, más un botón "+ Agregar".
 //
-// No se toca la lógica original: los botones sólo cambian el valor del slider y
-// disparan su evento 'input', que ya guarda y repinta. Ver haptics.js (ruteo del
-// switch) y presupuesto.js (catLabel lee los nombres personalizados).
+// Los nombres nuevos y las categorías nuevas se guardan por dispositivo. Las
+// categorías custom se inyectan en GASTO_CATS y PV_CAT_IDS al cargar, así el
+// resto de la app (getPresupuestoCat, dropdown, resumen, alertas, inicio) las
+// toma sin cambios: getPresupuestoCat(id) lee el valor del slider por id.
 
-// Sube/baja el monto de un slider de presupuesto y reusa su guardado/repintado.
-function adjustSliderPresu(id, delta) {
-  const e = document.getElementById(id);
-  if (!e) return;
-  let v = parseFloat(e.value) + delta;
-  const min = parseFloat(e.min), max = parseFloat(e.max);
-  if (!isNaN(min)) v = Math.max(min, v);
-  if (!isNaN(max)) v = Math.min(max, v);
-  const step = parseFloat(e.step);
-  if (step > 0) v = Math.round(v / step) * step;   // evita decimales raros al sumar floats
-  e.value = v;
-  e.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
+// ══════════════ Nombres personalizados (renombrar) ══════════════
 function guardarNombresCat(obj) {
   try { localStorage.setItem('finlab_cat_nombres', JSON.stringify(obj)); } catch (e) {}
 }
@@ -30,21 +19,18 @@ function guardarNombresCat(obj) {
 function renombrarCat(id) {
   const actual = (typeof catLabel === 'function') ? catLabel(id) : id;
   const nuevo = prompt('Nombre de la categoría:', actual);
-  if (nuevo === null) return;                         // canceló
+  if (nuevo === null) return;
   const limpio = nuevo.replace(/[<>]/g, '').trim().slice(0, 40);
   const store = (typeof catNombresCustom === 'function') ? catNombresCustom() : {};
   const def = (typeof GASTO_CATS !== 'undefined' ? (GASTO_CATS.find(c => c.id === id) || {}).label : '') || '';
-  if (!limpio || limpio === def) delete store[id];   // vacío o igual al original => vuelve al default
+  if (!limpio || limpio === def) delete store[id];
   else store[id] = limpio;
   guardarNombresCat(store);
   aplicarNombresCategorias();
-  ['initGastoCatSelect', 'renderGastos', 'renderResumen', 'renderInicio'].forEach(fn => {
-    if (typeof window[fn] === 'function') { try { window[fn](); } catch (e) {} }
-  });
+  refrescarApp();
 }
 
-// El <label> humano de una categoría: fila simple, o la que está detrás de un
-// toggle (ahí el nombre vive en el .toggle-field anterior al .sub-field).
+// El <label> de una categoría: fila simple o la que está detrás de un toggle.
 function labelDeCategoria(id) {
   const sub = document.getElementById('row-' + id);
   if (sub) {
@@ -65,23 +51,128 @@ function aplicarNombresCategorias() {
   });
 }
 
-(function () {
+function refrescarApp() {
+  ['initGastoCatSelect', 'renderGastos', 'renderResumen', 'renderInicio'].forEach(fn => {
+    if (typeof window[fn] === 'function') { try { window[fn](); } catch (e) {} }
+  });
+}
+
+// ══════════════ Botones + / − de los sliders de presupuesto ══════════════
+function adjustSliderPresu(id, delta) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  let v = parseFloat(e.value) + delta;
+  const min = parseFloat(e.min), max = parseFloat(e.max);
+  if (!isNaN(min)) v = Math.max(min, v);
+  if (!isNaN(max)) v = Math.min(max, v);
+  const step = parseFloat(e.step);
+  if (step > 0) v = Math.round(v / step) * step;
+  e.value = v;
+  e.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// ══════════════ Categorías personalizadas (agregar / borrar) ══════════════
+const LS_CATS_CUSTOM = 'finlab_cat_custom';
+function catsCustom() { try { return JSON.parse(localStorage.getItem(LS_CATS_CUSTOM) || '[]'); } catch (e) { return []; } }
+function guardarCatsCustom(arr) { try { localStorage.setItem(LS_CATS_CUSTOM, JSON.stringify(arr)); } catch (e) {} }
+
+// Suma las categorías custom a las listas madre (una sola vez cada una).
+function mergeCatsCustom() {
+  catsCustom().forEach(c => {
+    if (typeof GASTO_CATS !== 'undefined' && !GASTO_CATS.some(x => x.id === c.id)) {
+      const iOtro = GASTO_CATS.findIndex(x => x.id === 'otro');
+      GASTO_CATS.splice(iOtro >= 0 ? iOtro : GASTO_CATS.length, 0, { id: c.id, label: c.label });
+    }
+    if (typeof PV_CAT_IDS !== 'undefined' && !PV_CAT_IDS.includes(c.id)) PV_CAT_IDS.push(c.id);
+  });
+}
+
+function bindCustomSlider(id) {
+  const el = document.getElementById(id), v = document.getElementById('v-' + id);
+  if (!el) return;
+  const fmt = (typeof fmtARS === 'function') ? fmtARS : (n => '$' + Math.round(n));
+  const upd = () => {
+    if (v) v.textContent = fmt(parseFloat(el.value) || 0);
+    const arr = catsCustom(); const c = arr.find(x => x.id === id);
+    if (c) { c.budget = parseFloat(el.value) || 0; guardarCatsCustom(arr); }
+    if (typeof repintar === 'function') { try { repintar(); } catch (e) {} }
+  };
+  el.addEventListener('input', upd);
+  if (v) v.textContent = fmt(parseFloat(el.value) || 0);
+}
+
+function filaCustomHTML(c) {
+  const nombre = (typeof catLabel === 'function') ? catLabel(c.id) : c.label;
+  const b = c.budget || 0;
+  const max = Math.max(5000000, Math.ceil((b * 1.5) / 10000) * 10000);
+  const estiloBtn = 'background:none;border:none;cursor:pointer;font-size:.82rem;padding:2px 4px;line-height:1;vertical-align:middle;';
+  return '<div class="field" data-custom="' + c.id + '">' +
+    '<label data-ren-done="1"><span class="cat-nombre">' + nombre + '</span>' +
+    '<button type="button" class="cat-edit-btn" title="Renombrar" style="' + estiloBtn + 'color:var(--accent);margin-left:6px;" onclick="renombrarCat(\'' + c.id + '\')">✏️</button>' +
+    '<button type="button" class="cat-del-btn" title="Eliminar" style="' + estiloBtn + 'color:var(--red);" onclick="eliminarCategoria(\'' + c.id + '\')">🗑️</button>' +
+    '</label>' +
+    '<div class="field-row">' +
+    '<input type="range" id="' + c.id + '" min="0" max="' + max + '" step="10000" value="' + b + '">' +
+    '<span class="val" id="v-' + c.id + '"></span>' +
+    '</div></div>';
+}
+
+function renderCustomCatRows() {
+  const cont = document.getElementById('custom-cats-list');
+  if (!cont) return;
+  const arr = catsCustom();
+  cont.innerHTML = arr.length ? arr.map(filaCustomHTML).join('')
+    : '<div class="field-hint" style="margin:2px 0 8px 0;">Todavía no agregaste categorías propias.</div>';
+  arr.forEach(c => bindCustomSlider(c.id));
+  inyectarSteppersPanel();   // los sliders nuevos necesitan sus botones − / +
+}
+
+function agregarCategoria() {
+  const nombre = prompt('Nombre de la categoría nueva:');
+  if (nombre === null) return;
+  const limpio = nombre.replace(/[<>]/g, '').trim().slice(0, 40);
+  if (!limpio) return;
+  const arr = catsCustom();
+  const id = 'cst_' + Date.now().toString(36);
+  arr.push({ id, label: limpio, budget: 0 });
+  guardarCatsCustom(arr);
+  if (typeof GASTO_CATS !== 'undefined' && !GASTO_CATS.some(x => x.id === id)) {
+    const iOtro = GASTO_CATS.findIndex(x => x.id === 'otro');
+    GASTO_CATS.splice(iOtro >= 0 ? iOtro : GASTO_CATS.length, 0, { id, label: limpio });
+  }
+  if (typeof PV_CAT_IDS !== 'undefined' && !PV_CAT_IDS.includes(id)) PV_CAT_IDS.push(id);
+  renderCustomCatRows();
+  refrescarApp();
+}
+
+function eliminarCategoria(id) {
+  const c = catsCustom().find(x => x.id === id);
+  const nombre = c ? ((typeof catLabel === 'function') ? catLabel(id) : c.label) : id;
+  if (!confirm('¿Eliminar la categoría "' + nombre + '"?\n\nLos gastos que ya cargaste en ella no se borran, pero quedan sin una categoría propia.')) return;
+  guardarCatsCustom(catsCustom().filter(x => x.id !== id));
+  if (typeof GASTO_CATS !== 'undefined') { const i = GASTO_CATS.findIndex(x => x.id === id); if (i >= 0) GASTO_CATS.splice(i, 1); }
+  if (typeof PV_CAT_IDS !== 'undefined') { const i = PV_CAT_IDS.indexOf(id); if (i >= 0) PV_CAT_IDS.splice(i, 1); }
+  if (typeof catNombresCustom === 'function') { const n = catNombresCustom(); if (id in n) { delete n[id]; guardarNombresCat(n); } }
+  renderCustomCatRows();
+  refrescarApp();
+}
+
+// ══════════════ Inyección de botones y lápices en el panel ══════════════
+let _pmSeq = 0;
+function inyectarSteppersPanel() {
   const panel = document.getElementById('aside-presu');
   if (!panel) return;
-
-  // 1) Botones − / + en cada slider del panel de gastos.
-  let n = 0;
   panel.querySelectorAll('input[type="range"]').forEach(rango => {
     const id = rango.id;
     if (!id || rango.dataset.pmDone) return;
     rango.dataset.pmDone = '1';
-    const row = rango.parentElement;                 // .field-row
+    const row = rango.parentElement;
     if (!row) return;
     let step = parseFloat(rango.step); if (!(step > 0)) step = 1;
     const mkWrap = (signo, delta) => {
       const wrap = document.createElement('span');
       wrap.className = 'pm-wrap';
-      const swId = 'pm-presu-' + id + '-' + (++n);
+      const swId = 'pm-presu-' + id + '-' + (++_pmSeq);
       wrap.innerHTML =
         '<button class="pm-btn" tabindex="-1" aria-hidden="true">' + signo + '</button>' +
         '<label class="pm-switch-label" for="' + swId + '">' +
@@ -89,24 +180,45 @@ function aplicarNombresCategorias() {
         '" data-target="' + id + '" data-delta="' + delta + '" data-presu="1"></label>';
       return wrap;
     };
-    row.insertBefore(mkWrap('−', -step), rango);   // − antes del slider
-    rango.insertAdjacentElement('afterend', mkWrap('+', step)); // + después
+    row.insertBefore(mkWrap('−', -step), rango);
+    rango.insertAdjacentElement('afterend', mkWrap('+', step));
   });
+}
 
-  // 2) Lápiz para renombrar en cada categoría.
-  if (typeof PV_CAT_IDS !== 'undefined') {
-    PV_CAT_IDS.forEach(id => {
-      const lab = labelDeCategoria(id);
-      if (!lab || lab.dataset.renDone) return;
-      lab.dataset.renDone = '1';
-      const nombre = (typeof catLabel === 'function') ? catLabel(id) : (lab.textContent || id).trim();
-      lab.innerHTML =
-        '<span class="cat-nombre">' + nombre + '</span>' +
-        '<button type="button" class="cat-edit-btn" title="Renombrar categoría" ' +
-        'style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.82rem;padding:2px 4px;margin-left:6px;line-height:1;vertical-align:middle;" ' +
-        'onclick="renombrarCat(\'' + id + '\')">✏️</button>';
-    });
+function inyectarPencilsBuiltin() {
+  if (typeof PV_CAT_IDS === 'undefined') return;
+  PV_CAT_IDS.forEach(id => {
+    const lab = labelDeCategoria(id);
+    if (!lab || lab.dataset.renDone) return;   // las custom ya traen su lápiz
+    lab.dataset.renDone = '1';
+    const nombre = (typeof catLabel === 'function') ? catLabel(id) : (lab.textContent || id).trim();
+    lab.innerHTML =
+      '<span class="cat-nombre">' + nombre + '</span>' +
+      '<button type="button" class="cat-edit-btn" title="Renombrar categoría" ' +
+      'style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.82rem;padding:2px 4px;margin-left:6px;line-height:1;vertical-align:middle;" ' +
+      'onclick="renombrarCat(\'' + id + '\')">✏️</button>';
+  });
+}
+
+// ══════════════ Init ══════════════
+(function () {
+  const panel = document.getElementById('aside-presu');
+  if (!panel) return;
+
+  mergeCatsCustom();
+
+  if (!document.getElementById('pg-custom')) {
+    panel.insertAdjacentHTML('beforeend',
+      '<div class="param-group" id="pg-custom">' +
+      '<div class="grp-label">Categorías personalizadas</div>' +
+      '<div id="custom-cats-list"></div>' +
+      '<button type="button" class="btn" style="width:100%;margin-top:10px;" onclick="agregarCategoria()">+ Agregar categoría</button>' +
+      '</div>');
   }
 
+  renderCustomCatRows();      // filas custom (incluye sus botones vía inyectarSteppersPanel)
+  inyectarSteppersPanel();    // botones en los sliders fijos
+  inyectarPencilsBuiltin();   // lápiz en las categorías fijas
   aplicarNombresCategorias();
+  if (typeof initGastoCatSelect === 'function') { try { initGastoCatSelect(); } catch (e) {} }
 })();
