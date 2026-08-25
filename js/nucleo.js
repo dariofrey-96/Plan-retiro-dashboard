@@ -471,6 +471,7 @@ function recalc(){
   if(curInner==='sensibilidad')renderSens();
   if(curInner==='inversa')renderInv();
   curMeta=meta;renderCartera();
+  if(typeof renderEnCamino==='function')renderEnCamino();
 }
 
 function renderEsc(){
@@ -758,6 +759,7 @@ async function refreshPrices(){
   // después del primer dibujo de Inicio, así que se la redibuja para que el
   // patrimonio quede con el precio recién traído y no con el cacheado.
   if(typeof renderInicio==='function')renderInicio();
+  if(typeof renderEnCamino==='function')renderEnCamino();
   setStatus('ok','Actualizado · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
 }
 
