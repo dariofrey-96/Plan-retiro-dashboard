@@ -271,7 +271,7 @@ function computeInvestingTime(){
   info.textContent=`Invirtiendo hace ${yrs} años y ${months} meses`;
 }
 $('fechaNacimiento').addEventListener('change',()=>{computeExactAge();recalc();updateYearsToRetirement();saveDates();});
-$('fechaInicioInversion').addEventListener('change',()=>{computeInvestingTime();saveDates();});
+$('fechaInicioInversion').addEventListener('change',()=>{computeInvestingTime();saveDates();if(typeof renderEnCamino==='function')renderEnCamino();});
 function syncCarteraToCapital(){
   const tv=assets.reduce((s,a)=>s+a.qty*a.price,0);
   if(tv<=0){alert('Tu cartera no tiene valor todavía. Cargá activos primero.');return;}

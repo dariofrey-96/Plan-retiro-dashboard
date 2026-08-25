@@ -1,8 +1,9 @@
 // ── PROYECCIÓN: "¿Vas en camino?" ───────────────────────────────────────────
-// Compara tu ahorro REAL (el valor de tu cartera de jubilación, en USD) contra
-// la BASE del plan (el "capital inicial" cargado en los parámetros). Todo en
-// dólares, igual que la proyección. Aditivo: se dibuja desde recalc() y
-// refreshPrices() (una línea en cada uno), no reemplaza nada.
+// Proyecta tu capital DESDE la fecha de inicio de inversión hasta hoy usando los
+// parámetros del plan (capital inicial + aportes mensuales que crecen + rendimiento)
+// y lo compara con lo que REALMENTE vale tu cartera de jubilación. Así ves si a
+// esta altura vas adelantado, igual o atrasado. Todo en USD, como la proyección.
+// Aditivo: se dibuja desde recalc() y refreshPrices(), no reemplaza nada.
 
 const LS_JUB_CARTERA = 'finlab_jub_cartera';
 function jubScope() { try { return localStorage.getItem(LS_JUB_CARTERA) || 'todas'; } catch (e) { return 'todas'; } }
@@ -17,20 +18,44 @@ function jubValorUSD(scope) {
   return lista.reduce((s, a) => s + (a.qty || 0) * (a.price || 0), 0);
 }
 
-// Copia el valor real de la cartera al slider de capital inicial y recalcula.
-function jubUsarComoBase() {
-  const e = document.getElementById('capitalInicial');
-  if (!e) return;
-  const real = Math.round(jubValorUSD(jubScope()));
-  const min = parseFloat(e.min), max = parseFloat(e.max);
-  let v = real;
-  if (!isNaN(min)) v = Math.max(min, v);
-  if (!isNaN(max)) v = Math.min(max, v);
-  e.value = v;
-  const ve = document.getElementById('v-capitalInicial');
-  if (ve && typeof SL !== 'undefined' && SL.capitalInicial) ve.textContent = SL.capitalInicial.d(v);
-  if (typeof recalc === 'function') recalc();
-  if (typeof saveParams === 'function') saveParams();
+const JUB_MS_MES = (365.25 * 24 * 3600 * 1000) / 12;
+// Meses (con decimales) desde la fecha de inicio de inversión hasta hoy.
+// null = no hay fecha cargada; -1 = la fecha es futura.
+function jubMesesTranscurridos() {
+  const el = document.getElementById('fechaInicioInversion');
+  if (!el || !el.value) return null;
+  const start = new Date(el.value + 'T00:00:00');
+  if (isNaN(start)) return null;
+  const ms = Date.now() - start.getTime();
+  if (ms < 0) return -1;
+  return ms / JUB_MS_MES;
+}
+
+// Cuánto debería valer hoy: rola el capital mes a mes con el rendimiento del plan
+// y sumando el aporte mensual (que crece una vez por año).
+function jubEsperado(meses) {
+  const g = id => { const e = document.getElementById(id); return e ? (parseFloat(e.value) || 0) : 0; };
+  const val = (k, id) => (typeof LC !== 'undefined' && LC && LC[k] != null) ? LC[k] : g(id);
+  const ci = val('ci', 'capitalInicial'), ai = val('ai', 'ahorroMensual'),
+        ca = val('ca', 'crecAhorro'), ret = val('ret', 'retorno');
+  let cap = ci, aho = ai;
+  const whole = Math.floor(meses), frac = meses - whole;
+  for (let k = 0; k < whole; k++) {
+    cap = cap * (1 + ret / 12) + aho;
+    if ((k + 1) % 12 === 0) aho *= (1 + ca);
+  }
+  if (frac > 0) cap = cap * (1 + (ret / 12) * frac) + aho * frac;
+  return cap;
+}
+
+function jubFechaLinda(v) { const p = String(v).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : v; }
+function jubHace(meses) {
+  if (meses < 1) { const d = Math.max(1, Math.round(meses * 30.44)); return 'hace ' + d + ' día' + (d === 1 ? '' : 's'); }
+  const y = Math.floor(meses / 12), m = Math.round(meses - y * 12);
+  const partes = [];
+  if (y > 0) partes.push(y + ' año' + (y === 1 ? '' : 's'));
+  if (m > 0) partes.push(m + ' mes' + (m === 1 ? '' : 'es'));
+  return 'hace ' + (partes.join(' y ') || 'menos de un mes');
 }
 
 function renderEnCamino() {
@@ -38,20 +63,12 @@ function renderEnCamino() {
   if (!cont) return;
   if (typeof carteras === 'undefined' || !Array.isArray(carteras)) { cont.innerHTML = ''; return; }
   const F = (typeof fmt === 'function') ? fmt : (n => '$' + Math.round(n));
+  const verde = 'var(--green)', rojo = 'var(--red)', suave = 'var(--muted)';
 
   let scope = jubScope();
   if (!(scope === 'todas' || carteras.some(c => c.id === scope))) scope = 'todas';
 
-  const real = jubValorUSD(scope);
-  const base = (typeof LC !== 'undefined' && LC && LC.ci != null)
-    ? LC.ci
-    : (document.getElementById('capitalInicial') ? (parseFloat(document.getElementById('capitalInicial').value) || 0) : 0);
-  const dif = real - base;
-  const verde = 'var(--green)', rojo = 'var(--red)', suave = 'var(--muted)';
-  const enCamino = dif >= 0;
-  const col = base <= 0 ? suave : (enCamino ? verde : rojo);
-  const w = base > 0 ? Math.min(100, Math.round(real / base * 100)) : 0;
-
+  // Selector de cartera (sólo si hay más de una).
   let sel = '';
   if (carteras.length > 1) {
     const ops = [{ id: 'todas', n: 'Todas' }].concat(carteras.map(c => ({ id: c.id, n: c.nombre })));
@@ -59,30 +76,51 @@ function renderEnCamino() {
       + ops.map(o => `<option value="${o.id}"${o.id === scope ? ' selected' : ''}>${o.n}</option>`).join('')
       + '</select>';
   }
+  const cab = '<div class="chart-header"><span class="chart-title">¿Vas en camino?</span>' + sel + '</div>';
+
+  const meses = jubMesesTranscurridos();
+  const fi = document.getElementById('fechaInicioInversion');
+
+  if (meses === null) {
+    cont.innerHTML = '<div class="chart-card">' + cab +
+      '<div style="font-size:.85rem;color:' + suave + ';margin-top:4px;line-height:1.5;">' +
+      'Cargá tu <b>fecha de inicio de inversión</b> en los parámetros (⚙) para ver, según tu plan, cuánto deberías tener hoy y si vas en camino.</div></div>';
+    return;
+  }
+  if (meses === -1) {
+    cont.innerHTML = '<div class="chart-card">' + cab +
+      '<div style="font-size:.85rem;color:' + suave + ';margin-top:4px;">Tu fecha de inicio de inversión está en el futuro.</div></div>';
+    return;
+  }
+
+  const esperado = jubEsperado(meses);
+  const real = jubValorUSD(scope);
+  const dif = real - esperado;
+  const enCamino = dif >= 0;
+  const cerca = esperado > 0 && Math.abs(dif) < esperado * 0.02;
+  const col = cerca ? suave : (enCamino ? verde : rojo);
+  const w = esperado > 0 ? Math.min(100, Math.round(real / esperado * 100)) : 0;
+  const pct = esperado > 0 ? Math.abs(dif / esperado * 100) : 0;
 
   let pie;
-  if (base <= 0) pie = 'Poné un capital inicial en los parámetros para poder comparar.';
-  else if (Math.abs(dif) < base * 0.005) pie = 'Estás justo en la base de tu plan.';
-  else if (enCamino) pie = `Vas <b style="color:${verde}">${F(dif)}</b> por encima de la base de tu plan.`;
-  else pie = `Te faltan <b style="color:${rojo}">${F(-dif)}</b> para llegar a la base de tu plan.`;
+  if (cerca) pie = 'Vas <b>justo</b> según tu plan. 👌';
+  else if (enCamino) pie = `Vas <b style="color:${verde}">${F(dif)}</b> por encima de lo que esperaba tu plan <span style="color:${suave}">(${pct.toFixed(0)}% adelantado)</span>.`;
+  else pie = `Te faltan <b style="color:${rojo}">${F(-dif)}</b> para lo que esperaba tu plan <span style="color:${suave}">(${pct.toFixed(0)}% por debajo)</span>.`;
 
   cont.innerHTML =
-    '<div class="chart-card">' +
-      '<div class="chart-header"><span class="chart-title">¿Vas en camino?</span>' + sel + '</div>' +
-      '<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;margin-top:2px;">' +
-        '<div><div class="field-hint" style="margin:0">Tu ahorro real (cartera)</div>' +
-          '<div style="font-size:1.55rem;font-weight:700;letter-spacing:-.01em;">' + F(real) + '</div></div>' +
-        '<div style="opacity:.85"><div class="field-hint" style="margin:0">Base del plan (capital inicial)</div>' +
-          '<div style="font-size:1.15rem;font-weight:600;color:' + suave + '">' + F(base) + '</div></div>' +
+    '<div class="chart-card">' + cab +
+      '<div class="field-hint" style="margin:0 0 8px">Desde el ' + jubFechaLinda(fi.value) + ' · ' + jubHace(meses) + '</div>' +
+      '<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end;">' +
+        '<div><div class="field-hint" style="margin:0">Tenés hoy (cartera)</div>' +
+          '<div style="font-size:1.55rem;font-weight:700;letter-spacing:-.01em;color:' + col + '">' + F(real) + '</div></div>' +
+        '<div style="opacity:.9"><div class="field-hint" style="margin:0">Deberías tener</div>' +
+          '<div style="font-size:1.2rem;font-weight:600;color:' + suave + '">' + F(esperado) + '</div></div>' +
       '</div>' +
-      (base > 0
+      (esperado > 0
         ? '<div style="height:8px;background:var(--surface3);border-radius:100px;overflow:hidden;margin-top:13px;">' +
             '<div style="height:100%;width:' + w + '%;background:' + col + ';border-radius:100px;"></div></div>'
         : '') +
       '<div style="font-size:.85rem;margin-top:11px;line-height:1.4;">' + pie + '</div>' +
-      (base > 0 && Math.abs(dif) > 1
-        ? '<button onclick="jubUsarComoBase()" class="btn" style="margin-top:13px;">Usar mi cartera como capital inicial</button>'
-        : '') +
-      '<div class="field-hint" style="margin-top:9px">En dólares.</div>' +
+      '<div class="field-hint" style="margin-top:9px">En dólares · lo esperado sale de tu capital inicial, tus aportes mensuales y el rendimiento del plan.</div>' +
     '</div>';
 }
