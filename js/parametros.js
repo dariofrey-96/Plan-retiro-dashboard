@@ -18,17 +18,19 @@ function marcarSelectorParametros(tipo) {
 }
 
 function cambiarTipoParametros(tipo) {
-  const enPresu = ['inicio', 'resumen', 'gastos'].includes(seccionActual);
+  // Cada panel vive dentro de su mitad y una mitad oculta lo esconde, así que
+  // primero hay que estar parado en una sección que muestre ESE panel. Inicio no
+  // muestra ninguno de los dos, por eso siempre navega.
   const irSin = id => {
     if (typeof irSeccionSinAnimacion === 'function') irSeccionSinAnimacion(id);
     else if (typeof irASeccionApp === 'function') irASeccionApp(id);
   };
   if (tipo === 'presu') {
-    if (!enPresu) irSin('gastos');                 // muestra la mitad de presupuesto (cierra paneles)
+    if (!['resumen', 'gastos'].includes(seccionActual)) irSin('gastos');
     if (_invAbierto()) toggleSidebar();            // por las dudas, cerrar el de inversión
     if (!_presuAbierto()) toggleSidebarPresu();    // abrir el de presupuesto
   } else {
-    if (enPresu) irSin('retiro');                  // muestra la mitad de retiro
+    if (!['retiro', 'cartera'].includes(seccionActual)) irSin('retiro');
     if (_presuAbierto()) toggleSidebarPresu();     // cerrar el de presupuesto
     if (!_invAbierto()) toggleSidebar();           // abrir el de inversión
   }

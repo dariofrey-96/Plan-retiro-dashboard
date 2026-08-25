@@ -21,8 +21,12 @@ function fmtPctInt(n) { return Math.round(n * 100) + '%'; }
 // ── TABS ─────────────────────────────────────────────────────────────────
 let currentTab = 'resumen';
 function toggleSidebarPresu() {
-  const a = $('aside-presu'), backdrop = $('sheet-backdrop'), open = a.classList.toggle('open');
-  backdrop.classList.toggle('open', open);
+  // Usa su PROPIO oscurecido (sheet-backdrop-presu), que vive en la mitad de
+  // presupuesto y al tocarlo llama a esta misma función para cerrar. Antes usaba
+  // el de retiro (sheet-backdrop), cuyo click abría el panel de retiro y dejaba
+  // la pantalla trabada.
+  const a = $('aside-presu'), backdrop = $('sheet-backdrop-presu'), open = a.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('open', open);
 }
 // Al mover un parámetro se repinta la pantalla actual (antes esto lo hacía
 // recalc(), que alimentaba pantallas que ya no existen).

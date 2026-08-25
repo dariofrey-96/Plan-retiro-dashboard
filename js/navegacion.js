@@ -79,7 +79,11 @@ function cerrarPanelesDeParametros() {
 // objetivos de fondos y las alertas que muestra la portada.
 function abrirAjustesDeLaSeccion() {
   const s = seccionPorId(seccionActual);
-  if (s && s.mitad === 'retiro') { if (typeof toggleSidebar === 'function') toggleSidebar(); }
+  const tipo = (s && s.mitad === 'retiro') ? 'inv' : 'presu';
+  // El selector unificado sabe navegar a la sección que muestra ese panel antes
+  // de abrirlo (clave en Inicio, cuya mitad no contiene ningún panel).
+  if (typeof cambiarTipoParametros === 'function') { cambiarTipoParametros(tipo); return; }
+  if (tipo === 'inv') { if (typeof toggleSidebar === 'function') toggleSidebar(); }
   else if (typeof toggleSidebarPresu === 'function') toggleSidebarPresu();
 }
 

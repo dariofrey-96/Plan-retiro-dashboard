@@ -4,6 +4,24 @@
 
 #mitad-inicio .view-pad { padding-top: 14px; }
 
+/* El contenido de Inicio: una columna en celular. */
+#inicio-content { display: flex; flex-direction: column; gap: 14px; padding-bottom: 90px; }
+
+/* En pantalla ancha, Inicio NO tiene barra lateral, así que su .shell no debe
+   usar la grilla de 300px (si no, todo queda apretado en la columna izquierda y
+   sobra la mitad derecha). Se vuelve bloque, se centra el contenido y las
+   tarjetas se reparten en dos columnas; el saludo y el banner de alertas ocupan
+   el ancho completo. */
+@media (min-width: 900px) {
+  #mitad-inicio .shell { display: block; }
+  /* width:100% para que no se encoja al contenido dentro del flex (si no, el
+     margin:auto lo achica en vez de estirarlo hasta el máximo). */
+  #mitad-inicio .ini-pad { width: 100%; max-width: 1120px; margin: 0 auto; }
+  #inicio-content { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  #inicio-content > .panel-card { margin: 0; }
+  #inicio-content > *:not(.panel-card) { grid-column: 1 / -1; }
+}
+
 /* Con seis secciones abajo, el toggle Todo/Jubilación/Trading del patrimonio
    puede quedar sin lugar en pantallas angostas; que envuelva en vez de cortar. */
 #inicio-content .chart-header { flex-wrap: wrap; gap: 8px; }
