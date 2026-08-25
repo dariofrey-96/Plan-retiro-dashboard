@@ -5,16 +5,38 @@
 // esta altura vas adelantado, igual o atrasado. Todo en USD, como la proyección.
 // Aditivo: se dibuja desde recalc() y refreshPrices(), no reemplaza nada.
 
-const LS_JUB_CARTERA = 'finlab_jub_cartera';
-function jubScope() { try { return localStorage.getItem(LS_JUB_CARTERA) || 'todas'; } catch (e) { return 'todas'; } }
-function jubCambiarCartera(scope) { try { localStorage.setItem(LS_JUB_CARTERA, scope); } catch (e) {} renderEnCamino(); }
+// Cartera elegida para esta comparación. Arranca en null = "sin elegir", que se
+// resuelve a la cartera de JUBILACIÓN. La variable se reinicia en cada carga de la
+// app, así que cada vez que abrís arranca comparando contra jubilación, como pediste.
+// (Se puede cambiar con el selector; el cambio dura hasta que recargás.)
+let jubScopeActual = null;
+
+// Coincide un id de cartera venga como número o como texto (el <select> devuelve
+// texto, pero los ids de carteras son números — comparar con === estricto fallaba).
+function jubMismaCartera(a, b) { return String(a) === String(b); }
+
+// La cartera de jubilación: la que se llame "jubila…"/"retiro", o la primera que
+// haya si ninguna coincide. Siempre devuelve el id como texto.
+function jubCarteraPorDefecto() {
+  if (typeof carteras === 'undefined' || !Array.isArray(carteras) || !carteras.length) return 'todas';
+  const jub = carteras.find(c => /jubila|retiro/i.test(c.nombre || ''));
+  return String((jub || carteras[0]).id);
+}
+
+function jubScope() {
+  if (jubScopeActual != null &&
+      (jubScopeActual === 'todas' || (Array.isArray(carteras) && carteras.some(c => jubMismaCartera(c.id, jubScopeActual)))))
+    return jubScopeActual;
+  return jubCarteraPorDefecto();
+}
+function jubCambiarCartera(scope) { jubScopeActual = scope; renderEnCamino(); }
 
 // Valor en USD de una cartera (o de todas): cantidad × precio, igual que en Inicio.
 function jubValorUSD(scope) {
   if (typeof carteras === 'undefined' || !Array.isArray(carteras)) return 0;
   const lista = scope === 'todas'
     ? carteras.flatMap(c => c.assets || [])
-    : ((carteras.find(c => c.id === scope) || {}).assets || []);
+    : ((carteras.find(c => jubMismaCartera(c.id, scope)) || {}).assets || []);
   return lista.reduce((s, a) => s + (a.qty || 0) * (a.price || 0), 0);
 }
 
@@ -68,14 +90,14 @@ function renderEnCamino() {
   const verde = 'var(--green)', rojo = 'var(--red)', suave = 'var(--muted)';
 
   let scope = jubScope();
-  if (!(scope === 'todas' || carteras.some(c => c.id === scope))) scope = 'todas';
+  if (!(scope === 'todas' || carteras.some(c => jubMismaCartera(c.id, scope)))) scope = jubCarteraPorDefecto();
 
   // Selector de cartera (sólo si hay más de una).
   let sel = '';
   if (carteras.length > 1) {
     const ops = [{ id: 'todas', n: 'Todas' }].concat(carteras.map(c => ({ id: c.id, n: c.nombre })));
     sel = '<select onchange="jubCambiarCartera(this.value)" style="background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:5px 8px;font-size:.8rem;">'
-      + ops.map(o => `<option value="${o.id}"${o.id === scope ? ' selected' : ''}>${o.n}</option>`).join('')
+      + ops.map(o => `<option value="${o.id}"${jubMismaCartera(o.id, scope) ? ' selected' : ''}>${o.n}</option>`).join('')
       + '</select>';
   }
   const cab = '<div class="chart-header"><span class="chart-title">¿Vas en camino?</span>' + sel + '</div>';
