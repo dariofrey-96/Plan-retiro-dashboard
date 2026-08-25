@@ -8,7 +8,8 @@
 // vive en el mismo scope global, puede llamar a las dos sin tocarlas.
 
 const LS_APORTES = 'finlab_aportes_v1';
-let iniScope = 'todo';        // 'todo' | id de cartera — sólo afecta al bloque de patrimonio
+let iniScope = null;          // null = sin elegir → se resuelve a la cartera de jubilación
+                              // 'todo' | id de cartera — sólo afecta al bloque de patrimonio
 let editandoAportes = false;
 
 function iniNum(id) { const el = $(id); const n = el ? parseFloat(el.value) : NaN; return isNaN(n) ? 0 : n; }
@@ -92,6 +93,15 @@ function iniAlertas() {
 // ── Render ──────────────────────────────────────────────────────────────────
 function iniCambiarScope(scope) { iniScope = scope; renderInicio(); }
 
+// Scope por defecto del patrimonio en Inicio: la cartera de jubilación (por
+// nombre). Si hay una sola cartera el toggle ni aparece, y si ninguna coincide
+// cae a 'todo' (el total) en vez de adivinar.
+function iniScopePorDefecto() {
+  if (!Array.isArray(carteras) || carteras.length <= 1) return 'todo';
+  const jub = carteras.find(c => /jubila|retiro/i.test(c.nombre || ''));
+  return jub ? jub.id : 'todo';
+}
+
 function renderInicio() {
   const cont = $('inicio-content');
   if (!cont) return;
@@ -119,10 +129,13 @@ function renderInicio() {
   }
 
   // ── Patrimonio ──
+  // Por defecto muestra la cartera de jubilación (no el total): si no se tocó el
+  // toggle en esta sesión, se resuelve sola. Se reinicia en cada carga de la app.
+  const scope = (iniScope != null) ? iniScope : iniScopePorDefecto();
   const snaps = iniSnapsOrdenados();
   const nuevo = snaps.length ? snaps[snaps.length - 1] : null;
-  const actual = iniValorVivo(iniScope) || iniValorSnap(nuevo, iniScope);
-  const prev = iniValorSnap(iniSnapHace24(), iniScope);
+  const actual = iniValorVivo(scope) || iniValorSnap(nuevo, scope);
+  const prev = iniValorSnap(iniSnapHace24(), scope);
   const pct = prev > 0 ? (actual - prev) / prev * 100 : null;
   const dif = prev > 0 ? actual - prev : null;
   const col = (pct == null || Math.abs(pct) < 0.005) ? suave : (pct >= 0 ? verde : rojo);
@@ -131,7 +144,7 @@ function renderInicio() {
   const chips = [{ id: 'todo', n: 'Todo' }].concat(
     carteras.length > 1 ? carteras.map(c => ({ id: c.id, n: c.nombre })) : []
   ).map(o => `<button onclick="iniCambiarScope(${typeof o.id === 'string' ? `'${o.id}'` : o.id})"
-      class="toggle-btn${iniScope === o.id ? ' active' : ''}">${o.n}</button>`).join('');
+      class="toggle-btn${scope === o.id ? ' active' : ''}">${o.n}</button>`).join('');
 
   // Mini-resumen de "¿vas en camino?" (sólo jubilación), para verlo de un vistazo
   // sin ir a Proyección. Tocá la línea para abrir el detalle completo allá.
