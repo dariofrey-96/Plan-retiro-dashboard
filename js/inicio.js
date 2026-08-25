@@ -133,6 +133,24 @@ function renderInicio() {
   ).map(o => `<button onclick="iniCambiarScope(${typeof o.id === 'string' ? `'${o.id}'` : o.id})"
       class="toggle-btn${iniScope === o.id ? ' active' : ''}">${o.n}</button>`).join('');
 
+  // Mini-resumen de "¿vas en camino?" (sólo jubilación), para verlo de un vistazo
+  // sin ir a Proyección. Tocá la línea para abrir el detalle completo allá.
+  let caminoLinea = '';
+  if (typeof jubResumen === 'function') {
+    const r = jubResumen();
+    if (r) {
+      const ccol = r.cerca ? suave : (r.enCamino ? verde : rojo);
+      const cflecha = r.cerca ? '●' : (r.enCamino ? '▲' : '▼');
+      const ctxt = r.cerca ? 'En línea con el plan'
+        : (r.enCamino ? `${r.pct.toFixed(0)}% por encima del plan`
+                      : `${r.pct.toFixed(0)}% por debajo del plan`);
+      caminoLinea = `<button onclick="irASeccionApp('retiro')" style="width:100%;margin-top:11px;padding:9px 11px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.8rem;text-align:left;">
+        <span style="color:${suave};">🎯 Plan de jubilación</span>
+        <span style="color:${ccol};font-weight:600;white-space:nowrap;">${cflecha} ${ctxt} ›</span>
+      </button>`;
+    }
+  }
+
   H.push(`<div class="panel-card">
     <div class="chart-header"><span class="chart-title">💰 Patrimonio</span>
       ${carteras.length > 1 ? `<div class="toggle-wrap">${chips}</div>` : ''}</div>
@@ -144,6 +162,7 @@ function renderInicio() {
          <span style="color:${suave};font-size:.82rem;">${dif >= 0 ? '+' : '−'}${F$(Math.abs(dif))} en 24h</span>`}
     </div>
     <div class="field-hint" style="margin-top:8px;">En dólares.</div>
+    ${caminoLinea}
   </div>`);
 
   // ── Gastos del mes vs mismo tramo del mes pasado ──

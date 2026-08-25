@@ -82,6 +82,22 @@ function jubHace(meses) {
   return 'hace ' + (partes.join(' y ') || 'menos de un mes');
 }
 
+// Resumen compacto de "¿vas en camino?" para reusar en Inicio sin repetir la
+// matemática. SIEMPRE mira la cartera de jubilación (no lo que esté elegido en el
+// selector de Proyección). Devuelve null si no hay fecha de inicio cargada o si
+// está en el futuro, así quien lo llama decide si dibuja algo o no.
+function jubResumen() {
+  if (typeof carteras === 'undefined' || !Array.isArray(carteras)) return null;
+  const meses = jubMesesTranscurridos();
+  if (meses == null || meses < 0) return null;
+  const esperado = jubEsperado(meses);
+  const real = jubValorUSD(jubCarteraPorDefecto());
+  const dif = real - esperado;
+  const cerca = esperado > 0 && Math.abs(dif) < esperado * 0.02;
+  const pct = esperado > 0 ? Math.abs(dif / esperado * 100) : 0;
+  return { esperado, real, dif, cerca, enCamino: dif >= 0, pct };
+}
+
 function renderEnCamino() {
   const cont = document.getElementById('en-camino-card');
   if (!cont) return;
