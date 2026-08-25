@@ -31,20 +31,22 @@ function jubMesesTranscurridos() {
   return ms / JUB_MS_MES;
 }
 
-// Cuánto debería valer hoy: rola el capital mes a mes con el rendimiento del plan
-// y sumando el aporte mensual (que crece una vez por año).
+// Cuánto debería valer hoy: el capital inicial y cada aporte mensual rindiendo
+// desde que entraron. Cada mes empezado cuenta un aporte COMPLETO (como cuando
+// ponés la plata del mes de una), no una fracción; el aporte crece una vez al año.
 function jubEsperado(meses) {
   const g = id => { const e = document.getElementById(id); return e ? (parseFloat(e.value) || 0) : 0; };
   const val = (k, id) => (typeof LC !== 'undefined' && LC && LC[k] != null) ? LC[k] : g(id);
   const ci = val('ci', 'capitalInicial'), ai = val('ai', 'ahorroMensual'),
         ca = val('ca', 'crecAhorro'), ret = val('ret', 'retorno');
-  let cap = ci, aho = ai;
-  const whole = Math.floor(meses), frac = meses - whole;
-  for (let k = 0; k < whole; k++) {
-    cap = cap * (1 + ret / 12) + aho;
+  const factor = m => Math.pow(1 + ret / 12, m);   // rendimiento compuesto por m meses
+  let cap = ci * factor(meses);                     // el capital inicial rinde todo el tiempo
+  let aho = ai;
+  const aportes = Math.floor(meses) + 1;            // uno al inicio de cada mes, incluido el actual
+  for (let k = 0; k < aportes; k++) {
+    cap += aho * factor(meses - k);                 // el aporte del mes k rinde el tiempo que lleva puesto
     if ((k + 1) % 12 === 0) aho *= (1 + ca);
   }
-  if (frac > 0) cap = cap * (1 + (ret / 12) * frac) + aho * frac;
   return cap;
 }
 
