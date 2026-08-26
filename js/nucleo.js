@@ -558,6 +558,9 @@ function addAsset(){
   }else{
     assets.push({id:++assetIdCounter,cId:carteraActiva,name:nm,ticker:tk,cat,qty,price,costBasis:cost,change24h:null,lastUpdate:null,boughtDate:new Date().toISOString().slice(0,10)});
   }
+  // Deja registrado el aporte (plata invertida = cantidad × precio de compra) para
+  // que el resumen del mes no lo lea como ganancia. Ver compras.js.
+  if(typeof registrarCompra==='function')registrarCompra({cId:carteraActiva,ticker:tk,name:nm,cat,qty,price:cost,amount:qty*cost});
   saveAssets();
   ['new-name','new-ticker','new-qty','new-price','new-cost'].forEach(id=>$(id).value='');
   renderCartera();

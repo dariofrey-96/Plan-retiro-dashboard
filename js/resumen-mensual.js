@@ -33,8 +33,39 @@ function renderMonthlySummary() {
   const endSnap = snaps[snaps.length - 1];
   if (startSnap === endSnap) return;
 
-  const delta = endSnap.total - startSnap.total;
-  const pct = startSnap.total ? (delta / startSnap.total * 100) : 0;
+  // Flujos externos del mes: aportes (compras.js) y ventas, respetando la cartera
+  // que estás viendo (mismo criterio que el historial de ventas). Sirven para
+  // separar el RENDIMIENTO real de la plata que metiste o sacaste este mes.
+  const mesStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const pmDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const mesPrevStr = pmDate.getFullYear() + '-' + String(pmDate.getMonth() + 1).padStart(2, '0');
+  const dePrimera = (typeof carteras !== 'undefined' && carteras.length) ? carteras[0].id : 1;
+  const enVista = r => (typeof carteraActiva === 'undefined' || carteraActiva === TODAS)
+    ? true : ((r.cId != null ? r.cId : dePrimera) === carteraActiva);
+
+  const aporteMes = {}, aporteCat = {}; let aporteTot = 0, aportePrev = 0;
+  (typeof compras !== 'undefined' ? compras : []).forEach(c => {
+    if (!c || !enVista(c)) return;
+    const m = (c.date || '').slice(0, 7);
+    if (m === mesStr) {
+      aporteMes[c.ticker] = (aporteMes[c.ticker] || 0) + (c.amount || 0);
+      if (c.cat) aporteCat[c.cat] = (aporteCat[c.cat] || 0) + (c.amount || 0);
+      aporteTot += (c.amount || 0);
+    } else if (m === mesPrevStr) aportePrev += (c.amount || 0);
+  });
+  const ventaMes = {}, ventaCat = {}; let ventaTot = 0;
+  (typeof sales !== 'undefined' ? sales : []).forEach(s => {
+    if (!s || (s.date || '').slice(0, 7) !== mesStr || !enVista(s)) return;
+    ventaMes[s.ticker] = (ventaMes[s.ticker] || 0) + (s.saleValue || 0);
+    if (s.cat) ventaCat[s.cat] = (ventaCat[s.cat] || 0) + (s.saleValue || 0);
+    ventaTot += (s.saleValue || 0);
+  });
+
+  // Rendimiento del mes = variación de valor − lo que aportaste. Las ventas NO
+  // cambian el total (el activo se vuelve liquidez dentro de la misma cartera).
+  const delta = (endSnap.total - startSnap.total) - aporteTot;
+  const baseTot = startSnap.total + aporteTot;
+  const pct = baseTot ? (delta / baseTot * 100) : 0;
   const sign = delta >= 0 ? '+' : '';
   const cls = delta >= 0 ? 'green' : 'red';
   const monthName = now.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
@@ -44,23 +75,32 @@ function renderMonthlySummary() {
   const prevStartSnap = findSnapAtOrBefore(snaps, prevMonthStart, null);
   let prevComparisonHtml = '';
   if (prevStartSnap && prevStartSnap !== startSnap) {
-    const prevDelta = startSnap.total - prevStartSnap.total;
+    const prevDelta = (startSnap.total - prevStartSnap.total) - aportePrev;
     const better = delta >= prevDelta;
     prevComparisonHtml = `<div class="field-hint">Mes anterior: ${prevDelta >= 0 ? '+' : ''}${fmtC(prevDelta)} — este mes vas ${better ? 'mejor 📈' : 'más flojo 📉'} que el anterior.</div>`;
   }
 
   // Top movers por activo (en $ y %).
   const assetKeys = new Set([...Object.keys(startSnap.byAsset || {}), ...Object.keys(endSnap.byAsset || {})]);
-  const movers = [...assetKeys].map(a => {
+  const movers = [...assetKeys].filter(a => a !== 'USD').map(a => {
     const s0 = startSnap.byAsset?.[a] || 0, s1 = endSnap.byAsset?.[a] || 0;
-    return { ticker: a, delta: s1 - s0, pct: s0 ? (s1 - s0) / s0 * 100 : null, isNew: s0 === 0 && s1 > 0 };
+    const ap = aporteMes[a] || 0, ve = ventaMes[a] || 0;
+    const d = (s1 - s0) - ap + ve;          // sólo la parte de precio, sin aportes ni ventas
+    const base = s0 + ap;
+    return { ticker: a, delta: d, pct: base > 0 ? d / base * 100 : null, isNew: s0 === 0 && s1 > 0 };
   }).filter(m => Math.abs(m.delta) > 0.005);
   const gainers = movers.filter(m => m.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 3);
   const losers = movers.filter(m => m.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 3);
 
   // Desglose por categoría.
   const catDeltas = Object.keys(MONTHLY_CAT_LABELS)
-    .map(cat => ({ cat, delta: monthlyCatTotal(endSnap, cat) - monthlyCatTotal(startSnap, cat) }))
+    .map(cat => {
+      let d = monthlyCatTotal(endSnap, cat) - monthlyCatTotal(startSnap, cat) - (aporteCat[cat] || 0) + (ventaCat[cat] || 0);
+      // La liquidez sube por las ventas (y por aportes de USD); nada de eso es
+      // rendimiento, así que se descuenta para que no figure como ganancia.
+      if (cat === 'cash') d -= ventaTot;
+      return { cat, delta: d };
+    })
     .filter(c => Math.abs(c.delta) > 0.005)
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 
