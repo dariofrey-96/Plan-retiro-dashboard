@@ -1,0 +1,8 @@
+/* Extras de la sección Cartera escritos a mano (ningún generador los toca, a
+   diferencia de estilos.css que lo reescribe unificar-componentes.mjs).
+   Reusa los tokens de color, así que hereda el estilo del resto. */
+
+/* Botón "agregar compra" de cada fila: mismo tamaño y forma que sell/edit/del,
+   con hover verde porque suma a la posición (invertís más en ese activo). */
+.buy-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .85rem; padding: 3px 6px; border-radius: var(--radius-sm); transition: all .1s; }
+.buy-btn:hover { color: var(--green); background: var(--green-soft); }

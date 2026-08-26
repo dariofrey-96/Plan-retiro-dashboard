@@ -639,6 +639,7 @@ function rTbl(tbId,list,tv,bc,al,agp,agm){
       <td class="${cc}">${fmtCh(a.change24h)}</td>
       <td style="color:var(--muted)">${p}</td>
       <td style="display:flex;gap:3px;justify-content:center;align-items:center">
+        ${a.cat!=='cash'?`<button class="buy-btn" onclick="openBuyModal(${a.id})" title="Agregar una compra (promedia el precio)">➕</button>`:''}
         ${a.cat!=='cash'?`<button class="sell-btn" onclick="openSellModal(${a.id})" title="Vender / pasar a USD">💵</button>`:''}
         <button class="edit-btn" onclick="openEditModal(${a.id})" title="Editar precio de compra / cantidad">✏</button>
         <button class="del-btn" onclick="removeAsset(${a.id})" title="Eliminar">✕</button>

@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/componentes.css">
 <link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/cartera.css">
 <link rel="stylesheet" href="css/presupuesto.css">
 <link rel="stylesheet" href="css/inicio.css">
 <link rel="stylesheet" href="css/transiciones.css">
@@ -1049,6 +1050,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="buy-modal" style="display:none">
+  <div class="modal">
+    <h3>➕ Agregar compra</h3>
+    <div class="modal-info" id="buy-info"></div>
+    <div class="modal-field">
+      <label>Cuánto invertiste (USD)</label>
+      <input type="number" id="buy-amount" step="0.01" min="0" inputmode="decimal" placeholder="Ej: 500">
+    </div>
+    <div class="modal-field">
+      <label>Precio al que compraste (USD)</label>
+      <input type="number" id="buy-price" step="0.000001" min="0" inputmode="decimal">
+    </div>
+    <div class="modal-info" id="buy-preview"></div>
+    <div class="field-hint">Se suma a lo que ya tenés y recalcula el precio promedio. No cambia el precio de mercado, sólo tu posición.</div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeBuyModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmBuy()">Agregar compra</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="carteras-modal" style="display:none">
   <div class="modal">
     <h3>📁 Mis carteras</h3>
@@ -1068,6 +1090,7 @@
 <script src="js/sincronizacion.js"></script>
 <script src="js/historial.js"></script>
 <script src="js/ventas.js"></script>
+<script src="js/compras.js"></script>
 <script src="js/moneda.js"></script>
 <script src="js/resumen-mensual.js"></script>
 <script src="js/presupuesto.js"></script>
