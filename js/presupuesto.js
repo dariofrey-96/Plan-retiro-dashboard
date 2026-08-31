@@ -483,7 +483,7 @@ function renderGastos() {
       <td data-label="Categoría"><span class="cat-chip">${catLabel(g.cat)}</span></td>
       <td data-label="Monto" style="font-weight:600">${fmtARS(g.monto)}${g.grupo ? `<span class="cuota-chip" title="Pagaste ${fmtARS(g.montoTotal)} el ${new Date(g.fechaPago + 'T00:00:00').toLocaleDateString('es-AR')} por ${g.cuotas} meses">${g.cuota} de ${g.cuotas}</span>` : ''}</td>
       <td data-label="Nota" style="color:var(--muted)">${esc(g.nota) || '—'}</td>
-      <td><button class="del-gasto-btn" onclick="removeGasto(${g.id})" title="Eliminar">✕</button></td>
+      <td style="white-space:nowrap"><button class="edit-gasto-btn" onclick="editarGastoCat(${g.id})" title="Cambiar categoría">✎</button><button class="del-gasto-btn" onclick="removeGasto(${g.id})" title="Eliminar">✕</button></td>
     </tr>`).join('');
 }
 

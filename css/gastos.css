@@ -1,0 +1,10 @@
+/* Extras de la sección Gastos escritos a mano (ningún generador los toca, a
+   diferencia de presupuesto.css, que lo reescriben los scripts). Reusa tokens. */
+
+/* Botón "cambiar categoría" de cada fila de gasto: igual forma que el de borrar,
+   con hover en el color de acento en vez de rojo. */
+.app-presupuesto .edit-gasto-btn {
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  font-size: .85rem; padding: 3px 7px; border-radius: var(--radius-sm); transition: all .1s;
+}
+.app-presupuesto .edit-gasto-btn:hover { color: var(--accent); background: var(--accent-soft); }

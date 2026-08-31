@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/estilos.css">
 <link rel="stylesheet" href="css/cartera.css">
 <link rel="stylesheet" href="css/presupuesto.css">
+<link rel="stylesheet" href="css/gastos.css">
 <link rel="stylesheet" href="css/inicio.css">
 <link rel="stylesheet" href="css/transiciones.css">
 </head>
@@ -1087,6 +1088,21 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="gasto-cat-modal" style="display:none">
+  <div class="modal">
+    <h3>Cambiar categoría</h3>
+    <div class="modal-info" id="gasto-cat-info"></div>
+    <div class="modal-field">
+      <label>Nueva categoría</label>
+      <select id="gasto-cat-nueva" style="width:100%;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:9px 10px;font-size:.9rem;"></select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="cerrarGastoCatModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarGastoCat()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/nucleo.js"></script>
 <script src="js/en-camino.js"></script>
 <script src="js/haptics.js"></script>
@@ -1099,6 +1115,7 @@
 <script src="js/resumen-mensual.js"></script>
 <script src="js/presupuesto.js"></script>
 <script src="js/gastos-params.js"></script>
+<script src="js/gastos-editar.js"></script>
 <script src="js/presupuesto-tooltip.js"></script>
 <script src="js/presupuesto-sync.js"></script>
 <script src="js/inicio.js"></script>
