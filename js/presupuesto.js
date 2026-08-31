@@ -622,6 +622,23 @@ document.addEventListener('keydown', e => {
   else if ($('imp-modal') && $('imp-modal').classList.contains('open')) cerrarImport();
 });
 
+// El banner rojo de "te pasaste" nag-eaba en cada apertura. Ahora cada rubro en
+// exceso se muestra UNA VEZ POR SEMANA: al mostrarlo se duerme 7 días. Los avisos
+// (⚠️, "te quedan $X") no se tocan, y el detalle igual queda siempre visible en
+// las barras de presupuestado-vs-real. El snooze se limpia solo si el rubro vuelve
+// a la normalidad (ver el reset de más abajo), así un exceso nuevo sí vuelve a avisar.
+const SNOOZE_EXCESO_MS = 7 * 24 * 3600 * 1000;
+const alertasExcesoSesion = new Set();   // "mes|cat" ya mostrados en ESTA sesión (para que no se borre a mitad de sesión)
+function alertaExcesoVisible(cat, ahora) {
+  const sessKey = mesVisible + '|' + cat;
+  if (alertasExcesoSesion.has(sessKey)) return true;             // ya visible esta sesión: se queda
+  const est = getAlertaEstado(cat);
+  if (est.snoozeHasta && ahora < est.snoozeHasta) return false;  // dormido esta semana
+  alertasExcesoSesion.add(sessKey);
+  setAlertaEstado(cat, { snoozeHasta: ahora + SNOOZE_EXCESO_MS });
+  return true;
+}
+
 function renderAlertasBanner() {
   const el = $('alertas-banner');
   if (!el) return;
@@ -636,13 +653,18 @@ function renderAlertasBanner() {
   rows.forEach(r => {
     const est = all[key] && all[key][r.id];
     if (!est) return;
-    if (r.nivel === 0 && (est.nivel > 0 || est.mute)) { all[key][r.id] = { nivel: 0, mute: false }; dirty = true; }
+    if (r.nivel === 0 && (est.nivel > 0 || est.mute || est.snoozeHasta)) { all[key][r.id] = { nivel: 0, mute: false }; dirty = true; }
     else if (est.nivel > r.nivel) { est.nivel = r.nivel; dirty = true; }
   });
   if (dirty) saveAlertasEstado(all);
 
+  const ahora = Date.now();
   const visibles = cfg.activas
-    ? rows.filter(r => r.nivel > 0 && !getAlertaEstado(r.id).mute).sort((a, b) => b.pct - a.pct)
+    ? rows.filter(r => {
+        if (r.nivel <= 0 || getAlertaEstado(r.id).mute) return false;
+        // Avisos (⚠️) siempre; excesos (🚨) sólo una vez por semana.
+        return r.nivel < NIVEL_EXCESO ? true : alertaExcesoVisible(r.id, ahora);
+      }).sort((a, b) => b.pct - a.pct)
     : [];
   if (!visibles.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
 
