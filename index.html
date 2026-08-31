@@ -949,6 +949,11 @@
           </div>
 
           <div class="table-card gastos-table-wrap">
+            <div id="gasto-filtro-wrap" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+              <label for="gasto-filtro-cat" style="font-size:.8rem;color:var(--text-2);font-weight:600;">Filtrar:</label>
+              <select id="gasto-filtro-cat" onchange="cambiarFiltroGasto(this.value)" style="flex:1;min-width:150px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:7px 9px;font-size:.82rem;"></select>
+              <span id="gasto-filtro-info" style="font-size:.78rem;color:var(--muted);white-space:nowrap;"></span>
+            </div>
             <table>
               <thead>
                 <tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Nota</th><th></th></tr>
@@ -1116,6 +1121,7 @@
 <script src="js/presupuesto.js"></script>
 <script src="js/gastos-params.js"></script>
 <script src="js/gastos-editar.js"></script>
+<script src="js/gastos-filtro.js"></script>
 <script src="js/presupuesto-tooltip.js"></script>
 <script src="js/presupuesto-sync.js"></script>
 <script src="js/inicio.js"></script>

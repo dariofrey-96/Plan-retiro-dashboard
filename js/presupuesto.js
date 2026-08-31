@@ -473,11 +473,20 @@ function renderGastos() {
   renderSugerenciasFijos();
 
   const tbody = $('tbody-gastos');
+  if (typeof renderFiltroGastos === 'function') renderFiltroGastos(list);
   if (!list.length) {
     tbody.innerHTML = `<tr><td colspan="5" class="gastos-empty">No hay gastos cargados en ${monthLabel(key)}.${esMesActual ? ' Usá el formulario de arriba para empezar.' : ' Usá las flechitas de arriba para mirar otro mes.'}</td></tr>`;
     return;
   }
-  tbody.innerHTML = list.map(g => `
+  // El filtro sólo afecta a esta tabla; los KPIs y el presupuestado-vs-real de
+  // arriba siguen mostrando el mes completo.
+  const _filtro = (typeof gastoFiltroActivo === 'function') ? gastoFiltroActivo() : 'todas';
+  const _lista = (_filtro && _filtro !== 'todas') ? list.filter(g => g.cat === _filtro) : list;
+  if (!_lista.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="gastos-empty">No hay gastos de "${catLabel(_filtro)}" en ${monthLabel(key)}.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = _lista.map(g => `
     <tr>
       <td data-label="Fecha" style="color:var(--muted)">${new Date(g.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })}</td>
       <td data-label="Categoría"><span class="cat-chip">${catLabel(g.cat)}</span></td>
