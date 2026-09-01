@@ -455,14 +455,14 @@ function renderGastos() {
   } else {
     pvList.innerHTML = pvRows.map(r => {
       const noPresu = r.presu <= 0;
-      const label = noPresu ? 'sin presupuesto asignado' : fmtPctInt(r.pct);
+      const w = Math.min(r.pct, 1) * 100;
+      const nums = noPresu ? fmtARS(r.real) : `<b>${fmtARS(r.real)}</b> / ${fmtARS(r.presu)}`;
+      const label = noPresu ? 'sin pres.' : fmtPctInt(r.pct);
       return `
-        <div class="pv-row">
-          <div class="pv-row-top">
-            <span class="pv-name">${catLabel(r.id)}</span>
-            <span class="pv-nums"><b>${fmtARS(r.real)}</b> / ${noPresu ? '—' : fmtARS(r.presu)}<span class="pv-pct" style="color:${r.color}">${label}</span></span>
-          </div>
-          <div class="pv-bar"><div class="pv-fill" style="width:${Math.min(r.pct, 1) * 100}%;background:${r.color}"></div></div>
+        <div class="pvc-row" style="--pvw:${w}%;--pvc:${r.color}">
+          <span class="pvc-name">${catLabel(r.id)}</span>
+          <span class="pvc-nums">${nums}</span>
+          <span class="pvc-pct" style="color:${r.color}">${label}</span>
         </div>`;
     }).join('');
   }

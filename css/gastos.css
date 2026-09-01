@@ -30,3 +30,30 @@
 .app-presupuesto .gasto-form.abierto .gft-chevron { transform: rotate(180deg); }
 .app-presupuesto .gasto-form-body { display: none; }
 .app-presupuesto .gasto-form.abierto .gasto-form-body { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Presupuestado vs Real, versión compacta ───────────────────────────────
+   Un renglón por rubro (en vez de dos líneas + una barra aparte): la barra de
+   avance va de FONDO tenue detrás del texto, así ocupa casi la mitad de alto y
+   se sigue viendo de un vistazo cuánto llevás de cada presupuesto. */
+.app-presupuesto #pv-list .pvc-row {
+  position: relative; display: flex; align-items: center; gap: 10px; overflow: hidden;
+  padding: 8px 16px; border-bottom: 1px solid var(--hairline); font-size: .8rem;
+}
+.app-presupuesto #pv-list .pvc-row:last-child { border-bottom: none; }
+.app-presupuesto #pv-list .pvc-row::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: var(--pvw, 0%); background: var(--pvc, var(--accent)); opacity: .14; pointer-events: none;
+}
+.app-presupuesto #pv-list .pvc-name {
+  position: relative; flex: 1 1 auto; min-width: 0; color: var(--text); font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.app-presupuesto #pv-list .pvc-nums {
+  position: relative; flex: 0 0 auto; color: var(--text-3); font-size: .72rem;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.app-presupuesto #pv-list .pvc-nums b { color: var(--text); font-weight: 700; }
+.app-presupuesto #pv-list .pvc-pct {
+  position: relative; flex: 0 0 auto; min-width: 40px; text-align: right;
+  font-weight: 700; font-size: .72rem; font-variant-numeric: tabular-nums;
+}
