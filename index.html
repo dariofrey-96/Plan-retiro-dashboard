@@ -865,50 +865,6 @@
             </div>
           </div>
 
-          <div class="alertas-banner" id="alertas-banner" style="display:none"></div>
-
-          <div class="fijos-card" id="fijos-card" style="display:none"></div>
-          <div class="sug-card" id="sug-card" style="display:none"></div>
-
-          <div class="gasto-form">
-            <div class="gasto-form-row">
-              <div class="field">
-                <label>Fecha</label>
-                <input type="date" id="gasto-fecha">
-              </div>
-              <div class="field">
-                <label>Categoría</label>
-                <select id="gasto-cat"></select>
-              </div>
-              <div class="field">
-                <label>¿Cuántos meses cubre?</label>
-                <select id="gasto-meses">
-                  <option value="1" selected>Solo este mes</option>
-                  <option value="auto">Calcularlo según mi presupuesto</option>
-                  <option value="2">2 meses</option>
-                  <option value="3">3 meses</option>
-                  <option value="4">4 meses</option>
-                  <option value="5">5 meses</option>
-                  <option value="6">6 meses</option>
-                  <option value="9">9 meses</option>
-                  <option value="12">12 meses (un año)</option>
-                </select>
-              </div>
-            </div>
-            <div class="gasto-form-row">
-              <div class="field">
-                <label>Monto (ARS)</label>
-                <input type="number" id="gasto-monto" placeholder="0" min="0" step="1000">
-              </div>
-              <div class="field">
-                <label>Nota (opcional)</label>
-                <input type="text" id="gasto-nota" placeholder="Ej: Uber al aeropuerto" maxlength="60">
-              </div>
-            </div>
-            <button class="btn-add-gasto" onclick="addGasto()">+ Agregar gasto</button>
-            <button class="btn-importar" onclick="abrirImport()">📄 Importar resumen de tarjeta o billetera</button>
-          </div>
-
           <div class="gastos-kpis">
             <div class="gk">
               <div class="gk-label">Gastado este mes</div>
@@ -925,6 +881,56 @@
             <div class="gk">
               <div class="gk-label">Categoría con más gasto</div>
               <div class="gk-val" id="gk-top" style="font-size:.85rem">—</div>
+            </div>
+          </div>
+
+          <div class="alertas-banner" id="alertas-banner" style="display:none"></div>
+
+          <div class="fijos-card" id="fijos-card" style="display:none"></div>
+          <div class="sug-card" id="sug-card" style="display:none"></div>
+
+          <div class="gasto-form" id="gasto-form">
+            <button type="button" class="gasto-form-toggle" id="gasto-form-toggle" onclick="toggleGastoForm()" aria-expanded="false" aria-controls="gasto-form-body">
+              <span>＋ Agregar gasto</span>
+              <span class="gft-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="gasto-form-body" id="gasto-form-body">
+              <div class="gasto-form-row">
+                <div class="field">
+                  <label>Fecha</label>
+                  <input type="date" id="gasto-fecha">
+                </div>
+                <div class="field">
+                  <label>Categoría</label>
+                  <select id="gasto-cat"></select>
+                </div>
+                <div class="field">
+                  <label>¿Cuántos meses cubre?</label>
+                  <select id="gasto-meses">
+                    <option value="1" selected>Solo este mes</option>
+                    <option value="auto">Calcularlo según mi presupuesto</option>
+                    <option value="2">2 meses</option>
+                    <option value="3">3 meses</option>
+                    <option value="4">4 meses</option>
+                    <option value="5">5 meses</option>
+                    <option value="6">6 meses</option>
+                    <option value="9">9 meses</option>
+                    <option value="12">12 meses (un año)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="gasto-form-row">
+                <div class="field">
+                  <label>Monto (ARS)</label>
+                  <input type="number" id="gasto-monto" placeholder="0" min="0" step="1000">
+                </div>
+                <div class="field">
+                  <label>Nota (opcional)</label>
+                  <input type="text" id="gasto-nota" placeholder="Ej: Uber al aeropuerto" maxlength="60">
+                </div>
+              </div>
+              <button class="btn-add-gasto" onclick="addGasto()">Agregar gasto</button>
+              <button class="btn-importar" onclick="abrirImport()">📄 Importar resumen de tarjeta o billetera</button>
             </div>
           </div>
 
@@ -1122,6 +1128,7 @@
 <script src="js/gastos-params.js"></script>
 <script src="js/gastos-editar.js"></script>
 <script src="js/gastos-filtro.js"></script>
+<script src="js/gastos-form.js"></script>
 <script src="js/presupuesto-tooltip.js"></script>
 <script src="js/presupuesto-sync.js"></script>
 <script src="js/inicio.js"></script>

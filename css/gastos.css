@@ -8,3 +8,25 @@
   font-size: .85rem; padding: 3px 7px; border-radius: var(--radius-sm); transition: all .1s;
 }
 .app-presupuesto .edit-gasto-btn:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* ── Formulario de gasto colapsable ────────────────────────────────────────
+   Colapsado, el botón ES la tarjeta (fondo, borde, sombra); abierto, pasa a ser
+   sólo el encabezado de la tarjeta ya existente y aparece el cuerpo. Así ocupa
+   casi nada por defecto y da lugar a ver los números del mes. */
+.app-presupuesto .gasto-form-toggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow-card);
+  font-size: .92rem; font-weight: 600; cursor: pointer; transition: border-color .12s;
+}
+.app-presupuesto .gasto-form-toggle:hover { border-color: var(--accent); }
+.app-presupuesto .gft-chevron { color: var(--muted); font-size: .8rem; transition: transform .18s; }
+
+/* Colapsado: la tarjeta de fondo desaparece y queda sólo el botón. */
+.app-presupuesto .gasto-form:not(.abierto) { background: none; border: none; box-shadow: none; padding: 0; gap: 0; }
+
+/* Abierto: el botón se vuelve encabezado (sin fondo propio) y el cuerpo aparece. */
+.app-presupuesto .gasto-form.abierto .gasto-form-toggle { background: none; border: none; box-shadow: none; padding: 0; }
+.app-presupuesto .gasto-form.abierto .gft-chevron { transform: rotate(180deg); }
+.app-presupuesto .gasto-form-body { display: none; }
+.app-presupuesto .gasto-form.abierto .gasto-form-body { display: flex; flex-direction: column; gap: 10px; }
