@@ -104,11 +104,39 @@
 .app-presupuesto .btn-add-gasto,
 .app-presupuesto .tab.active{ color: var(--cg-solid); }
 
-/* ── GUARD RAILS: modales y panel de parámetros SÓLIDOS ── */
+/* ── Modales: SÓLIDOS (tienen contenido denso, mejor legibilidad) ── */
 .app-presupuesto .imp-modal,
-.app-presupuesto .alerta-modal,
-#aside-presu{
+.app-presupuesto .alerta-modal{
   background: var(--cg-solid);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* ── Panel de Parámetros (Inversión #aside + Presupuesto #aside-presu) → vidrio
+   translúcido, como pediste. El blur fuerte mantiene la legibilidad aunque el
+   fondo deje pasar algo de lo de atrás. Es global (los paneles están fuera de
+   las mitades). ── */
+#aside, #aside-presu{
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  backdrop-filter: blur(30px) saturate(160%);
+}
+:root :is(#aside, #aside-presu){ background: rgba(255,255,255,.80); }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) :is(#aside, #aside-presu){ background: rgba(22,23,27,.76); }
+}
+:root[data-theme="dark"] :is(#aside, #aside-presu){ background: rgba(22,23,27,.76); }
+:root[data-theme="light"] :is(#aside, #aside-presu){ background: rgba(255,255,255,.80); }
+
+/* ── Barra de navegación de abajo → vidrio flotante (todas las secciones) ──
+   Es global (fixed, fuera de las mitades). Translúcida + blur para que el
+   contenido pase por debajo con efecto esmerilado. ── */
+.bottom-nav{
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+}
+:root .bottom-nav{ background: rgba(255,255,255,.70); border-color: rgba(255,255,255,.85); }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .bottom-nav{ background: rgba(26,28,32,.60); border-color: rgba(255,255,255,.12); }
+}
+:root[data-theme="dark"] .bottom-nav{ background: rgba(26,28,32,.60); border-color: rgba(255,255,255,.12); }
+:root[data-theme="light"] .bottom-nav{ background: rgba(255,255,255,.70); border-color: rgba(255,255,255,.85); }
