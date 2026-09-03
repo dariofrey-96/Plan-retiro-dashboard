@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FinLab · estilo "vidrio" — INICIO y PRESUPUESTO (Resumen + Gastos).
+   Complementa css/cartera-vidrio.css (mitad de retiro). Aditivo y revertible:
+   quitar el <link> vuelve al diseño actual. Escrito a mano.
+
+   Técnica: pinta el degradado de fondo en cada mitad y REDEFINE los tokens de
+   superficie (--surface/--surface-2/--surface-3/--border/--shadow-card) a valores
+   de vidrio, así casi todos los componentes (que usan esos tokens) quedan
+   translúcidos de una; a las tarjetas se les agrega blur. Los modales y el panel
+   de parámetros quedan SÓLIDOS para que se lean bien.
+   Tema de tres estados: claro = menta; oscuro = grafito, verde sólo de acento.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── LIGHT (menta), por defecto ── */
+#mitad-inicio, .app-presupuesto{
+  --cg-grad: radial-gradient(110% 34% at 50% 0%, rgba(255,255,255,.70), transparent 60%),
+             linear-gradient(179deg,#d3ead9 0%,#e2f1e8 46%,#eef6f1 100%);
+  --surface: rgba(255,255,255,.62);
+  --surface-2: rgba(255,255,255,.50);
+  --surface-3: rgba(255,255,255,.42);
+  --border: rgba(255,255,255,.85);
+  --shadow-card: 0 8px 22px rgba(16,60,44,.10);
+  --cg-solid: #f2f7f4;
+  --cg-input: rgba(255,255,255,.72);
+}
+/* ── DARK (grafito) por sistema ── */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) :is(#mitad-inicio, .app-presupuesto){
+    --cg-grad: radial-gradient(110% 34% at 50% 0%, rgba(52,184,124,.15), transparent 62%),
+               linear-gradient(179deg,#0c0d0f 0%,#111216 50%,#181a1e 100%);
+    --surface: rgba(255,255,255,.05);
+    --surface-2: rgba(255,255,255,.08);
+    --surface-3: rgba(255,255,255,.11);
+    --border: rgba(255,255,255,.13);
+    --shadow-card: 0 8px 24px rgba(0,0,0,.30);
+    --cg-solid: #191a1e;
+    --cg-input: rgba(255,255,255,.09);
+  }
+}
+/* ── DARK elegido a mano ── */
+:root[data-theme="dark"] :is(#mitad-inicio, .app-presupuesto){
+  --cg-grad: radial-gradient(110% 34% at 50% 0%, rgba(52,184,124,.15), transparent 62%),
+             linear-gradient(179deg,#0c0d0f 0%,#111216 50%,#181a1e 100%);
+  --surface: rgba(255,255,255,.05);
+  --surface-2: rgba(255,255,255,.08);
+  --surface-3: rgba(255,255,255,.11);
+  --border: rgba(255,255,255,.13);
+  --shadow-card: 0 8px 24px rgba(0,0,0,.30);
+  --cg-solid: #191a1e;
+  --cg-input: rgba(255,255,255,.09);
+}
+/* ── LIGHT elegido a mano (le gana a un sistema oscuro) ── */
+:root[data-theme="light"] :is(#mitad-inicio, .app-presupuesto){
+  --cg-grad: radial-gradient(110% 34% at 50% 0%, rgba(255,255,255,.70), transparent 60%),
+             linear-gradient(179deg,#d3ead9 0%,#e2f1e8 46%,#eef6f1 100%);
+  --surface: rgba(255,255,255,.62);
+  --surface-2: rgba(255,255,255,.50);
+  --surface-3: rgba(255,255,255,.42);
+  --border: rgba(255,255,255,.85);
+  --shadow-card: 0 8px 22px rgba(16,60,44,.10);
+  --cg-solid: #f2f7f4;
+  --cg-input: rgba(255,255,255,.72);
+}
+
+/* ── Degradado de fondo en las dos mitades ── */
+#mitad-inicio, .app-presupuesto{ background: var(--cg-grad); min-height: 100vh; }
+
+/* ── Blur en las tarjetas (los tokens ya las volvieron translúcidas) ── */
+#mitad-inicio .panel-card,
+#mitad-inicio #inicio-content > *,
+.app-presupuesto .panel-card,
+.app-presupuesto .gk,
+.app-presupuesto .pv-wrap,
+.app-presupuesto .table-card,
+.app-presupuesto .gasto-form,
+.app-presupuesto .gasto-form-toggle,
+.app-presupuesto .mespill,
+.app-presupuesto .retiro-card,
+.app-presupuesto .fijos-card,
+.app-presupuesto .sug-card,
+.app-presupuesto .futuro-note{
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+}
+#mitad-inicio .panel-card{ border-radius: 22px; }
+
+/* Toggles / tabs con un poco de blur para que se sientan de vidrio */
+.app-presupuesto .tabs,
+.app-presupuesto .toggle-wrap,
+#mitad-inicio .toggle-wrap{
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* Campos: un poco más opacos que el vidrio para que se lea lo que escribís */
+.app-presupuesto input,
+.app-presupuesto select,
+.app-presupuesto textarea{ background: var(--cg-input); }
+
+/* Pastillas/botones "invertidos" (fondo = --text, texto = --surface): como
+   volvimos --surface translúcido, su texto se volvía invisible. Se les da un
+   color de superficie SÓLIDO para que el texto se lea sobre el fondo claro. */
+.app-presupuesto .rs-chip.on,
+.app-presupuesto .btn-add-gasto,
+.app-presupuesto .tab.active{ color: var(--cg-solid); }
+
+/* ── GUARD RAILS: modales y panel de parámetros SÓLIDOS ── */
+.app-presupuesto .imp-modal,
+.app-presupuesto .alerta-modal,
+#aside-presu{
+  background: var(--cg-solid);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
