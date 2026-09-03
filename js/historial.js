@@ -217,6 +217,30 @@ function setHistPeriod(days, btn) {
   renderHistChart();
 }
 
+// Capital invertido (USD) en cada punto del histórico: lo que aportaste vos.
+// Base = lo invertido antes de que existiera el registro de aportes (costo total
+// menos lo registrado), y a partir de ahí suma cada aporte (compras.js) en su fecha.
+// Respeta la cartera que estás viendo, igual que la línea de valor.
+function serieCapInvertido(snaps) {
+  const TODASv = (typeof TODAS !== 'undefined') ? TODAS : '__todas__';
+  const act = (typeof carteraActiva !== 'undefined') ? carteraActiva : TODASv;
+  const dePrimera = (typeof carteras !== 'undefined' && carteras.length) ? carteras[0].id : 1;
+  const enScope = c => act === TODASv ? true : ((c.cId != null ? c.cId : dePrimera) === act);
+  const cs = (typeof compras !== 'undefined' ? compras : [])
+    .filter(c => c && c.amount > 0 && enScope(c))
+    .map(c => ({ t: new Date(c.date + 'T00:00:00').getTime(), amount: c.amount }))
+    .sort((a, b) => a.t - b.t);
+  const totalCost = (typeof assets !== 'undefined' ? assets : []).reduce((s, a) => s + a.qty * (a.costBasis || a.price), 0);
+  const sumC = cs.reduce((s, c) => s + c.amount, 0);
+  const base = Math.max(0, totalCost - sumC);
+  return snaps.map(s => {
+    const t = getSnapTime(s);
+    let inv = base;
+    for (const c of cs) { if (c.t <= t) inv += c.amount; else break; }
+    return inv;
+  });
+}
+
 function renderHistChart() {
   if (!histData) return;
   let snaps = [...(histData.snapshots || [])].sort((a, b) => getSnapTime(a) - getSnapTime(b));
@@ -298,6 +322,33 @@ function renderHistChart() {
     cubicInterpolationMode: 'monotone',
     spanGaps: true
   }];
+
+  // ── Segunda línea: CAPITAL INVERTIDO (lo que aportaste), sólo para la cartera
+  // completa. Punteada, para ver aporte vs. crecimiento contra la línea de valor.
+  if (seriesSel === '__total__') {
+    const inv = serieCapInvertido(snaps);
+    if (inv.some(v => v > 0)) {
+      chartHist.data.datasets[0].label = 'Valor de la cartera';
+      chartHist.data.datasets.push({
+        label: 'Capital invertido',
+        data: inv,
+        borderColor: getCSSVar('--muted') || '#8b949e',
+        borderDash: [6, 5],
+        borderWidth: 1.6,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: getCSSVar('--muted') || '#8b949e',
+        cubicInterpolationMode: 'monotone',
+        spanGaps: true,
+        _capInvertido: true
+      });
+    }
+  }
+  chartHist.options.plugins.legend = {
+    display: chartHist.data.datasets.length > 1,
+    labels: { color: getCSSVar('--muted') || '#8b949e', usePointStyle: true, boxWidth: 8, boxHeight: 8, font: { size: 11 } }
+  };
   chartHist.update();
 }
 
@@ -319,12 +370,17 @@ function renderHistChart() {
       chartHist.options.scales.y.ticks.color = opts.scales.y.ticks.color;
       chartHist.options.scales.y.border.color = opts.scales.y.border.color;
       chartHist.data.datasets.forEach(ds => {
+        // La línea de "capital invertido" mantiene su gris; sólo la de valor va al acento.
+        if (ds._capInvertido) { ds.borderColor = getCSSVar('--muted'); ds.pointHoverBackgroundColor = getCSSVar('--muted'); return; }
         ds.borderColor = getCSSVar('--accent');
         ds.pointHoverBackgroundColor = getCSSVar('--accent');
         ds.pointHoverBorderColor = getCSSVar('--surface');
         // backgroundColor es la función del degradado: se repinta sola con el
         // color nuevo en el próximo draw, no hay que tocarla acá.
       });
+      if (chartHist.options.plugins.legend && chartHist.options.plugins.legend.labels) {
+        chartHist.options.plugins.legend.labels.color = getCSSVar('--muted');
+      }
       chartHist.update();
     }, 60);
     return r;
