@@ -1,0 +1,130 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FinLab · estilo "vidrio" (Liquid Glass) — SOLO la Cartera.
+   Se activa cuando la mitad de retiro tiene la clase .viendo-cartera (la pone
+   js/cartera-vidrio.js al entrar a Cartera), así NO afecta a Proyección aunque
+   compartan el encabezado de KPIs. Aditivo y revertible: quitar el <link> y el
+   <script> vuelve al diseño actual. Escrito a mano (ningún generador lo pisa).
+
+   Respeta el tema de la app (data-theme en :root, tres estados):
+   claro por defecto = menta; oscuro = grafito, con el verde sólo de acento.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Paleta CLARO (menta), por defecto ── */
+#mitad-retiro.viendo-cartera{
+  --cg-bg: radial-gradient(110% 38% at 50% 0%, rgba(255,255,255,.70), transparent 60%),
+           linear-gradient(179deg,#d3ead9 0%,#e2f1e8 46%,#eef6f1 100%);
+  --cg-glass: rgba(255,255,255,.60);
+  --cg-brd: rgba(255,255,255,.90);
+  --cg-hair: rgba(15,60,44,.10);
+  --cg-hi: inset 0 1px 0 rgba(255,255,255,.90);
+  --cg-drop: 0 8px 22px rgba(16,60,44,.10);
+  --cg-seg: rgba(255,255,255,.55);
+  --cg-seg-on: #0f7a45; --cg-seg-on-ink: #fff;
+}
+/* ── OSCURO (grafito) por preferencia del sistema ── */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) #mitad-retiro.viendo-cartera{
+    --cg-bg: radial-gradient(110% 36% at 50% 0%, rgba(52,184,124,.14), transparent 60%),
+             linear-gradient(179deg,#161719 0%,#1d1f23 50%,#26282d 100%);
+    --cg-glass: rgba(255,255,255,.06);
+    --cg-brd: rgba(255,255,255,.14);
+    --cg-hair: rgba(255,255,255,.08);
+    --cg-hi: inset 0 1px 0 rgba(255,255,255,.16);
+    --cg-drop: 0 10px 26px rgba(0,0,0,.35);
+    --cg-seg: rgba(255,255,255,.06);
+    --cg-seg-on: rgba(255,255,255,.92); --cg-seg-on-ink: #17181c;
+  }
+}
+/* ── OSCURO elegido a mano ── */
+:root[data-theme="dark"] #mitad-retiro.viendo-cartera{
+  --cg-bg: radial-gradient(110% 36% at 50% 0%, rgba(52,184,124,.14), transparent 60%),
+           linear-gradient(179deg,#161719 0%,#1d1f23 50%,#26282d 100%);
+  --cg-glass: rgba(255,255,255,.06);
+  --cg-brd: rgba(255,255,255,.14);
+  --cg-hair: rgba(255,255,255,.08);
+  --cg-hi: inset 0 1px 0 rgba(255,255,255,.16);
+  --cg-drop: 0 10px 26px rgba(0,0,0,.35);
+  --cg-seg: rgba(255,255,255,.06);
+  --cg-seg-on: rgba(255,255,255,.92); --cg-seg-on-ink: #17181c;
+}
+/* ── CLARO elegido a mano (le gana a un sistema oscuro) ── */
+:root[data-theme="light"] #mitad-retiro.viendo-cartera{
+  --cg-bg: radial-gradient(110% 38% at 50% 0%, rgba(255,255,255,.70), transparent 60%),
+           linear-gradient(179deg,#d3ead9 0%,#e2f1e8 46%,#eef6f1 100%);
+  --cg-glass: rgba(255,255,255,.60);
+  --cg-brd: rgba(255,255,255,.90);
+  --cg-hair: rgba(15,60,44,.10);
+  --cg-hi: inset 0 1px 0 rgba(255,255,255,.90);
+  --cg-drop: 0 8px 22px rgba(16,60,44,.10);
+  --cg-seg: rgba(255,255,255,.55);
+  --cg-seg-on: #0f7a45; --cg-seg-on-ink: #fff;
+}
+
+/* ── El degradado cubre toda la pantalla de Cartera ── */
+#mitad-retiro.viendo-cartera{ background: var(--cg-bg); min-height: 100vh; }
+/* Los contenedores intermedios quedan transparentes para que el degradado pase */
+#mitad-retiro.viendo-cartera .kpi-strip{ background: transparent; border: none; }
+#mitad-retiro.viendo-cartera #view-cartera{ background: transparent; }
+
+/* ── Tarjetas → vidrio esmerilado (KPIs de arriba + todo lo de la Cartera) ── */
+#mitad-retiro.viendo-cartera .kpi-strip .kpi,
+#mitad-retiro.viendo-cartera #view-cartera .panel-card,
+#mitad-retiro.viendo-cartera #view-cartera .ckpi,
+#mitad-retiro.viendo-cartera #view-cartera .assets-section{
+  background: var(--cg-glass);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--cg-brd);
+  border-radius: 22px;
+  box-shadow: var(--cg-hi), var(--cg-drop);
+}
+#mitad-retiro.viendo-cartera .kpi-strip .kpi{ border-radius: 18px; }
+#mitad-retiro.viendo-cartera #view-cartera .assets-section{ padding: 14px 16px; }
+
+/* El "Valor total" un poco más protagonista */
+#mitad-retiro.viendo-cartera #ck-total{ font-size: 2.1rem; letter-spacing: -.02em; }
+
+/* ── Selector de carteras / toggles → segmentado de vidrio ── */
+#mitad-retiro.viendo-cartera #view-cartera .toggle-wrap{
+  background: var(--cg-seg);
+  border: 1px solid var(--cg-brd);
+  border-radius: 100px;
+  padding: 4px;
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--cg-hi);
+}
+#mitad-retiro.viendo-cartera #view-cartera .toggle-btn{ border-radius: 100px; border: 0; background: none; }
+#mitad-retiro.viendo-cartera #view-cartera .toggle-btn.active{
+  background: var(--cg-seg-on);
+  color: var(--cg-seg-on-ink);
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+
+/* ── Botones → vidrio ── */
+#mitad-retiro.viendo-cartera #view-cartera .btn-carteras,
+#mitad-retiro.viendo-cartera #view-cartera .btn-sync,
+#mitad-retiro.viendo-cartera #view-cartera .btn-refresh,
+#mitad-retiro.viendo-cartera #view-cartera .snapshot-btn{
+  border-radius: 14px;
+  border: 1px solid var(--cg-brd);
+  background: var(--cg-glass);
+  color: var(--text);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--cg-hi), var(--cg-drop);
+}
+#mitad-retiro.viendo-cartera #view-cartera .btn{ border-radius: 12px; }
+
+/* ── Tablas de activos: transparentes sobre la tarjeta de vidrio ── */
+#mitad-retiro.viendo-cartera #view-cartera .asset-table{ background: transparent; }
+#mitad-retiro.viendo-cartera #view-cartera .asset-table th{ border-bottom-color: var(--cg-hair); background: transparent; }
+#mitad-retiro.viendo-cartera #view-cartera .asset-table td{ border-bottom-color: var(--cg-hair); }
+#mitad-retiro.viendo-cartera #view-cartera .asset-table tr:last-child td{ border-bottom: none; }
+
+/* ── Campos del formulario "Agregar activo" ── */
+#mitad-retiro.viendo-cartera #view-cartera .form-row input,
+#mitad-retiro.viendo-cartera #view-cartera .form-row select{ border-radius: 12px; }
+
+/* Barritas de meta/pnl más redondeadas para acompañar */
+#mitad-retiro.viendo-cartera #view-cartera .meta-pct-bar{ border-radius: 100px; overflow: hidden; }
