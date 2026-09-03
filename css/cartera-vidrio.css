@@ -79,8 +79,13 @@
 #mitad-retiro .kpi-strip .kpi{ border-radius: 18px; }
 #mitad-retiro #view-cartera .assets-section{ padding: 14px 16px; }
 
-/* El "Valor total" un poco más protagonista */
-#mitad-retiro #ck-total{ font-size: 2.1rem; letter-spacing: -.02em; }
+/* ── Tarjetas nuevas de Cartera (Capital · Rendimiento · TIR · Mejor · Peor) ── */
+#mitad-retiro #cartera-kpis .ckpi{ min-width: 138px; }
+#mitad-retiro #cartera-kpis .ck2 .ckpi-val{ font-size: 1.5rem; letter-spacing: -.02em; }
+#mitad-retiro #cartera-kpis .ck2-sub{ font-size: .68rem; font-weight: 700; margin-top: 4px; color: var(--muted); }
+@media (min-width: 900px){
+  #mitad-retiro #cartera-kpis{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
 
 /* ── Selector de carteras / toggles → segmentado de vidrio ── */
 #mitad-retiro #view-cartera .toggle-wrap{

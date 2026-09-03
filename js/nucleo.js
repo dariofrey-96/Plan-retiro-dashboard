@@ -573,21 +573,10 @@ function renderCartera(){
   const tv=assets.reduce((s,a)=>s+a.qty*a.price,0);
   const tc=assets.reduce((s,a)=>s+a.qty*(a.costBasis||a.price),0);
   const tp=tv-tc,pp=tc>0?tp/tc:0;
-  $('ck-total').textContent=F(tv);
-  const pe=$('ck-pnl');
-  pe.textContent=(tp>=0?'+':'')+F(tp)+' ('+fmtCh(pp*100)+')';
-  pe.className='ckpi-val '+(tp>=0?'green':'red');
-  const pb=$('ck-pnl-bar');pb.style.width=Math.min(Math.abs(pp)*100,100)+'%';pb.style.background=tp>=0?'var(--green)':'var(--red)';
-  const w=assets.filter(a=>a.change24h!=null);
-  if(w.length){
-    const tY=w.reduce((s,a)=>s+a.qty*a.price/(1+a.change24h/100),0);
-    const tN=w.reduce((s,a)=>s+a.qty*a.price,0);
-    const ch=tY>0?(tN-tY)/tY*100:0,df=tN-tY;
-    const ce=$('ck-24h');ce.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'% ('+F(df)+')';ce.className='ckpi-val '+(ch>=0?'green':'red');
-  }else{$('ck-24h').textContent='—';$('ck-24h').className='ckpi-val';}
-  const pm=curMeta>0?tv/curMeta:0;
-  $('ck-meta').textContent=(pm*100).toFixed(1)+'%';
-  const mb=$('ck-meta-bar');mb.style.width=Math.min(pm*100,100)+'%';mb.style.background=pm>=1?'var(--green)':pm>=0.5?'var(--orange)':'var(--red)';
+  // Tarjetas de Cartera: Capital actual · Rendimiento · TIR · Mejor · Peor activo.
+  // La lógica vive en js/cartera-kpis.js (aditivo). Reemplazó a las 4 viejas
+  // (Valor total / P&L / 24h / % meta cubierta), que ya estaban en Proyección.
+  if(typeof renderCarteraKpis==='function')renderCarteraKpis(tv,tc,tp,pp);
   const crs=assets.filter(a=>a.cat==='crypto'),sts=assets.filter(a=>a.cat==='stock'),mts=assets.filter(a=>a.cat==='metal'),chs=assets.filter(a=>a.cat==='cash');
   const tC=crs.reduce((s,a)=>s+a.qty*a.price,0),tS=sts.reduce((s,a)=>s+a.qty*a.price,0),tM=mts.reduce((s,a)=>s+a.qty*a.price,0),tCh=chs.reduce((s,a)=>s+a.qty*a.price,0);
   const agp=gv('alertaGanancia'),agm=gv('alertaGananciaMeses');

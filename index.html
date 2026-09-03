@@ -418,12 +418,7 @@
           <button class="toggle-btn" data-cur="ARS" onclick="setCarteraCurrency('ARS',this)">ARS</button>
         </div>
       </div>
-      <div class="cartera-kpis">
-        <div class="ckpi"><div class="ckpi-label">Valor total</div><div class="ckpi-val blue" id="ck-total">$0</div></div>
-        <div class="ckpi"><div class="ckpi-label">P&L total</div><div class="ckpi-val" id="ck-pnl">—</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-pnl-bar"></div></div></div>
-        <div class="ckpi"><div class="ckpi-label">Cambio 24h</div><div class="ckpi-val" id="ck-24h">—</div></div>
-        <div class="ckpi"><div class="ckpi-label">% meta cubierta</div><div class="ckpi-val" id="ck-meta">0%</div><div class="meta-pct-bar"><div class="meta-pct-fill" id="ck-meta-bar"></div></div></div>
-      </div>
+      <div class="cartera-kpis" id="cartera-kpis"></div>
 
       <div class="cartera-main-col">
         <button class="btn-sync" onclick="syncCarteraToCapital()">↔ Usar valor de cartera como capital inicial</button>
@@ -1124,6 +1119,7 @@
 <script src="js/historial.js"></script>
 <script src="js/ventas.js"></script>
 <script src="js/compras.js"></script>
+<script src="js/cartera-kpis.js"></script>
 <script src="js/moneda.js"></script>
 <script src="js/resumen-mensual.js"></script>
 <script src="js/presupuesto.js"></script>
