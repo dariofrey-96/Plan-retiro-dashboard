@@ -24,8 +24,8 @@
 /* ── OSCURO (grafito) por preferencia del sistema ── */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]) #mitad-retiro.viendo-cartera{
-    --cg-bg: radial-gradient(110% 36% at 50% 0%, rgba(52,184,124,.14), transparent 60%),
-             linear-gradient(179deg,#161719 0%,#1d1f23 50%,#26282d 100%);
+    --cg-bg: radial-gradient(110% 36% at 50% 0%, rgba(52,184,124,.15), transparent 62%),
+             linear-gradient(179deg,#0c0d0f 0%,#111216 50%,#181a1e 100%);
     --cg-glass: rgba(255,255,255,.06);
     --cg-brd: rgba(255,255,255,.14);
     --cg-hair: rgba(255,255,255,.08);
