@@ -210,6 +210,12 @@ function renderInicio() {
     if (feed) H.push(feed);
   }
 
+  // ── Metas con anillos de progreso ──
+  if (typeof renderMetasCard === 'function') {
+    const m = renderMetasCard();
+    if (m) H.push(m);
+  }
+
   // ── Gastos del mes vs mismo tramo del mes pasado ──
   const esteMes = iniGastadoHastaDia(mk, dia);
   const mesPasado = iniGastadoHastaDia(mkPrev, dia);

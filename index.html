@@ -1116,6 +1116,36 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="meta-modal" style="display:none">
+  <div class="modal">
+    <h3 id="meta-modal-title">Nueva meta</h3>
+    <div class="modal-field">
+      <label>Nombre</label>
+      <input type="text" id="meta-nombre" placeholder="Ej: Fondo de emergencia">
+    </div>
+    <div class="modal-field">
+      <label>Objetivo (cuánto querés juntar)</label>
+      <input type="number" id="meta-objetivo" min="0" inputmode="numeric" placeholder="Ej: 1000000">
+    </div>
+    <div class="modal-field">
+      <label>Lo que llevás juntado</label>
+      <input type="number" id="meta-actual" min="0" inputmode="numeric" placeholder="Ej: 250000">
+    </div>
+    <div class="modal-field">
+      <label>Moneda</label>
+      <select id="meta-moneda" style="width:100%;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:9px 10px;font-size:.9rem;">
+        <option value="ARS">Pesos</option>
+        <option value="USD">Dólares</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" id="meta-del-btn" onclick="metaEliminar()" style="margin-right:auto;color:var(--red);display:none;">Eliminar</button>
+      <button class="btn btn-cancel" onclick="metaCerrar()">Cancelar</button>
+      <button class="btn btn-primary" onclick="metaGuardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/nucleo.js"></script>
 <script src="js/en-camino.js"></script>
 <script src="js/haptics.js"></script>
@@ -1136,6 +1166,7 @@
 <script src="js/presupuesto-sync.js"></script>
 <script src="js/inicio.js"></script>
 <script src="js/insights.js"></script>
+<script src="js/metas.js"></script>
 <script src="js/navegacion.js"></script>
 <script src="js/transiciones.js"></script>
 <script src="js/parametros.js"></script>
