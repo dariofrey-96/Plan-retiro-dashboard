@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FinLab · piel "cockpit" (de la maqueta): esmeralda + ámbar, tipografías
+   Bricolage Grotesque (títulos) + Hanken Grotesk (texto). REEMPLAZA la piel de
+   vidrio sin tocar los archivos generados ni la estructura: re-apunta los mismos
+   tokens de la app y las variables --cg-* del vidrio a la paleta de la maqueta.
+   Aditivo y revertible: quitar este <link> vuelve al vidrio.
+
+   Técnica: la paleta vive en variables --ck-* definidas POR ESTADO DE TEMA (los
+   mismos tres estados que tokens.css). Después se mapea una sola vez con el
+   selector :root:root (especificidad 0,2,0) para ganarle a :root[data-theme=…] y
+   al bloque @media, sin importar el tema. Las mitades se re-apuntan con
+   :root:root #mitad-… (1,2,0), que le gana a los selectores del vidrio.
+   Tema de tres estados: oscuro = cockpit de la maqueta; claro = versión derivada.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · Paleta cockpit por tema (solo define --ck-*) ── */
+:root{                                   /* CLARO por defecto (derivado) */
+  --ck-bg:#f4f7f5; --ck-surf:#ffffff; --ck-surf2:#f0f4f1; --ck-surf3:#e7ede9;
+  --ck-line:rgba(15,40,30,.10); --ck-hair:rgba(15,40,30,.08);
+  --ck-ink:#0f1613; --ck-ink2:#55605a; --ck-ink3:#8a938d;
+  --ck-acc:#12a575; --ck-acc-d:#0e8a62; --ck-acc-soft:rgba(18,165,117,.12); --ck-acc-ink:#ffffff;
+  --ck-red:#e05656; --ck-red-t:#c23c3c; --ck-red-soft:rgba(224,86,86,.10);
+  --ck-gold:#cf8f21; --ck-gold-soft:rgba(207,143,33,.12);
+  --ck-grad:radial-gradient(80% 50% at 15% -5%, rgba(18,165,117,.08), transparent 60%),
+            radial-gradient(70% 40% at 100% 0%, rgba(99,169,255,.05), transparent 55%), #f4f7f5;
+  --ck-solid:#ffffff; --ck-input:#ffffff; --ck-nav:rgba(255,255,255,.82);
+  --ck-seg:#eef2ef; --ck-seg-on:#12a575; --ck-seg-ink:#ffffff;
+  --ck-hi:inset 0 1px 0 rgba(255,255,255,.9); --ck-drop:0 8px 22px rgba(16,60,44,.08);
+  --ck-shadow:0 8px 22px rgba(16,60,44,.10);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){   /* OSCURO por sistema */
+  --ck-bg:#0b0d10; --ck-surf:#14181d; --ck-surf2:#1a1f26; --ck-surf3:#222831;
+  --ck-line:rgba(255,255,255,.08); --ck-hair:rgba(255,255,255,.07);
+  --ck-ink:#eef2f0; --ck-ink2:#a7b0ac; --ck-ink3:#6b746f;
+  --ck-acc:#35d6a0; --ck-acc-d:#23a97c; --ck-acc-soft:rgba(53,214,160,.14); --ck-acc-ink:#08130e;
+  --ck-red:#ff6f6f; --ck-red-t:#ff9a9a; --ck-red-soft:rgba(255,111,111,.14);
+  --ck-gold:#f5b64a; --ck-gold-soft:rgba(245,182,74,.14);
+  --ck-grad:radial-gradient(80% 50% at 15% -5%, rgba(53,214,160,.10), transparent 60%),
+            radial-gradient(70% 40% at 100% 0%, rgba(99,169,255,.07), transparent 55%), #0b0d10;
+  --ck-solid:#14181d; --ck-input:#1a1f26; --ck-nav:rgba(16,19,24,.82);
+  --ck-seg:rgba(255,255,255,.05); --ck-seg-on:#35d6a0; --ck-seg-ink:#08130e;
+  --ck-hi:inset 0 1px 0 rgba(255,255,255,.04); --ck-drop:0 10px 26px rgba(0,0,0,.4);
+  --ck-shadow:0 8px 24px rgba(0,0,0,.4);
+} }
+:root[data-theme="dark"]{                 /* OSCURO elegido a mano */
+  --ck-bg:#0b0d10; --ck-surf:#14181d; --ck-surf2:#1a1f26; --ck-surf3:#222831;
+  --ck-line:rgba(255,255,255,.08); --ck-hair:rgba(255,255,255,.07);
+  --ck-ink:#eef2f0; --ck-ink2:#a7b0ac; --ck-ink3:#6b746f;
+  --ck-acc:#35d6a0; --ck-acc-d:#23a97c; --ck-acc-soft:rgba(53,214,160,.14); --ck-acc-ink:#08130e;
+  --ck-red:#ff6f6f; --ck-red-t:#ff9a9a; --ck-red-soft:rgba(255,111,111,.14);
+  --ck-gold:#f5b64a; --ck-gold-soft:rgba(245,182,74,.14);
+  --ck-grad:radial-gradient(80% 50% at 15% -5%, rgba(53,214,160,.10), transparent 60%),
+            radial-gradient(70% 40% at 100% 0%, rgba(99,169,255,.07), transparent 55%), #0b0d10;
+  --ck-solid:#14181d; --ck-input:#1a1f26; --ck-nav:rgba(16,19,24,.82);
+  --ck-seg:rgba(255,255,255,.05); --ck-seg-on:#35d6a0; --ck-seg-ink:#08130e;
+  --ck-hi:inset 0 1px 0 rgba(255,255,255,.04); --ck-drop:0 10px 26px rgba(0,0,0,.4);
+  --ck-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+:root[data-theme="light"]{                /* CLARO elegido a mano */
+  --ck-bg:#f4f7f5; --ck-surf:#ffffff; --ck-surf2:#f0f4f1; --ck-surf3:#e7ede9;
+  --ck-line:rgba(15,40,30,.10); --ck-hair:rgba(15,40,30,.08);
+  --ck-ink:#0f1613; --ck-ink2:#55605a; --ck-ink3:#8a938d;
+  --ck-acc:#12a575; --ck-acc-d:#0e8a62; --ck-acc-soft:rgba(18,165,117,.12); --ck-acc-ink:#ffffff;
+  --ck-red:#e05656; --ck-red-t:#c23c3c; --ck-red-soft:rgba(224,86,86,.10);
+  --ck-gold:#cf8f21; --ck-gold-soft:rgba(207,143,33,.12);
+  --ck-grad:radial-gradient(80% 50% at 15% -5%, rgba(18,165,117,.08), transparent 60%),
+            radial-gradient(70% 40% at 100% 0%, rgba(99,169,255,.05), transparent 55%), #f4f7f5;
+  --ck-solid:#ffffff; --ck-input:#ffffff; --ck-nav:rgba(255,255,255,.82);
+  --ck-seg:#eef2ef; --ck-seg-on:#12a575; --ck-seg-ink:#ffffff;
+  --ck-hi:inset 0 1px 0 rgba(255,255,255,.9); --ck-drop:0 8px 22px rgba(16,60,44,.08);
+  --ck-shadow:0 8px 22px rgba(16,60,44,.10);
+}
+
+/* ── 2 · Mapear la app a la paleta cockpit (gana sobre los 3 estados de tokens.css) ── */
+:root:root{
+  --bg:var(--ck-bg);
+  --surface:var(--ck-surf); --surface-2:var(--ck-surf2); --surface-3:var(--ck-surf3);
+  --surface2:var(--ck-surf2); --surface3:var(--ck-surf3);
+  --border:var(--ck-line); --divider:var(--ck-line); --hairline:var(--ck-hair);
+  --text:var(--ck-ink); --text-2:var(--ck-ink2); --text-3:var(--ck-ink3); --muted:var(--ck-ink2);
+  --accent:var(--ck-acc); --accent-dark:var(--ck-acc-d); --accent-text:var(--ck-acc); --accent-soft:var(--ck-acc-soft);
+  --green:var(--ck-acc); --green-text:var(--ck-acc); --green-dark:var(--ck-acc-d); --green-soft:var(--ck-acc-soft);
+  --red:var(--ck-red); --red-text:var(--ck-red-t); --red-dark:var(--ck-red-t); --red-soft:var(--ck-red-soft);
+  --gold:var(--ck-gold); --gold-text:var(--ck-gold); --orange:var(--ck-gold); --gold-soft:var(--ck-gold-soft); --orange-soft:var(--ck-gold-soft);
+  --purple:#a98bff; --purple-text:#a98bff; --teal:#63a9ff; --teal-text:#63a9ff;
+  --shadow-card:var(--ck-shadow);
+  --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-xl:22px;
+}
+
+/* ── 3 · Mitades: re-apunta las variables del vidrio a la paleta cockpit ── */
+:root:root #mitad-inicio, :root:root .app-presupuesto{
+  --surface:var(--ck-surf); --surface-2:var(--ck-surf2); --surface-3:var(--ck-surf3);
+  --border:var(--ck-line); --shadow-card:var(--ck-shadow);
+  --cg-grad:var(--ck-grad); --cg-solid:var(--ck-solid); --cg-input:var(--ck-input);
+}
+:root:root #mitad-retiro{
+  --cg-bg:var(--ck-grad); --cg-glass:var(--ck-surf); --cg-brd:var(--ck-line);
+  --cg-hair:var(--ck-hair); --cg-hi:var(--ck-hi); --cg-drop:var(--ck-drop);
+  --cg-seg:var(--ck-seg); --cg-seg-on:var(--ck-seg-on); --cg-seg-on-ink:var(--ck-seg-ink);
+}
+
+/* ── 4 · Chrome global (barra inferior + paneles de parámetros) ── */
+:root:root .bottom-nav{ background:var(--ck-nav); border-color:var(--ck-line); }
+:root:root #aside, :root:root #aside-presu{ background:var(--ck-surf); }
+
+/* ── 5 · Tipografías de la maqueta ── */
+body{ font-family:"Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body{ background:var(--ck-bg); }
+h1, h2, h3, h4, .chart-title{
+  font-family:"Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
+  letter-spacing:-.02em;
+}
+
+/* ── 6 · Detalles: texto oscuro sobre botón esmeralda ── */
+:root:root .btn-primary{ color:var(--ck-acc-ink); }

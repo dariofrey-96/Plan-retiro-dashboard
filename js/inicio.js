@@ -118,15 +118,8 @@ function renderInicio() {
   H.push(`<div style="padding:6px 2px 2px 2px;"><div style="font-size:1.1rem;font-weight:700;">${saludo}</div>
     <div class="field-hint" style="margin:0;">Tu resumen de hoy · ${hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}</div></div>`);
 
-  // ── Alertas activas (banner, sólo si hay) ──
-  const alertas = iniAlertas();
-  if (alertas.length) {
-    const nombres = alertas.map(a => (typeof catLabel === 'function' ? catLabel(a.id) : a.id)).slice(0, 3).join(', ');
-    H.push(`<button onclick="irASeccionApp('gastos')" style="width:100%;text-align:left;background:var(--red-soft);border:1px solid var(--red);border-radius:var(--radius-md);padding:12px 14px;color:var(--text);cursor:pointer;display:flex;gap:10px;align-items:center;">
-      <span style="font-size:1.1rem;">⚠️</span>
-      <span style="font-size:.82rem;line-height:1.3;"><b>${alertas.length} ${alertas.length === 1 ? 'categoría pasada' : 'categorías pasadas'} de presupuesto</b><br><span style="color:${suave};">${nombres} · tocá para ver</span></span>
-    </button>`);
-  }
+  // (Las categorías pasadas de presupuesto ya no van en un banner propio: aparecen
+  // como el insight de mayor prioridad en el feed "Para vos hoy", más abajo.)
 
   // ── Patrimonio ──
   // Por defecto muestra la cartera de jubilación (no el total): si no se tocó el
@@ -177,6 +170,45 @@ function renderInicio() {
     <div class="field-hint" style="margin-top:8px;">En dólares.</div>
     ${caminoLinea}
   </div>`);
+
+  // ── Libre para gastar este mes ──
+  // La pregunta de todos los días: "¿cuánto me queda para gastar?". Del ingreso
+  // se apartan primero los fondos que guardás mes a mes (inversión + emergencia +
+  // vacaciones) y se le restan los gastos que ya cargaste. Lo que sobra es tu caja
+  // libre. En pesos, como todo el presupuesto.
+  const salarioMes = iniNum('salario');
+  if (salarioMes > 0) {
+    const fondosMes = iniNum('fInversiones') + iniNum('fEmergencia') + iniNum('fVacaciones');
+    const gastoMesTot = (loadGastosAll()[mk] || []).reduce((s, x) => s + (x.monto || 0), 0);
+    const disponible = salarioMes - fondosMes;      // lo que queda tras apartar los fondos
+    const libre = disponible - gastoMesTot;          // lo que te queda para gastar
+    const usado = disponible > 0 ? Math.min(100, Math.max(0, gastoMesTot / disponible * 100)) : 100;
+    const lcol = libre < 0 ? rojo : (disponible > 0 && libre < disponible * 0.15 ? 'var(--orange)' : verde);
+    const barra = libre < 0 ? rojo : (usado >= 85 ? 'var(--orange)' : verde);
+    const sub = libre < 0
+      ? `Te pasaste ${AR(-libre)} de lo que tenías disponible.`
+      : (disponible > 0
+          ? `de ${AR(disponible)} disponibles, después de apartar tus fondos`
+          : 'Tus fondos del mes se llevan todo tu ingreso.');
+    H.push(`<div class="panel-card">
+      <div class="chart-header"><span class="chart-title">💸 Libre para gastar</span>
+        <span class="field-hint" style="margin:0;">este mes</span></div>
+      <div style="font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.05;color:${lcol};">${AR(libre)}</div>
+      <div style="color:${suave};font-size:.82rem;margin-top:5px;">${sub}</div>
+      <div style="height:8px;background:var(--surface3);border-radius:100px;overflow:hidden;margin-top:12px;">
+        <div style="height:100%;width:${usado}%;background:${barra};border-radius:100px;"></div></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:11px;font-size:.78rem;color:${suave};">
+        <span>Ingreso ${AR(salarioMes)}</span><span>− Fondos ${AR(fondosMes)}</span><span>− Gastos ${AR(gastoMesTot)}</span>
+      </div>
+      <div class="field-hint" style="margin-top:8px;">Asumiendo que apartás tus fondos del mes. En pesos.</div>
+    </div>`);
+  }
+
+  // ── Feed de insights ("Para vos hoy"): lo único que hoy importa, en criollo. ──
+  if (typeof renderFeedInsights === 'function') {
+    const feed = renderFeedInsights();
+    if (feed) H.push(feed);
+  }
 
   // ── Gastos del mes vs mismo tramo del mes pasado ──
   const esteMes = iniGastadoHastaDia(mk, dia);

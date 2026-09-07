@@ -7,9 +7,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="FinLab">
-<meta name="theme-color" content="#17161a">
+<meta name="theme-color" content="#0b0d10">
 <title>FinLab</title>
 <link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/componentes.css">
@@ -20,7 +23,9 @@
 <link rel="stylesheet" href="css/cartera-vidrio.css">
 <link rel="stylesheet" href="css/vidrio-app.css">
 <link rel="stylesheet" href="css/inicio.css">
+<link rel="stylesheet" href="css/hoy.css">
 <link rel="stylesheet" href="css/transiciones.css">
+<link rel="stylesheet" href="css/piel.css">
 </head>
 <body>
 <header>
@@ -328,7 +333,7 @@
             <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Acumulación</div>
             <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Retiro</div>
             <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Real</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Meta</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Meta</div>
           </div>
           <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
         </div>
@@ -1130,6 +1135,7 @@
 <script src="js/presupuesto-tooltip.js"></script>
 <script src="js/presupuesto-sync.js"></script>
 <script src="js/inicio.js"></script>
+<script src="js/insights.js"></script>
 <script src="js/navegacion.js"></script>
 <script src="js/transiciones.js"></script>
 <script src="js/parametros.js"></script>

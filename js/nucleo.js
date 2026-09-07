@@ -448,10 +448,10 @@ function recalc(){
   rR.forEach(r=>{lb.push(r.e);dA.push(null);dRet.push(chartMode==='nominal'?r.cF:null);dRl.push(r.cR);dM.push(meta);});
   chart.data.labels=lb;
   chart.data.datasets=[
-    {label:'Capital acumulado',data:dA,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.07)',borderWidth:2.5,pointRadius:0,pointHoverRadius:5,fill:true,tension:0.3,spanGaps:false},
-    {label:'Capital en retiro',data:dRet,borderColor:'#f85149',backgroundColor:'rgba(248,81,73,.05)',borderWidth:2.5,pointRadius:0,pointHoverRadius:5,fill:true,tension:0.3,spanGaps:false},
-    {label:'Capital real (hoy)',data:dRl,borderColor:'#bc8cff',backgroundColor:'rgba(188,140,255,.05)',borderWidth:2,borderDash:[4,3],pointRadius:0,pointHoverRadius:5,fill:chartMode==='real',tension:0.3,spanGaps:true},
-    {label:'Meta',data:dM,borderColor:'#3fb950',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}
+    {label:'Capital acumulado',data:dA,borderColor:'#35d6a0',backgroundColor:'rgba(53,214,160,.07)',borderWidth:2.5,pointRadius:0,pointHoverRadius:5,fill:true,tension:0.3,spanGaps:false},
+    {label:'Capital en retiro',data:dRet,borderColor:'#ff6f6f',backgroundColor:'rgba(255,111,111,.06)',borderWidth:2.5,pointRadius:0,pointHoverRadius:5,fill:true,tension:0.3,spanGaps:false},
+    {label:'Capital real (hoy)',data:dRl,borderColor:'#a98bff',backgroundColor:'rgba(169,139,255,.06)',borderWidth:2,borderDash:[4,3],pointRadius:0,pointHoverRadius:5,fill:chartMode==='real',tension:0.3,spanGaps:true},
+    {label:'Meta',data:dM,borderColor:'#f5b64a',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false}
   ];
   chart.update();
 
@@ -476,14 +476,14 @@ function recalc(){
 
 function renderEsc(){
   const {ea,er,nA,ci,ai,ca,inf,meta}=LC;
-  const escs=[{l:'Pesimista (6%)',r:0.06,c:'#f85149',d:[5,3]},{l:'Base ('+fmtPct(LC.ret)+')',r:LC.ret,c:'#d29922',d:[]},{l:'Optimista (12%)',r:0.12,c:'#3fb950',d:[]}];
+  const escs=[{l:'Pesimista (6%)',r:0.06,c:'#ff6f6f',d:[5,3]},{l:'Base ('+fmtPct(LC.ret)+')',r:LC.ret,c:'#f5b64a',d:[]},{l:'Optimista (12%)',r:0.12,c:'#35d6a0',d:[]}];
   const lb=[];for(let i=1;i<=nA;i++)lb.push(ea+i);
   const ds=escs.map(e=>{
     const data=[];let c=ci,a=ai;
     for(let i=0;i<nA;i++){const aA=a*12;c=c+aA+(c+aA/2)*e.r;data.push(c);a*=(1+ca);}
     return {label:e.l,data,borderColor:e.c,backgroundColor:'transparent',borderWidth:2.5,borderDash:e.d,pointRadius:0,pointHoverRadius:5,fill:false,tension:0.3};
   });
-  ds.push({label:'Meta',data:Array(nA).fill(meta),borderColor:'#3fb950',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,backgroundColor:'transparent'});
+  ds.push({label:'Meta',data:Array(nA).fill(meta),borderColor:'#f5b64a',borderDash:[6,4],borderWidth:1.5,pointRadius:0,fill:false,backgroundColor:'transparent'});
   chartEsc.data.labels=lb;chartEsc.data.datasets=ds;chartEsc.update();
 }
 
@@ -530,7 +530,7 @@ let assets=[],assetIdCounter=0;
 // `carteras` es la fuente de la verdad; `assets` es solo lo que se está viendo.
 let carteras=[],carteraActiva=null;
 const TODAS='__todas__';
-const PAL=['#58a6ff','#3fb950','#bc8cff','#d29922','#f85149','#39d353','#79c0ff','#ffa657','#ff7b72','#a5d6ff'];
+const PAL=['#35d6a0','#63a9ff','#a98bff','#f5b64a','#ff6f6f','#4fe3b0','#79c0ff','#ffd27a','#ff9a9a','#a5d6ff'];
 const CL={crypto:'Crypto',stock:'Acción/ETF',cash:'USD/USDT'};
 
 function updateTickerHint(){
@@ -588,10 +588,10 @@ function renderCartera(){
   $('pct-metal').textContent=tv>0&&mts.length?(tM/tv*100).toFixed(1)+'%':'';
   $('pct-cash').textContent=tv>0&&chs.length?(tCh/tv*100).toFixed(1)+'%':'';
   const cd=[],cc=[],cl=[];
-  if(tC>0){cd.push(tC);cc.push('#58a6ff');cl.push('Crypto');}
-  if(tS>0){cd.push(tS);cc.push('#3fb950');cl.push('Acciones/ETFs');}
-  if(tM>0){cd.push(tM);cc.push('#f0b429');cl.push('Metales');}
-  if(tCh>0){cd.push(tCh);cc.push('#39d353');cl.push('USD/USDT');}
+  if(tC>0){cd.push(tC);cc.push('#63a9ff');cl.push('Crypto');}
+  if(tS>0){cd.push(tS);cc.push('#35d6a0');cl.push('Acciones/ETFs');}
+  if(tM>0){cd.push(tM);cc.push('#f5b64a');cl.push('Metales');}
+  if(tCh>0){cd.push(tCh);cc.push('#a98bff');cl.push('USD/USDT');}
   dCat.data.labels=cl;dCat.data.datasets[0].data=cd;dCat.data.datasets[0].backgroundColor=cc;dCat.update();
   $('donut-total-val').textContent=F(tv);
   const cleg=$('cat-legend');cleg.innerHTML='';

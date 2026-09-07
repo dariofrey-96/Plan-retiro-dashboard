@@ -1,0 +1,24 @@
+/* ── PANTALLA "HOY": feed de insights ─────────────────────────────────────────
+   Estilos del feed de la portada. Usa los tokens de superficie (que la piel de
+   vidrio redefine por token-override), así que hereda solo el look glass. */
+
+.feed { display: flex; flex-direction: column; gap: 8px; }
+
+.feed-item {
+  display: flex; gap: 11px; align-items: flex-start;
+  width: 100%; text-align: left; cursor: pointer;
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-left: 3px solid var(--muted);
+  border-radius: var(--radius-md); padding: 11px 13px;
+  transition: transform .12s ease, background .12s ease;
+}
+.feed-item:hover { background: var(--surface3); }
+.feed-item:active { transform: scale(.99); }
+
+.feed-ic { font-size: 1.15rem; line-height: 1.25; flex-shrink: 0; }
+.feed-tx { font-size: .86rem; line-height: 1.4; flex: 1; }
+.feed-tx b { font-weight: 700; }
+.feed-sub { display: block; color: var(--muted); font-size: .76rem; margin-top: 3px; }
+.feed-chev { color: var(--muted); font-size: 1.15rem; align-self: center; flex-shrink: 0; }
+
+.feed-card .chart-header { margin-bottom: 11px; }
