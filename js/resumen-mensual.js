@@ -16,6 +16,10 @@ function findSnapAtOrBefore(snaps, ts, fallback) {
 }
 
 function renderMonthlySummary() {
+  // La tarjeta "¿Fue el mercado o fuiste vos?" vive ahora arriba, aparte del
+  // resumen. Se oculta por defecto y se muestra sólo si hay datos de benchmark.
+  const mvCard = document.getElementById('mercado-vos-card');
+  if (mvCard) mvCard.style.display = 'none';
   const el = $('monthly-summary');
   if (!el || !histData) return;
   // Cada medición se mira desde la cartera elegida antes de hacer cualquier
@@ -110,11 +114,13 @@ function renderMonthlySummary() {
   el.innerHTML = `
     <div class="ckpi"><div class="ckpi-label">Cartera en ${monthName}</div><div class="ckpi-val ${cls}">${sign}${fmtC(delta)} (${sign}${pct.toFixed(1)}%)</div></div>
     ${prevComparisonHtml}
-    ${renderBenchmarkBlock(startSnap, endSnap, pct)}
     ${gainers.length ? `<div class="summary-block"><div class="summary-block-title">📈 Lo que más subió</div>${gainers.map(m => moverRow(m, true)).join('')}</div>` : ''}
     ${losers.length ? `<div class="summary-block"><div class="summary-block-title">📉 Lo que más cayó</div>${losers.map(m => moverRow(m, false)).join('')}</div>` : ''}
     ${catDeltas.length ? `<div class="summary-block"><div class="summary-block-title">Por categoría</div>${catDeltas.map(catRow).join('')}</div>` : ''}
   `;
+
+  // Pinta la tarjeta "¿Fue el mercado o fuiste vos?" (arriba, aparte).
+  pintarMercadoVos(startSnap, endSnap, pct);
 }
 
 // ── "¿FUE EL MERCADO O FUI YO?" ────────────────────────────────────────────
@@ -122,32 +128,39 @@ function renderMonthlySummary() {
 // todo esto devuelve '' si no hay datos en ambas puntas del período.
 const BENCH_LABELS = { spy: 'S&P 500', btc: 'Bitcoin', gold: 'Oro' };
 
-function renderBenchmarkBlock(startSnap, endSnap, carteraPct) {
+// Compara el rendimiento de la cartera del mes contra referencias (S&P, BTC,
+// Oro). Los snapshots viejos no traen benchmarks, así que devuelve null si no hay
+// datos en ambas puntas del período; quien lo llama decide si dibuja algo.
+function calcBenchmarks(startSnap, endSnap, carteraPct) {
   const b0 = startSnap.benchmarks, b1 = endSnap.benchmarks;
-  if (!b0 || !b1) return '';
-
+  if (!b0 || !b1) return null;
   const filas = Object.keys(BENCH_LABELS)
     .filter(k => typeof b0[k] === 'number' && b0[k] > 0 && typeof b1[k] === 'number')
     .map(k => ({ clave: k, pct: (b1[k] - b0[k]) / b0[k] * 100 }));
-  if (!filas.length) return '';
-
-  const fila = f => `<div class="mover-row"><span>${BENCH_LABELS[f.clave]}</span><span class="${f.pct >= 0 ? 'green' : 'red'}">${f.pct >= 0 ? '+' : ''}${f.pct.toFixed(1)}%</span></div>`;
-
-  // La lectura en criollo: compara tu cartera contra el promedio de las
-  // referencias, para decir si el movimiento fue tuyo o del mercado en general.
+  if (!filas.length) return null;
   const promedio = filas.reduce((s, f) => s + f.pct, 0) / filas.length;
   const dif = carteraPct - promedio;
   let lectura;
-  if (Math.abs(dif) < 0.5) lectura = 'Tu cartera se movió prácticamente igual que el mercado.';
-  else if (dif > 0) lectura = `Tu cartera le ganó al mercado por ${dif.toFixed(1)} puntos. 👏`;
-  else lectura = `Tu cartera quedó ${Math.abs(dif).toFixed(1)} puntos por debajo del mercado.`;
+  if (Math.abs(dif) < 0.5) lectura = 'Te moviste prácticamente igual que el mercado.';
+  else if (dif > 0) lectura = `Le ganaste al mercado por ${dif.toFixed(1)} puntos. 👏`;
+  else lectura = `Quedaste ${Math.abs(dif).toFixed(1)} puntos por debajo del mercado.`;
+  return { filas, lectura, carteraPct };
+}
 
-  return `<div class="summary-block">
-    <div class="summary-block-title">🌍 ¿Fue el mercado o fuiste vos?</div>
-    <div class="mover-row"><span><b>Tu cartera</b></span><span class="${carteraPct >= 0 ? 'green' : 'red'}"><b>${carteraPct >= 0 ? '+' : ''}${carteraPct.toFixed(1)}%</b></span></div>
-    ${filas.map(fila).join('')}
-    <div class="field-hint">${lectura}</div>
-  </div>`;
+// Dibuja la tarjeta "¿Fue el mercado o fuiste vos?" (arriba de Cartera). Se
+// oculta si no hay datos de benchmark en el período.
+function pintarMercadoVos(startSnap, endSnap, carteraPct) {
+  const card = document.getElementById('mercado-vos-card');
+  const cont = document.getElementById('mercado-vos');
+  if (!card || !cont) return;
+  const d = calcBenchmarks(startSnap, endSnap, carteraPct);
+  if (!d) { cont.innerHTML = ''; card.style.display = 'none'; return; }
+  const fila = f => `<div class="mover-row"><span>${BENCH_LABELS[f.clave]}</span><span class="${f.pct >= 0 ? 'green' : 'red'}">${f.pct >= 0 ? '+' : ''}${f.pct.toFixed(1)}%</span></div>`;
+  cont.innerHTML =
+    `<div class="mover-row"><span><b>Tu cartera</b></span><span class="${d.carteraPct >= 0 ? 'green' : 'red'}"><b>${d.carteraPct >= 0 ? '+' : ''}${d.carteraPct.toFixed(1)}%</b></span></div>` +
+    d.filas.map(fila).join('') +
+    `<div class="field-hint" style="margin-top:8px">${d.lectura}</div>`;
+  card.style.display = '';
 }
 
 (function () {
