@@ -443,9 +443,25 @@ function renderGastos() {
   if (otroReal > 0) pvRows.push({ id: 'otro', presu: 0, real: otroReal, pct: 1.3, color: 'var(--red)' });
 
   const disponible = totalPresu - totalRealPresu - otroReal;
-  const dEl = $('gk-disponible');
-  dEl.textContent = fmtARS(disponible);
-  dEl.className = 'gk-val ' + (disponible >= 0 ? 'green' : 'red');
+  // Medidor de presupuesto del mes (reemplaza las 4 fichas sueltas): gastado vs
+  // presupuesto, barra de uso y cuánto te queda. Toda la info en una tarjeta.
+  const gastadoPresu = totalRealPresu + otroReal;      // lo que va contra el presupuesto
+  const usoPct = totalPresu > 0 ? Math.min(100, Math.max(0, gastadoPresu / totalPresu * 100)) : 0;
+  const gbud = $('gg-budget'); if (gbud) gbud.textContent = totalPresu > 0 ? fmtARS(totalPresu) : '—';
+  const gfill = $('gg-fill');
+  if (gfill) {
+    gfill.style.width = usoPct + '%';
+    gfill.style.background = disponible < 0 ? 'var(--red)' : (usoPct >= 85 ? 'var(--orange)' : 'var(--green)');
+  }
+  const gleft = $('gg-left');
+  if (gleft) {
+    gleft.innerHTML = totalPresu <= 0
+      ? 'Definí presupuesto en las categorías'
+      : (disponible >= 0
+          ? `Te queda <b>${fmtARS(disponible)}</b>`
+          : `Te pasaste <b style="color:var(--red)">${fmtARS(-disponible)}</b>`);
+  }
+  const gday = $('gg-day'); if (gday) gday.textContent = esMesActual ? ('al día ' + new Date().getDate()) : '';
 
   updateRetiroPreview();
 

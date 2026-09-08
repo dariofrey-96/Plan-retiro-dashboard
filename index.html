@@ -882,22 +882,22 @@
             </div>
           </div>
 
-          <div class="gastos-kpis">
-            <div class="gk">
-              <div class="gk-label">Gastado este mes</div>
-              <div class="gk-val red" id="gk-total">$0</div>
+          <div class="panel-card gastos-gauge">
+            <div class="gg-head">
+              <span class="gg-title">Gastado este mes</span>
+              <span class="field-hint" id="gg-day" style="margin:0"></span>
             </div>
-            <div class="gk">
-              <div class="gk-label">Disponible este mes</div>
-              <div class="gk-val" id="gk-disponible">$0</div>
+            <div class="gg-amount">
+              <span class="gg-spent" id="gk-total">$0</span>
+              <span class="gg-budget">de <span id="gg-budget">$0</span></span>
             </div>
-            <div class="gk">
-              <div class="gk-label">Cantidad de registros</div>
-              <div class="gk-val" id="gk-count">0</div>
-            </div>
-            <div class="gk">
-              <div class="gk-label">Categoría con más gasto</div>
-              <div class="gk-val" id="gk-top" style="font-size:.85rem">—</div>
+            <div class="gg-track"><div class="gg-fill" id="gg-fill"></div></div>
+            <div class="gg-meta">
+              <span id="gg-left">—</span>
+              <span class="gg-sep">·</span>
+              <span><b id="gk-count">0</b> gastos</span>
+              <span class="gg-sep">·</span>
+              <span>mayor: <span id="gk-top">—</span></span>
             </div>
           </div>
 

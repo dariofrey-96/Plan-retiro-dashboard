@@ -1,6 +1,21 @@
 /* Extras de la sección Gastos escritos a mano (ningún generador los toca, a
    diferencia de presupuesto.css, que lo reescriben los scripts). Reusa tokens. */
 
+/* Medidor de presupuesto del mes (reemplaza las 4 fichas de KPI). Insight-first:
+   un solo número claro (gastado vs presupuesto), barra de uso y cuánto te queda. */
+.gastos-gauge { margin-bottom: 4px; }
+.gg-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gg-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.gg-amount { display: flex; align-items: baseline; gap: 9px; margin-top: 6px; flex-wrap: wrap; }
+.gg-spent { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+.gg-budget { color: var(--muted); font-size: .9rem; }
+.gg-budget span { font-weight: 600; color: var(--text); }
+.gg-track { height: 9px; background: var(--surface3); border-radius: 100px; overflow: hidden; margin-top: 12px; }
+.gg-fill { height: 100%; width: 0; background: var(--green); border-radius: 100px; transition: width .3s ease; }
+.gg-meta { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-top: 11px; font-size: .78rem; color: var(--muted); }
+.gg-meta b { color: var(--text); font-weight: 700; }
+.gg-sep { opacity: .45; }
+
 /* Sub-navegación Gastos / Resumen (control segmentado dentro de la mitad de
    presupuesto). Antes Resumen y Gastos eran dos ítems de la barra de abajo; con
    las 4 pestañas, Resumen se pliega acá. Visible en mobile y escritorio. */
