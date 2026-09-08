@@ -9,13 +9,13 @@
 // En los bordes (no hay vecina) o con "reducir movimiento", se usa un modo simple:
 // la sección se corre un poco con resistencia y, al soltar, cambia o vuelve.
 function seccionActualIdx() {
-  return SECCIONES_APP.findIndex(s => s.id === seccionActual);
+  return SECCIONES_NAV.indexOf(seccionActual);
 }
 
 function irASeccion(idx) {
-  const s = SECCIONES_APP[idx];
-  if (!s || s.id === seccionActual) return;
-  irASeccionApp(s.id);
+  const id = SECCIONES_NAV[idx];
+  if (!id || id === seccionActual) return;
+  irASeccionApp(id);
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
@@ -91,7 +91,7 @@ function gestoBloqueado(el) {
     } else if (el) {
       let d = dx;
       const idx = seccionActualIdx();
-      if ((idx === 0 && dx > 0) || (idx === SECCIONES_APP.length - 1 && dx < 0)) d = dx * 0.32;
+      if ((idx === 0 && dx > 0) || (idx === SECCIONES_NAV.length - 1 && dx < 0)) d = dx * 0.32;
       else d = dx * 0.5;   // sin animación de vecina: se corre poco
       el.style.transition = 'none';
       el.style.transform = 'translateX(' + d + 'px)';
@@ -117,7 +117,7 @@ function gestoBloqueado(el) {
     document.body.classList.remove('nav-dragging');
     const idx = seccionActualIdx();
     const objetivo = dx < 0 ? idx + 1 : idx - 1;
-    const puede = objetivo >= 0 && objetivo < SECCIONES_APP.length;
+    const puede = objetivo >= 0 && objetivo < SECCIONES_NAV.length;
     if (puede && Math.abs(dx) > umbral) {
       limpiarSimple(elem);
       irASeccion(objetivo);

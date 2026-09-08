@@ -17,6 +17,12 @@ const SECCIONES_APP = [
   { id: 'cartera', mitad: 'retiro',      ir: () => switchView('cartera') },
 ];
 
+// Orden de las CUATRO pestañas para deslizar con el dedo (mismo orden que la
+// barra de abajo): Hoy · Gastos · Cartera · Futuro. Resumen NO está: se cambia
+// con el sub-toggle dentro de Gastos, no deslizando. Lo usan deslizar.js y el
+// pager de transiciones.js — si no, el swipe recorría las 6 secciones viejas.
+const SECCIONES_NAV = ['inicio', 'gastos', 'cartera', 'retiro'];
+
 // El subtítulo del encabezado dice en qué sección estás. Antes ese lugar decía
 // "USD · personal", que valía sólo para una de las dos mitades.
 const NOMBRES_SECCION = {

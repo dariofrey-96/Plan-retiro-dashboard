@@ -19,7 +19,7 @@
   const reduce = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function idxDe(id) { return SECCIONES_APP.findIndex(s => s.id === id); }
+  function idxDe(id) { return SECCIONES_NAV.indexOf(id); }
   function mitadDe(id) { const s = SECCIONES_APP.find(x => x.id === id); return s ? s.mitad : null; }
 
   // El elemento "página" de cada sección (para la animación de entrada por toque).
@@ -113,8 +113,8 @@
       const cur = seccionActual;
       const idx = idxDe(cur);
       const oi = idx + (pdir > 0 ? 1 : -1);
-      if (oi < 0 || oi >= SECCIONES_APP.length) return false;
-      const tgt = SECCIONES_APP[oi].id;
+      if (oi < 0 || oi >= SECCIONES_NAV.length) return false;
+      const tgt = SECCIONES_NAV[oi];
 
       const header = document.querySelector('header');
       const nav = document.getElementById('bottom-nav');
