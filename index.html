@@ -421,11 +421,10 @@
   </div>
   <div class="view" id="view-cartera">
     <div class="cartera-layout">
-      <div class="chart-header currency-toggle-row" style="padding:0 2px">
+      <div class="chart-header cartera-hdr" style="padding:0 2px">
         <div class="toggle-wrap" id="cartera-selector"></div>
         <button class="btn-carteras" onclick="abrirGestorCarteras()" title="Crear, renombrar o borrar carteras">⚙ Carteras</button>
-      </div>
-      <div class="chart-header currency-toggle-row" style="padding:0 2px">
+        <span class="cartera-hdr-spacer"></span>
         <span class="field-hint" id="ars-rate-hint" style="margin:0"></span>
         <div class="toggle-wrap currency-toggle">
           <button class="toggle-btn active" data-cur="USD" onclick="setCarteraCurrency('USD',this)">USD</button>
@@ -458,32 +457,44 @@
           <div class="field-hint" id="hist-stale-msg" style="display:none;color:var(--orange)"></div>
         </div>
 
-        <div class="panel-card" id="mercado-vos-card" style="display:none">
-          <div class="chart-header">
-            <span class="chart-title">🌍 ¿Fue el mercado o fuiste vos?</span>
-            <span class="field-hint" style="margin:0">este mes</span>
+        <button class="colap-toggle" id="resumen-toggle" onclick="toggleColapsable('cartera-resumen-detalle', this)" aria-expanded="false" aria-controls="cartera-resumen-detalle">
+          <span>🗓️ Resumen del mes · ¿mercado o vos?</span>
+          <span class="colap-chevron" aria-hidden="true">▾</span>
+        </button>
+        <div id="cartera-resumen-detalle" hidden>
+          <div class="panel-card" id="mercado-vos-card" style="display:none">
+            <div class="chart-header">
+              <span class="chart-title">🌍 ¿Fue el mercado o fuiste vos?</span>
+              <span class="field-hint" style="margin:0">este mes</span>
+            </div>
+            <div id="mercado-vos"></div>
           </div>
-          <div id="mercado-vos"></div>
+
+          <div class="panel-card" id="monthly-summary-card">
+            <div class="chart-header">
+              <span class="chart-title">🗓️ Resumen del mes</span>
+            </div>
+            <div id="monthly-summary"><div class="field-hint">Todavía no hay suficiente historial para armar el resumen del mes.</div></div>
+          </div>
         </div>
 
-        <div class="panel-card" id="monthly-summary-card">
-          <div class="chart-header">
-            <span class="chart-title">🗓️ Resumen del mes</span>
-          </div>
-          <div id="monthly-summary"><div class="field-hint">Todavía no hay suficiente historial para armar el resumen del mes.</div></div>
-        </div>
+        <button class="colap-toggle" id="donut-toggle" onclick="toggleDonuts(this)" aria-expanded="false" aria-controls="cartera-donut-detalle">
+          <span>🍩 Ver distribución (categorías y activos)</span>
+          <span class="colap-chevron" aria-hidden="true">▾</span>
+        </button>
+        <div id="cartera-donut-detalle" hidden>
+          <div class="donut-row">
+            <div class="panel-card">
+              <div class="donut-block-title">Por categoría</div>
+              <div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div>
+              <div class="cat-legend" id="cat-legend"></div>
+            </div>
 
-        <div class="donut-row">
-          <div class="panel-card">
-            <div class="donut-block-title">Por categoría</div>
-            <div class="donut-wrap"><canvas id="donut-cat"></canvas><div class="donut-label"><div class="donut-total" id="donut-total-val">$0</div><div class="donut-sub">total</div></div></div>
-            <div class="cat-legend" id="cat-legend"></div>
-          </div>
-
-          <div class="panel-card">
-            <div class="donut-block-title">Por activo</div>
-            <div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div>
-            <div class="cat-legend" id="asset-legend"></div>
+            <div class="panel-card">
+              <div class="donut-block-title">Por activo</div>
+              <div class="donut-wrap"><canvas id="donut-asset"></canvas><div class="donut-label"><div class="donut-total" id="donut-asset-val" style="font-size:.72rem">—</div><div class="donut-sub">mayor pos.</div></div></div>
+              <div class="cat-legend" id="asset-legend"></div>
+            </div>
           </div>
         </div>
 

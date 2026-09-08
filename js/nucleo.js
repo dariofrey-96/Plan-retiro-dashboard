@@ -548,7 +548,9 @@ let assets=[],assetIdCounter=0;
 // `carteras` es la fuente de la verdad; `assets` es solo lo que se está viendo.
 let carteras=[],carteraActiva=null;
 const TODAS='__todas__';
-const PAL=['#35d6a0','#63a9ff','#a98bff','#f5b64a','#ff6f6f','#4fe3b0','#79c0ff','#ffd27a','#ff9a9a','#a5d6ff'];
+// Paleta del donut "por activo": hues BIEN distintos (nada de dos verdes o dos
+// azules casi iguales), así activos vecinos nunca se confunden de color.
+const PAL=['#35d6a0','#63a9ff','#f5b64a','#a98bff','#ff6f6f','#f272c8','#5ad1e0','#c3e14a','#ff9d5c','#8f9bff'];
 const CL={crypto:'Crypto',stock:'Acción/ETF',cash:'USD/USDT'};
 
 function updateTickerHint(){
@@ -671,7 +673,12 @@ function rTbl(tbId,list,tv,bc,al,agp,agm){
     }
     const ts=a.lastUpdate?'<span class="price-ts">'+a.lastUpdate+'</span>':'';
     const qtyTxt=a.qty.toLocaleString('es-AR',{maximumFractionDigits:6});
-    const spark=sparklineSVG(serieActivoHist(snapsOrd,a.ticker));
+    // Serie del historial; si todavía no hay 2 puntos, cae a "desde tu compra
+    // hasta hoy" (precio promedio → precio actual) para que el mini-gráfico
+    // siempre aparezca.
+    let serie=serieActivoHist(snapsOrd,a.ticker);
+    if(serie.length<2 && (a.costBasis||0)>0) serie=[a.qty*a.costBasis, v];
+    const spark=sparklineSVG(serie);
     tb.innerHTML+=`<div class="asset-card">
       <div class="ac-top">
         <div class="ac-id">

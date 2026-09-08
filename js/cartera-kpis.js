@@ -128,3 +128,24 @@ function renderCarteraKpis(tv, tc, tp, pp) {
   function ini() { const a = document.querySelector('#mitad-retiro .view.active'); if (a) toggleStrip(a.id.replace('view-', '')); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ini); else ini();
 })();
+
+// ── Secciones colapsables de Cartera (resumen del mes / distribución) ─────────
+// Arrancan plegadas para que la página no ocupe tanto; el botón las despliega.
+function toggleColapsable(boxId, btn) {
+  const box = document.getElementById(boxId);
+  if (!box) return false;
+  const abrir = box.hidden;
+  box.hidden = !abrir;
+  if (btn) { btn.classList.toggle('abierto', abrir); btn.setAttribute('aria-expanded', abrir ? 'true' : 'false'); }
+  return abrir;
+}
+
+// Las donas son canvas: Chart.js no las puede medir mientras están ocultas, así
+// que al mostrarlas hay que re-dimensionarlas o quedan en blanco.
+function toggleDonuts(btn) {
+  const abrio = toggleColapsable('cartera-donut-detalle', btn);
+  if (abrio) setTimeout(function () {
+    try { if (typeof dCat !== 'undefined') { dCat.resize(); dCat.update(); } } catch (e) {}
+    try { if (typeof dAsset !== 'undefined') { dAsset.resize(); dAsset.update(); } } catch (e) {}
+  }, 40);
+}

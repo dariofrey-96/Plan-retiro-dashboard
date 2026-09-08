@@ -64,3 +64,21 @@
 #mitad-retiro .cat-leg-left span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #mitad-retiro .cat-dot { width: 11px; height: 11px; border-radius: 4px; }
 #mitad-retiro .cat-leg-pct { font-size: .78rem; color: var(--text); white-space: nowrap; }
+
+/* ── Cabecera de Cartera en un solo renglón ── */
+.cartera-hdr { justify-content: flex-start; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cartera-hdr-spacer { flex: 1 1 auto; }
+
+/* ── Botones de secciones colapsables (resumen del mes / distribución) ── */
+.colap-toggle {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  border-radius: 14px; padding: 12px 15px; cursor: pointer;
+  font-size: .85rem; font-weight: 600; box-shadow: var(--shadow-card);
+  transition: background .12s ease;
+}
+.colap-toggle:hover { background: var(--surface-2); }
+.colap-toggle .colap-chevron { color: var(--muted); transition: transform .2s ease; }
+.colap-toggle.abierto .colap-chevron { transform: rotate(180deg); }
+#cartera-resumen-detalle:not([hidden]),
+#cartera-donut-detalle:not([hidden]) { display: flex; flex-direction: column; gap: 14px; margin-top: -2px; }
