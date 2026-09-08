@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Cartera · activos en TARJETAS (antes eran tablas densas que scrolleaban de
+   costado en el celular). Cada activo es una tarjeta con su valor, P&L, 24h, un
+   mini-gráfico (sparkline) de su evolución y los botones de acción.
+   Se carga DESPUÉS de cartera-vidrio.css para neutralizar el fondo de vidrio de
+   cada sección (si no, quedaría una tarjeta dentro de otra). Aditivo/revertible.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Cada categoría deja de ser una tarjeta y pasa a ser un grupo titulado: así las
+   tarjetas de adentro no quedan "tarjeta dentro de tarjeta". */
+#mitad-retiro #view-cartera .assets-section{
+  background: transparent; border: none; box-shadow: none; overflow: visible;
+  padding: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+#mitad-retiro #view-cartera .section-title{
+  padding: 0 2px 2px; display: flex; justify-content: space-between;
+  align-items: baseline; gap: 8px;
+}
+
+/* Contenedor: una columna en el celular, dos en pantalla ancha. */
+.asset-cards{ display: flex; flex-direction: column; gap: 9px; margin-top: 6px; }
+@media (min-width: 760px){ .asset-cards{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } }
+
+/* La tarjeta de cada activo. */
+.asset-card{
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 9px;
+  box-shadow: var(--shadow-card);
+}
+
+.ac-top{ display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.ac-id{ min-width: 0; flex: 1; }
+.ac-head{ display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.ac-ticker{ font-weight: 800; font-size: 1rem; letter-spacing: -.01em; }
+.ac-name{ color: var(--muted); font-size: .76rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-spark{ flex: 0 0 auto; align-self: center; }
+
+.ac-nums{ display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.ac-val{ font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; }
+.ac-qty{ color: var(--muted); font-size: .72rem; margin-top: 2px; }
+.ac-perf{ text-align: right; font-size: .82rem; font-weight: 600; white-space: nowrap; }
+.ac-24h{ font-size: .72rem; font-weight: 600; margin-top: 2px; }
+
+.ac-actions{
+  display: flex; gap: 4px; justify-content: flex-end; align-items: center;
+  padding-top: 8px; border-top: 1px solid var(--hairline);
+}
+
+/* Colores de P&L / 24h por si algún tema no los define en este contexto. */
+.asset-card .pnl-pos, .asset-card .change-pos{ color: var(--green); }
+.asset-card .pnl-neg, .asset-card .change-neg{ color: var(--red); }
+.asset-card .change-neu, .asset-card .ac-24h.change-neu{ color: var(--muted); }

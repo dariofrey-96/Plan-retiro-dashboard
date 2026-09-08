@@ -604,10 +604,40 @@ function renderCartera(){
   renderSnaps();
 }
 
+// Mini-gráfico (sparkline) de un activo: la evolución de su VALOR en el
+// historial (byAsset del snapshot). SVG inline, sin librería. Devuelve '' si no
+// hay al menos dos puntos. Verde si terminó arriba de donde arrancó, rojo si no.
+function sparklineSVG(vals, w, h) {
+  w = w || 66; h = h || 24;
+  const nums = (vals || []).filter(v => typeof v === 'number' && isFinite(v));
+  if (nums.length < 2) return '';
+  const min = Math.min(...nums), max = Math.max(...nums), rng = (max - min) || 1;
+  const pts = nums.map((v, i) => {
+    const x = (i / (nums.length - 1)) * w;
+    const y = h - 2 - ((v - min) / rng) * (h - 4);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const col = nums[nums.length - 1] >= nums[0] ? 'var(--green)' : 'var(--red)';
+  return '<svg class="ac-spark" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h +
+    '" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="' + col +
+    '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+// Serie de valores de un ticker a lo largo del historial (últimos ~24 puntos).
+function serieActivoHist(snapsOrd, ticker) {
+  return snapsOrd.map(s => (s.byAsset && s.byAsset[ticker] != null) ? s.byAsset[ticker] : null)
+                 .filter(v => v != null);
+}
+
 function rTbl(tbId,list,tv,bc,al,agp,agm){
   const tb=$(tbId);tb.innerHTML='';
+  const snapsOrd = (typeof histData!=='undefined' && histData && histData.snapshots)
+    ? [...histData.snapshots].sort((x,y)=>getSnapTime(x)-getSnapTime(y)).slice(-24)
+    : [];
+  const F = (typeof fmtC==='function') ? fmtC : fmt;
+  const FP = (typeof fmtPrice==='function') ? fmtPrice : (n=>'$'+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6}));
   list.forEach(a=>{
-    const v=a.qty*a.price,p=tv>0?(v/tv*100).toFixed(1)+'%':'—';
+    const v=a.qty*a.price;
     const cost=a.qty*(a.costBasis||a.price),pnl=v-cost,ppnl=cost>0?pnl/cost*100:0;
     const pc=pnl>=0?'pnl-pos':'pnl-neg';
     const cc=a.change24h==null?'change-neu':a.change24h>=0?'change-pos':'change-neg';
@@ -622,21 +652,30 @@ function rTbl(tbId,list,tv,bc,al,agp,agm){
       }
     }
     const ts=a.lastUpdate?'<span class="price-ts">'+a.lastUpdate+'</span>':'';
-    tb.innerHTML+=`<tr>
-      <td><span class="asset-name">${a.name}${alert}${gainAlert}</span><span class="asset-ticker">${a.ticker} <span class="cat-badge ${bc}">${CL[a.cat]||a.cat}</span></span></td>
-      <td>${a.qty.toLocaleString('es-AR',{maximumFractionDigits:6})}</td>
-      <td>${typeof fmtPrice==='function'?fmtPrice(a.price):'$'+a.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:6})}${ts}</td>
-      <td style="font-weight:600">${typeof fmtC==='function'?fmtC(v):'$'+Math.round(v).toLocaleString('es-AR')}</td>
-      <td class="${pc}">${pnl>=0?'+':''}${typeof fmtC==='function'?fmtC(pnl):fmt(pnl)}<br><span style="font-size:.6rem">${(ppnl>=0?'+':'')+ppnl.toFixed(1)}%</span></td>
-      <td class="${cc}">${fmtCh(a.change24h)}</td>
-      <td style="color:var(--muted)">${p}</td>
-      <td style="display:flex;gap:3px;justify-content:center;align-items:center">
+    const qtyTxt=a.qty.toLocaleString('es-AR',{maximumFractionDigits:6});
+    const spark=sparklineSVG(serieActivoHist(snapsOrd,a.ticker));
+    tb.innerHTML+=`<div class="asset-card">
+      <div class="ac-top">
+        <div class="ac-id">
+          <div class="ac-head"><span class="ac-ticker">${a.ticker}</span><span class="cat-badge ${bc}">${CL[a.cat]||a.cat}</span>${alert}${gainAlert}</div>
+          <div class="ac-name">${a.name}</div>
+        </div>
+        ${spark}
+      </div>
+      <div class="ac-nums">
+        <div><div class="ac-val">${F(v)}</div><div class="ac-qty">${qtyTxt} u · ${FP(a.price)}${ts}</div></div>
+        <div class="ac-perf">
+          <div class="${pc}">${pnl>=0?'+':''}${F(pnl)} · ${(ppnl>=0?'+':'')+ppnl.toFixed(1)}%</div>
+          <div class="ac-24h ${cc}">24h ${fmtCh(a.change24h)}</div>
+        </div>
+      </div>
+      <div class="ac-actions">
         ${a.cat!=='cash'?`<button class="buy-btn" onclick="openBuyModal(${a.id})" title="Agregar una compra (promedia el precio)">➕</button>`:''}
         ${a.cat!=='cash'?`<button class="sell-btn" onclick="openSellModal(${a.id})" title="Vender / pasar a USD">💵</button>`:''}
         <button class="edit-btn" onclick="openEditModal(${a.id})" title="Editar precio de compra / cantidad">✏</button>
         <button class="del-btn" onclick="removeAsset(${a.id})" title="Eliminar">✕</button>
-      </td>
-    </tr>`;
+      </div>
+    </div>`;
   });
 }
 

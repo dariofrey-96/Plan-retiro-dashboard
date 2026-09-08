@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="css/gastos.css">
 <link rel="stylesheet" href="css/cartera-vidrio.css">
 <link rel="stylesheet" href="css/vidrio-app.css">
+<link rel="stylesheet" href="css/cartera-cards.css">
 <link rel="stylesheet" href="css/inicio.css">
 <link rel="stylesheet" href="css/hoy.css">
 <link rel="stylesheet" href="css/transiciones.css">
@@ -472,19 +473,19 @@
 
         <div class="assets-section" id="section-crypto" style="display:none">
           <div class="section-title"><span>Crypto <span style="color:var(--accent);margin-left:6px" id="total-crypto"></span></span><span id="pct-crypto" style="font-size:.64rem;color:var(--muted)"></span></div>
-          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-crypto"></tbody></table></div>
+          <div class="asset-cards" id="tbody-crypto"></div>
         </div>
         <div class="assets-section" id="section-stocks" style="display:none">
           <div class="section-title"><span>Acciones / ETFs <span style="color:var(--green);margin-left:6px" id="total-stocks"></span></span><span id="pct-stocks" style="font-size:.64rem;color:var(--muted)"></span></div>
-          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-stocks"></tbody></table></div>
+          <div class="asset-cards" id="tbody-stocks"></div>
         </div>
         <div class="assets-section" id="section-metal" style="display:none">
           <div class="section-title"><span>Metales <span style="color:var(--orange);margin-left:6px" id="total-metal"></span></span><span id="pct-metal" style="font-size:.64rem;color:var(--muted)"></span></div>
-          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-metal"></tbody></table></div>
+          <div class="asset-cards" id="tbody-metal"></div>
         </div>
         <div class="assets-section" id="section-cash" style="display:none">
           <div class="section-title"><span>USD / USDT (liquidez) <span style="color:var(--green);margin-left:6px" id="total-cash"></span></span><span id="pct-cash" style="font-size:.64rem;color:var(--muted)"></span></div>
-          <div style="overflow-x:auto"><table class="asset-table"><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Valor</th><th>P&L</th><th>24h</th><th>%</th><th></th></tr></thead><tbody id="tbody-cash"></tbody></table></div>
+          <div class="asset-cards" id="tbody-cash"></div>
         </div>
 
         <div class="assets-section">
