@@ -37,7 +37,7 @@ function repintar() {
 
 function setTab(t) {
   currentTab = t;
-  document.querySelectorAll('.tab[data-tab], .bn-item[data-tab]').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab[data-tab], .bn-item[data-tab], .toggle-btn[data-tab]').forEach(b => b.classList.remove('active'));
   document.querySelectorAll(`[data-tab="${t}"]`).forEach(b => b.classList.add('active'));
   $('view-gastos').style.display  = t === 'gastos'  ? '' : 'none';
   $('view-resumen').style.display = t === 'resumen' ? '' : 'none';

@@ -20,10 +20,10 @@ const SECCIONES_APP = [
 // El subtítulo del encabezado dice en qué sección estás. Antes ese lugar decía
 // "USD · personal", que valía sólo para una de las dos mitades.
 const NOMBRES_SECCION = {
-  inicio:  'Tu resumen',
+  inicio:  'Hoy',
   resumen: 'Resumen del mes',
   gastos:  'Gastos del mes',
-  retiro:  'Proyección de retiro · USD',
+  retiro:  'Futuro · Proyección USD',
   cartera: 'Cartera de inversión · USD',
 };
 

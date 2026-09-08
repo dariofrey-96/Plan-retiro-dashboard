@@ -32,14 +32,13 @@
 <header>
   <div class="header-left"><h1>FinLab</h1><span class="sub" id="seccion-actual-nombre"></span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" data-seccion="inicio" onclick="irASeccionApp('inicio')">Inicio</button>
-    <button class="nav-tab" data-seccion="resumen" onclick="irASeccionApp('resumen')">Resumen</button>
+    <button class="nav-tab active" data-seccion="inicio" onclick="irASeccionApp('inicio')">Hoy</button>
     <button class="nav-tab" data-seccion="gastos" onclick="irASeccionApp('gastos')">Gastos</button>
-    <button class="nav-tab" data-seccion="retiro" onclick="irASeccionApp('retiro')">Proyección</button>
     <button class="nav-tab" data-seccion="cartera" onclick="irASeccionApp('cartera')">Cartera</button>
+    <button class="nav-tab" data-seccion="retiro" onclick="irASeccionApp('retiro')">Futuro</button>
   </div>
   <div class="header-right">
-    <button class="sidebar-toggle" id="sidebar-toggle" onclick="abrirAjustesDeLaSeccion()">⚙ Ajustes</button>
+    <button class="icon-btn" id="ajustes-btn" onclick="abrirAjustesDeLaSeccion()" title="Ajustes">⚙</button>
     <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Tema">🌙</button>
   </div>
 </header>
@@ -861,6 +860,13 @@
 
   <main>
     <div class="content">
+      <!-- Sub-navegación Gastos / Resumen (antes eran dos ítems de la barra) -->
+      <div class="presu-subtabs-wrap">
+        <div class="toggle-wrap presu-subtabs">
+          <button class="toggle-btn active" data-tab="gastos" onclick="setTab('gastos')">Gastos</button>
+          <button class="toggle-btn" data-tab="resumen" onclick="setTab('resumen')">Resumen</button>
+        </div>
+      </div>
       <!-- VIEW: GASTOS DEL MES -->
       <div id="view-gastos" style="display:none">
         <div class="view-pad gastos-view">
@@ -1029,12 +1035,10 @@
 </div>
 
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bn-item active" data-seccion="inicio" onclick="irASeccionApp('inicio')"><span class="bn-ic">⌂</span>Inicio</button>
-  <button class="bn-item" data-seccion="resumen" onclick="irASeccionApp('resumen')"><span class="bn-ic">◔</span>Resumen</button>
+  <button class="bn-item active" data-seccion="inicio" onclick="irASeccionApp('inicio')"><span class="bn-ic">⌂</span>Hoy</button>
   <button class="bn-item" data-seccion="gastos" onclick="irASeccionApp('gastos')"><span class="bn-ic">＋</span>Gastos</button>
-  <button class="bn-item" data-seccion="retiro" onclick="irASeccionApp('retiro')"><span class="bn-ic">📈</span>Proyección</button>
   <button class="bn-item" data-seccion="cartera" onclick="irASeccionApp('cartera')"><span class="bn-ic">💼</span>Cartera</button>
-  <button class="bn-item" onclick="abrirAjustesDeLaSeccion()"><span class="bn-ic">⚙</span>Ajustes</button>
+  <button class="bn-item" data-seccion="retiro" onclick="irASeccionApp('retiro')"><span class="bn-ic">📈</span>Futuro</button>
 </nav>
 
 <div class="modal-overlay" id="edit-modal" style="display:none">

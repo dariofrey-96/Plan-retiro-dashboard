@@ -1,6 +1,13 @@
 /* Extras de la sección Gastos escritos a mano (ningún generador los toca, a
    diferencia de presupuesto.css, que lo reescriben los scripts). Reusa tokens. */
 
+/* Sub-navegación Gastos / Resumen (control segmentado dentro de la mitad de
+   presupuesto). Antes Resumen y Gastos eran dos ítems de la barra de abajo; con
+   las 4 pestañas, Resumen se pliega acá. Visible en mobile y escritorio. */
+.presu-subtabs-wrap { padding: 14px 16px 0; }
+.presu-subtabs { width: max-content; max-width: 100%; }
+@media (min-width: 900px){ .presu-subtabs-wrap { padding: 16px 24px 0; } }
+
 /* Botón "cambiar categoría" de cada fila de gasto: igual forma que el de borrar,
    con hover en el color de acento en vez de rojo. */
 .app-presupuesto .edit-gasto-btn {

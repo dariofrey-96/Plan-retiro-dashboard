@@ -324,7 +324,7 @@ function switchInner(n,btn){
 }
 function toggleSidebar(){
   const a=document.querySelector('aside'),btn=$('sidebar-toggle'),open=a.classList.toggle('open');
-  btn.textContent=open?'✕ Cerrar':'⚙ Params';
+  if(btn) btn.textContent=open?'✕ Cerrar':'⚙ Params';
 }
 
 // SLIDERS
