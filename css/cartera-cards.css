@@ -51,3 +51,16 @@
 .asset-card .pnl-pos, .asset-card .change-pos{ color: var(--green); }
 .asset-card .pnl-neg, .asset-card .change-neg{ color: var(--red); }
 .asset-card .change-neu, .asset-card .ac-24h.change-neu{ color: var(--muted); }
+
+/* ── Donas (Por categoría / Por activo) rediseñadas ─────────────────────────
+   Los gajos redondeados y separados los da Chart.js (nucleo.js). Acá agrandamos
+   el número del centro y prolijamos la leyenda para que cada sector se lea bien. */
+#mitad-retiro .donut-wrap { width: 160px; height: 160px; }
+#mitad-retiro .donut-total { font-size: 1.2rem; font-weight: 800; letter-spacing: -.01em; }
+#mitad-retiro .donut-sub { font-size: .6rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 3px; }
+#mitad-retiro .cat-legend { gap: 10px; margin-top: 15px; }
+#mitad-retiro .cat-leg-row { font-size: .8rem; }
+#mitad-retiro .cat-leg-left { gap: 9px; min-width: 0; }
+#mitad-retiro .cat-leg-left span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mitad-retiro .cat-dot { width: 11px; height: 11px; border-radius: 4px; }
+#mitad-retiro .cat-leg-pct { font-size: .78rem; color: var(--text); white-space: nowrap; }

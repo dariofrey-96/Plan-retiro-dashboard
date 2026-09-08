@@ -400,10 +400,13 @@ function donutOpts(){
   const txt=getCSSVar('--text')||'#e6edf3';
   const surf2=getCSSVar('--surface2')||'#1c2333';
   const bord=getCSSVar('--border')||'#30363d';
-  return {responsive:true,maintainAspectRatio:true,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:surf2,borderColor:bord,borderWidth:1,bodyColor:txt,callbacks:{label:c=>` ${c.label}: ${(typeof fmtC==='function'?fmtC:fmt)(c.parsed)}`}}}};
+  return {responsive:true,maintainAspectRatio:true,cutout:'76%',plugins:{legend:{display:false},tooltip:{backgroundColor:surf2,borderColor:bord,borderWidth:1,bodyColor:txt,callbacks:{label:c=>` ${c.label}: ${(typeof fmtC==='function'?fmtC:fmt)(c.parsed)}`}}}};
 }
-const dCat=new Chart($('donut-cat').getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0,hoverOffset:4}]},options:donutOpts()});
-const dAsset=new Chart($('donut-asset').getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderWidth:0,hoverOffset:4}]},options:donutOpts()});
+// Gajos redondeados y separados: cada sector se distingue mejor y se ve más
+// moderno. spacing deja un huequito entre gajos; borderRadius los redondea.
+const DONUT_DS={borderWidth:0,hoverOffset:6,borderRadius:7,spacing:2};
+const dCat=new Chart($('donut-cat').getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],...DONUT_DS}]},options:donutOpts()});
+const dAsset=new Chart($('donut-asset').getContext('2d'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],...DONUT_DS}]},options:donutOpts()});
 
 // CALC CORE
 let LC={},curMeta=0;
