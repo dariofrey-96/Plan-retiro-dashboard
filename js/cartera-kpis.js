@@ -116,7 +116,7 @@ function renderCarteraKpis(tv, tc, tp, pp) {
   // "salud": Ahorro mensual / Retorno real), que ya están en Proyección.
   function toggleStrip(v) {
     try {
-      document.querySelectorAll('.kpi-strip, .health-strip').forEach(s => {
+      document.querySelectorAll('.kpi-strip, .health-strip, #futuro-verdict').forEach(s => {
         s.style.display = (v === 'cartera') ? 'none' : '';
       });
     } catch (e) {}

@@ -315,12 +315,27 @@ function switchView(v,btn){
 let curInner='grafico';
 function switchInner(n,btn){
   curInner=n;
-  document.querySelectorAll('.inner-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.inner-tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
   ['grafico','tabla','escenarios','sensibilidad','inversa'].forEach(x=>{const e=$('inner-'+x);if(e)e.style.display='none';});
   const el=$('inner-'+n);if(el)el.style.display='flex';
   if(n==='escenarios')renderEsc();
   if(n==='sensibilidad')renderSens();
   if(n==='inversa')renderInv();
+}
+
+// Futuro (Proyección): las vistas técnicas (Tabla, Escenarios, Sensibilidad,
+// Calc. Inversa) arrancan plegadas. Este botón muestra/esconde la tira de
+// pestañas. Al cerrar, vuelve al Gráfico para no dejar una vista técnica colgada.
+function toggleProyDetalle(){
+  const box=$('proy-detalle'), btn=$('proy-detalle-toggle');
+  if(!box) return;
+  const abrir=box.hidden;
+  box.hidden=!abrir;
+  if(btn){ btn.classList.toggle('abierto',abrir); btn.setAttribute('aria-expanded',abrir?'true':'false'); }
+  if(!abrir){
+    const g=document.querySelector('#proy-detalle .inner-tab');
+    if(typeof switchInner==='function') switchInner('grafico',g);
+  }
 }
 function toggleSidebar(){
   const a=document.querySelector('aside'),btn=$('sidebar-toggle'),open=a.classList.toggle('open');

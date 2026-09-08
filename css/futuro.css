@@ -1,0 +1,18 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Futuro (Proyección de retiro): estilos del rediseño insight-first.
+   El veredicto "¿vas en camino?" va arriba de todo; las vistas técnicas (tabla,
+   escenarios, sensibilidad, calculadora) se pliegan detrás de este botón.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.proy-detalle-toggle {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  border-radius: 14px; padding: 12px 15px; cursor: pointer;
+  font-size: .85rem; font-weight: 600; box-shadow: var(--shadow-card);
+  transition: background .12s ease;
+}
+.proy-detalle-toggle:hover { background: var(--surface-2); }
+.proy-detalle-toggle .pdt-chevron { color: var(--muted); transition: transform .2s ease; }
+.proy-detalle-toggle.abierto .pdt-chevron { transform: rotate(180deg); }
+
+#proy-detalle { margin-top: 8px; }

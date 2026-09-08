@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="css/cartera-vidrio.css">
 <link rel="stylesheet" href="css/vidrio-app.css">
 <link rel="stylesheet" href="css/cartera-cards.css">
+<link rel="stylesheet" href="css/futuro.css">
 <link rel="stylesheet" href="css/inicio.css">
 <link rel="stylesheet" href="css/hoy.css">
 <link rel="stylesheet" href="css/transiciones.css">
@@ -284,6 +285,7 @@
   </div>
 </aside>
 <main>
+  <div class="view-pad" id="futuro-verdict" style="padding-bottom:0"><div id="en-camino-card"></div></div>
   <div class="kpi-strip">
     <div class="hscroll-pad" style="flex-basis:6px"></div>
     <div class="kpi"><div class="kpi-label">Capital necesario</div><div class="kpi-value blue" id="kpi-meta">—</div><div class="kpi-sub" id="kpi-meta-sub">al retiro</div></div>
@@ -303,14 +305,22 @@
   </div>
 
   <div class="view active" id="view-retiro">
-    <div class="inner-tabs">
-      <div class="hscroll-pad" style="flex-basis:10px"></div>
-      <button class="inner-tab active" onclick="switchInner('grafico',this)">Gráfico</button>
-      <button class="inner-tab" onclick="switchInner('tabla',this)">Tabla</button>
-      <button class="inner-tab" onclick="switchInner('escenarios',this)">Escenarios</button>
-      <button class="inner-tab" onclick="switchInner('sensibilidad',this)">Sensibilidad</button>
-      <button class="inner-tab" onclick="switchInner('inversa',this)">Calc. Inversa</button>
-      <div class="hscroll-pad" style="flex-basis:10px"></div>
+    <div class="view-pad" style="padding-top:14px;padding-bottom:0">
+      <button class="proy-detalle-toggle" id="proy-detalle-toggle" onclick="toggleProyDetalle()" aria-expanded="false" aria-controls="proy-detalle">
+        <span>📊 Ver tabla, escenarios y más</span>
+        <span class="pdt-chevron" aria-hidden="true">▾</span>
+      </button>
+    </div>
+    <div id="proy-detalle" hidden>
+      <div class="inner-tabs">
+        <div class="hscroll-pad" style="flex-basis:10px"></div>
+        <button class="inner-tab active" onclick="switchInner('grafico',this)">Gráfico</button>
+        <button class="inner-tab" onclick="switchInner('tabla',this)">Tabla</button>
+        <button class="inner-tab" onclick="switchInner('escenarios',this)">Escenarios</button>
+        <button class="inner-tab" onclick="switchInner('sensibilidad',this)">Sensibilidad</button>
+        <button class="inner-tab" onclick="switchInner('inversa',this)">Calc. Inversa</button>
+        <div class="hscroll-pad" style="flex-basis:10px"></div>
+      </div>
     </div>
 
     <div id="inner-grafico" style="display:flex;flex-direction:column">
@@ -337,7 +347,6 @@
           </div>
           <div class="chart-canvas-wrap"><canvas id="chart"></canvas></div>
         </div>
-        <div id="en-camino-card"></div>
         <div class="cartera-kpis" style="overflow-x:visible;flex-wrap:wrap">
           <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Total aportado de tu bolsillo</div><div class="ckpi-val blue" id="proy-stat-aportado">—</div></div>
           <div class="ckpi" style="flex:1;min-width:150px"><div class="ckpi-label">Generado por interés compuesto</div><div class="ckpi-val green" id="proy-stat-interes">—</div><div class="field-hint" id="proy-stat-interes-pct" style="margin-top:3px"></div></div>
