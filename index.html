@@ -1171,6 +1171,21 @@
         <option value="USD">Dólares</option>
       </select>
     </div>
+    <div class="modal-field">
+      <label>Aporte automático (opcional)</label>
+      <input type="number" id="meta-auto-monto" min="0" inputmode="numeric" placeholder="Ej: 40000 — vacío = sin aporte automático">
+    </div>
+    <div class="modal-field">
+      <label>¿Cada cuánto se suma solo?</label>
+      <select id="meta-auto-cada" style="width:100%;background:var(--surface3);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:9px 10px;font-size:.9rem;">
+        <option value="1">Todos los meses</option>
+        <option value="2">Cada 2 meses</option>
+        <option value="3">Cada 3 meses</option>
+        <option value="6">Cada 6 meses</option>
+        <option value="12">Una vez al año</option>
+      </select>
+    </div>
+    <div class="field-hint" style="margin:-4px 0 2px">Se suma solo cada vez que abrís la app, desde el período que viene. Si estuviste meses sin abrirla, pone al día lo que falte.</div>
     <div class="modal-btns">
       <button class="btn btn-cancel" id="meta-del-btn" onclick="metaEliminar()" style="margin-right:auto;color:var(--red);display:none;">Eliminar</button>
       <button class="btn btn-cancel" onclick="metaCerrar()">Cancelar</button>

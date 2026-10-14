@@ -46,6 +46,7 @@
 .meta-body { flex: 1; min-width: 0; }
 .meta-name { font-size: .9rem; font-weight: 600; }
 .meta-nums { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+.meta-auto { font-size: .72rem; color: var(--accent); margin-top: 3px; font-weight: 600; }
 .meta-chev { color: var(--muted); font-size: 1.15rem; flex-shrink: 0; }
 
 .meta-empty {
